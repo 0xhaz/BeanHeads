@@ -40,9 +40,9 @@ library Avatar {
     }
 
     function getBody(bytes4 selector) public pure returns (string memory) {
-        bytes4[2] memory bodies = [ImagesInBytes.BODIES, ImagesInBytes.CHEST];
+        bytes4[2] memory bodies = [ImagesInBytes.BREAST, ImagesInBytes.CHEST];
 
-        return selector == bodies[0] ? ImagesLib.Bodies : selector == bodies[1] ? ImagesLib.Chest : "";
+        return selector == bodies[0] ? ImagesLib.Breast : selector == bodies[1] ? ImagesLib.Chest : "";
     }
 
     function getClothing(bytes4 selector) public pure returns (string memory) {

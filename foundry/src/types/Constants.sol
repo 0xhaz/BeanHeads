@@ -35,7 +35,8 @@ library Images {
     string public constant eyes_wink = "images/eyes/wink.svg";
     string public constant facialhair_mediumBeard = "images/facialhair/mediumBeard.svg";
     string public constant facialhair_stubble = "images/facialhair/stubble.svg";
-    string public constant hair_afro = "images/hair/afro.svg";
+    string public constant hair_afroFront = "images/hair/afroFront.svg";
+    string public constant hair_afroBack = "images/hair/afroBack.svg";
     string public constant hair_baldingHair = "images/hair/baldingHair.svg";
     string public constant hair_bobCut = "images/hair/bobCut.svg";
     string public constant hair_bunHair = "images/hair/bunHair.svg";
@@ -90,7 +91,8 @@ library ImagesLib {
     string public constant Wink = Images.eyes_wink;
     string public constant MediumBeard = Images.facialhair_mediumBeard;
     string public constant Stubble = Images.facialhair_stubble;
-    string public constant Afro = Images.hair_afro;
+    string public constant AfroFront = Images.hair_afroFront;
+    string public constant AfroBack = Images.hair_afroBack;
     string public constant BaldingHair = Images.hair_baldingHair;
     string public constant BobCut = Images.hair_bobCut;
     string public constant BunHair = Images.hair_bunHair;
