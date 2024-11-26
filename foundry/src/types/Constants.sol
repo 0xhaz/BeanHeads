@@ -148,7 +148,8 @@ library ImagesInBytes {
     bytes4 constant REACT = 0x8c0c0c67;
     bytes4 constant REDWOOD = 0x67e53428;
     bytes4 constant VUE = 0x627b97bc;
-    bytes4 constant AFRO = 0x346605cb;
+    bytes4 constant AFRO_FRONT = 0x59deb26d;
+    bytes4 constant AFRO_BACK = 0x3aa1d8c1;
     bytes4 constant BALDING_HAIR = 0x4860dce4;
     bytes4 constant BOBCUT = 0xe34ca225;
     bytes4 constant BUN = 0x20d41f57;

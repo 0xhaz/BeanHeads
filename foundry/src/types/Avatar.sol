@@ -46,8 +46,9 @@ library Avatar {
     }
 
     function getClothing(bytes4 selector) public pure returns (string memory) {
-        bytes4[5] memory clothingTypes = [
-            ImagesInBytes.DRESS,
+        bytes4[6] memory clothingTypes = [
+            ImagesInBytes.DRESS_FRONT,
+            ImagesInBytes.DRESS_BACK,
             ImagesInBytes.DRESS_SHIRT,
             ImagesInBytes.SHIRT,
             ImagesInBytes.TANK_TOP,
@@ -55,12 +56,14 @@ library Avatar {
         ];
 
         return selector == clothingTypes[0]
-            ? ImagesLib.Dress
+            ? ImagesLib.DressFront
             : selector == clothingTypes[1]
-                ? ImagesLib.DressShirt
+                ? ImagesLib.DressBack
                 : selector == clothingTypes[2]
-                    ? ImagesLib.Shirt
-                    : selector == clothingTypes[3] ? ImagesLib.TankTop : selector == clothingTypes[4] ? ImagesLib.VNeck : "";
+                    ? ImagesLib.DressShirt
+                    : selector == clothingTypes[3]
+                        ? ImagesLib.Shirt
+                        : selector == clothingTypes[4] ? ImagesLib.TankTop : selector == clothingTypes[5] ? ImagesLib.VNeck : "";
     }
 
     function getClothingColor(bytes3 color) public pure returns (string memory) {
@@ -139,8 +142,9 @@ library Avatar {
     }
 
     function getHair(bytes4 selector) public pure returns (string memory) {
-        bytes4[9] memory hairStyles = [
-            ImagesInBytes.AFRO,
+        bytes4[10] memory hairStyles = [
+            ImagesInBytes.AFRO_FRONT,
+            ImagesInBytes.AFRO_BACK,
             ImagesInBytes.BALDING_HAIR,
             ImagesInBytes.BOBCUT,
             ImagesInBytes.BUN,
@@ -152,20 +156,22 @@ library Avatar {
         ];
 
         return selector == hairStyles[0]
-            ? ImagesLib.Afro
+            ? ImagesLib.AfroFront
             : selector == hairStyles[1]
-                ? ImagesLib.BaldingHair
+                ? ImagesLib.AfroBack
                 : selector == hairStyles[2]
-                    ? ImagesLib.BobCut
+                    ? ImagesLib.BaldingHair
                     : selector == hairStyles[3]
-                        ? ImagesLib.BunHair
+                        ? ImagesLib.BobCut
                         : selector == hairStyles[4]
-                            ? ImagesLib.BuzzCut
+                            ? ImagesLib.BunHair
                             : selector == hairStyles[5]
-                                ? ImagesLib.LongHair
+                                ? ImagesLib.BuzzCut
                                 : selector == hairStyles[6]
-                                    ? ImagesLib.LongHairBack
-                                    : selector == hairStyles[7] ? ImagesLib.PixieCut : selector == hairStyles[8] ? ImagesLib.ShortHair : "";
+                                    ? ImagesLib.LongHair
+                                    : selector == hairStyles[7]
+                                        ? ImagesLib.LongHairBack
+                                        : selector == hairStyles[8] ? ImagesLib.PixieCut : selector == hairStyles[9] ? ImagesLib.ShortHair : "";
     }
 
     function getHairColor(bytes3 color) public pure returns (string memory) {
