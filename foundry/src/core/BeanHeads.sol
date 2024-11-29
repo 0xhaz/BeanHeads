@@ -116,7 +116,6 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
         _shapes[tokenId] = Avatar.Shapes(circleColor);
 
         _safeMint(msg.sender, tokenId);
-
         emit MintedGenesis(msg.sender, tokenId);
 
         return tokenId;
@@ -143,6 +142,50 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
     function getAttributesByTokenId(uint256 tokenId) external view returns (string[20] memory) {}
 
     function getAttributesByOwner(address owner) external view returns (string[20][] memory) {}
+
+    function getBodies(uint256 tokenId) external view returns (Avatar.Bodies memory) {
+        return _bodies[tokenId];
+    }
+
+    function getAccessories(uint256 tokenId) external view returns (Avatar.Accessories memory) {
+        return _accessories[tokenId];
+    }
+
+    function getClothes(uint256 tokenId) external view returns (Avatar.Clothes memory) {
+        return _clothes[tokenId];
+    }
+
+    function getHats(uint256 tokenId) external view returns (Avatar.Hats memory) {
+        return _hats[tokenId];
+    }
+
+    function getEyes(uint256 tokenId) external view returns (Avatar.Eyes memory) {
+        return _eyes[tokenId];
+    }
+
+    function getEyebrows(uint256 tokenId) external view returns (Avatar.Eyebrows memory) {
+        return _eyebrows[tokenId];
+    }
+
+    function getMouths(uint256 tokenId) external view returns (Avatar.Mouths memory) {
+        return _mouths[tokenId];
+    }
+
+    function getHairs(uint256 tokenId) external view returns (Avatar.Hairs memory) {
+        return _hairs[tokenId];
+    }
+
+    function getFacialHairs(uint256 tokenId) external view returns (Avatar.FacialHairs memory) {
+        return _facialHairs[tokenId];
+    }
+
+    function getFaceMask(uint256 tokenId) external view returns (Avatar.FaceMask memory) {
+        return _faceMasks[tokenId];
+    }
+
+    function getShapes(uint256 tokenId) external view returns (Avatar.Shapes memory) {
+        return _shapes[tokenId];
+    }
 
     function randomNum(uint256 mod, uint256 seed, uint256 salt) external view returns (uint256) {}
 
