@@ -8,27 +8,57 @@ import {ImagesLib, ImagesInBytes} from "src/types/Constants.sol";
  */
 
 library Avatar {
-    struct Attributes {
-        uint8 accessory;
+    struct Bodies {
         uint8 bodyType;
-        uint8 clothes;
-        uint8 eyebrowShape;
-        uint8 eyeShape;
-        uint8 mouthStyle;
-        uint8 facialHairType;
-        uint8 clothesGraphic;
-        uint8 hairStyle;
-        uint8 hatStyle;
-        bytes3 faceMaskColor;
-        bytes3 clothingColor;
-        bytes3 hairColor;
-        bytes3 hatColor;
-        bytes3 circleColor;
-        bytes3 lipColor;
         bytes3 skinColor;
-        bool faceMask;
+    }
+
+    struct Accessories {
+        uint8 accessory;
         bool lashes;
         bool mask;
+    }
+
+    struct Clothes {
+        uint8 clothes;
+        uint8 clothesGraphic;
+        bytes3 clothingColor;
+    }
+
+    struct Hats {
+        uint8 hatStyle;
+        bytes3 hatColor;
+    }
+
+    struct Eyes {
+        uint8 eyeShape;
+    }
+
+    struct Eyebrows {
+        uint8 eyebrowShape;
+    }
+
+    struct Mouths {
+        uint8 mouthStyle;
+        bytes3 lipColor;
+    }
+
+    struct Hairs {
+        uint8 hairStyle;
+        bytes3 hairColor;
+    }
+
+    struct FacialHairs {
+        uint8 facialHairType;
+    }
+
+    struct FaceMask {
+        bool isOn;
+        bytes3 faceMaskColor;
+    }
+
+    struct Shapes {
+        bytes3 circleColor;
     }
 
     function getAccessory(bytes4 selector) public pure returns (string memory) {

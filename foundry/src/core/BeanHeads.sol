@@ -16,20 +16,47 @@ import {Avatar} from "src/types/Avatar.sol";
  */
 contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
     using Base64 for bytes;
-    using Avatar for Avatar.Attributes;
+    using Strings for uint256;
+    using Avatar for *;
 
     error BeanHeads__TokenDoesNotExist();
 
-    mapping(uint256 => Avatar.Attributes) private _attributes;
+    mapping(uint256 => Avatar.Bodies) private _bodies;
+    mapping(uint256 => Avatar.Accessories) private _accessories;
+    mapping(uint256 => Avatar.Clothes) private _clothes;
+    mapping(uint256 => Avatar.Hats) private _hats;
+    mapping(uint256 => Avatar.Eyes) private _eyes;
+    mapping(uint256 => Avatar.Eyebrows) private _eyebrows;
+    mapping(uint256 => Avatar.Mouths) private _mouths;
+    mapping(uint256 => Avatar.Hairs) private _hairs;
+    mapping(uint256 => Avatar.FacialHairs) private _facialHairs;
+    mapping(uint256 => Avatar.FaceMask) private _faceMasks;
+    mapping(uint256 => Avatar.Shapes) private _shapes;
 
     uint256 private tokenIdCounter;
+
+    event MintedGenesis(address indexed owner, uint256 indexed tokenId);
 
     constructor() ERC721("BeanHeads", "BEAN") Ownable(msg.sender) {}
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         if (_ownerOf(tokenId) == address(0)) revert BeanHeads__TokenDoesNotExist();
 
-        Avatar.Attributes memory avatar = _attributes[tokenId];
+        Avatar.Bodies memory body = _bodies[tokenId];
+        Avatar.Accessories memory accessory = _accessories[tokenId];
+        Avatar.Clothes memory clothes = _clothes[tokenId];
+        Avatar.Hats memory hat = _hats[tokenId];
+        Avatar.Eyes memory eyes = _eyes[tokenId];
+        Avatar.Eyebrows memory eyebrows = _eyebrows[tokenId];
+        Avatar.Mouths memory mouth = _mouths[tokenId];
+        Avatar.Hairs memory hair = _hairs[tokenId];
+        Avatar.FacialHairs memory facialHair = _facialHairs[tokenId];
+        Avatar.FaceMask memory faceMask = _faceMasks[tokenId];
+        Avatar.Shapes memory shape = _shapes[tokenId];
+
+        string memory attributes = _buildAttributesJSON(
+            body, accessory, clothes, hat, eyes, eyebrows, mouth, hair, facialHair, faceMask, shape
+        );
 
         return string(
             abi.encodePacked(
@@ -38,51 +65,10 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
                     bytes(
                         abi.encodePacked(
                             '{"name": "BeanHead #',
-                            tokenIdCounter,
-                            '", "description" : "BeanHeads is a customizable avatar on chain NFT collection", "attributes": [',
-                            '{"trait_type": "Accessory", "value": "',
-                            Avatar.getAccessory(bytes4(abi.encodePacked(avatar.accessory))),
-                            '"},',
-                            '{"trait_type": "Body Type", "value": "',
-                            Avatar.getBody(bytes4(abi.encodePacked(avatar.bodyType))),
-                            '{"trait_type": "Clothes", "value": "',
-                            Avatar.getClothing(bytes4(abi.encodePacked(avatar.clothes))),
-                            '{"trait_type": "Clothes Color", "value": "',
-                            Avatar.getClothingColor(avatar.clothingColor),
-                            '{"trait_type": "Clothes Graphic", "value": "',
-                            Avatar.getClothingGraphic(bytes4(abi.encodePacked(avatar.clothesGraphic))),
-                            '{"trait_type": "Eyebrow Shape", "value": "',
-                            Avatar.getEyebrows(bytes4(abi.encodePacked(avatar.eyebrowShape))),
-                            '{"trait_type": "Eye Shape", "value": "',
-                            Avatar.getEyes(bytes4(abi.encodePacked(avatar.eyeShape))),
-                            '{"trait_type": "Facial Hair Type", "value": "',
-                            Avatar.getFacialHair(bytes4(abi.encodePacked(avatar.facialHairType))),
-                            '{"trait_type": "Hair Style", "value": "',
-                            Avatar.getHair(bytes4(abi.encodePacked(avatar.hairStyle))),
-                            '{"trait_type": "Hair Color", "value": "',
-                            Avatar.getHairColor(avatar.hairColor),
-                            '{"trait_type": "Hat Style", "value": "',
-                            Avatar.getHats(bytes4(abi.encodePacked(avatar.hatStyle))),
-                            '{"trait_type": "Hat Color", "value": "',
-                            Avatar.getHatColor(avatar.hatColor),
-                            '{"trait_type": "Mouth Type", "value": "',
-                            Avatar.getMouths(bytes4(abi.encodePacked(avatar.mouthStyle))),
-                            '{"trait_type": "Lip Color", "value": "',
-                            Avatar.getLipColor(avatar.lipColor),
-                            '{"trait_type": "Skin Color", "value": "',
-                            Avatar.getSkinColor(avatar.skinColor),
-                            '{"trait_type": "Circle Color", "value": "',
-                            Avatar.getCircleColor(avatar.circleColor),
-                            '{"trait_type": "Face Mask", "value": "',
-                            Avatar.isFaceMaskOn(avatar.faceMask),
-                            '{"trait_type": "Face Mask Color", "value": "',
-                            Avatar.getFaceMaskColor(avatar.faceMaskColor),
-                            '{"trait_type": "Lashes", "value": "',
-                            Avatar.hasLashes(avatar.lashes),
-                            '{"trait_type": "Mask", "value": "',
-                            Avatar.hasMask(avatar.mask),
-                            "]",
-                            "}"
+                            Strings.toString(tokenId),
+                            '", "description": "BeanHeads is a customizable avatar on-chain NFT collection", "attributes": [',
+                            attributes,
+                            "]}"
                         )
                     )
                 )
@@ -113,32 +99,27 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
         bool faceMask,
         bool lashes,
         bool mask
-    ) public {
-        _attributes[tokenIdCounter] = Avatar.Attributes(
-            accessory,
-            bodyType,
-            clothes,
-            eyebrowShape,
-            eyeShape,
-            mouthStyle,
-            facialHairType,
-            clothesGraphic,
-            hairStyle,
-            hatStyle,
-            faceMaskColor,
-            clothingColor,
-            hairColor,
-            hatColor,
-            circleColor,
-            lipColor,
-            skinColor,
-            faceMask,
-            lashes,
-            mask
-        );
-
-        _safeMint(msg.sender, tokenIdCounter);
+    ) public returns (uint256) {
+        uint256 tokenId = tokenIdCounter;
         tokenIdCounter++;
+
+        _bodies[tokenId] = Avatar.Bodies(bodyType, skinColor);
+        _accessories[tokenId] = Avatar.Accessories(accessory, lashes, mask);
+        _clothes[tokenId] = Avatar.Clothes(clothes, clothesGraphic, clothingColor);
+        _hats[tokenId] = Avatar.Hats(hatStyle, hatColor);
+        _eyes[tokenId] = Avatar.Eyes(eyeShape);
+        _eyebrows[tokenId] = Avatar.Eyebrows(eyebrowShape);
+        _mouths[tokenId] = Avatar.Mouths(mouthStyle, lipColor);
+        _hairs[tokenId] = Avatar.Hairs(hairStyle, hairColor);
+        _facialHairs[tokenId] = Avatar.FacialHairs(facialHairType);
+        _faceMasks[tokenId] = Avatar.FaceMask(faceMask, faceMaskColor);
+        _shapes[tokenId] = Avatar.Shapes(circleColor);
+
+        _safeMint(msg.sender, tokenId);
+
+        emit MintedGenesis(msg.sender, tokenId);
+
+        return tokenId;
     }
 
     function getAttributes(uint256 tokenId) external view returns (string[20] memory) {}
@@ -169,5 +150,84 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
 
     function _baseURI() internal pure override returns (string memory) {
         return "data:application/json;base64,";
+    }
+
+    function _buildAttributesJSON(
+        Avatar.Bodies memory body,
+        Avatar.Accessories memory accessory,
+        Avatar.Clothes memory clothes,
+        Avatar.Hats memory hat,
+        Avatar.Eyes memory eyes,
+        Avatar.Eyebrows memory eyebrows,
+        Avatar.Mouths memory mouth,
+        Avatar.Hairs memory hair,
+        Avatar.FacialHairs memory facialHair,
+        Avatar.FaceMask memory faceMask,
+        Avatar.Shapes memory shape
+    ) private pure returns (string memory) {
+        return string(
+            abi.encodePacked(
+                '{"trait_type": "Accessory", "value": "',
+                Avatar.getAccessory(bytes4(abi.encodePacked(accessory.accessory))),
+                '"},',
+                '{"trait_type": "Body Type", "value": "',
+                Avatar.getBody(bytes4(abi.encodePacked(body.bodyType))),
+                '"},',
+                '{"trait_type": "Skin Color", "value": "',
+                Avatar.getSkinColor(body.skinColor),
+                '"},',
+                '{"trait_type": "Clothes", "value": "',
+                Avatar.getClothing(bytes4(abi.encodePacked(clothes.clothes))),
+                '"},',
+                '{"trait_type": "Clothes Color", "value": "',
+                Avatar.getClothingColor(clothes.clothingColor),
+                '"},',
+                '{"trait_type": "Clothes Graphic", "value": "',
+                Avatar.getClothingGraphic(bytes4(abi.encodePacked(clothes.clothesGraphic))),
+                '"},',
+                '{"trait_type": "Eyebrow Shape", "value": "',
+                Avatar.getEyebrows(bytes4(abi.encodePacked(eyebrows.eyebrowShape))),
+                '"},',
+                '{"trait_type": "Eye Shape", "value": "',
+                Avatar.getEyes(bytes4(abi.encodePacked(eyes.eyeShape))),
+                '"},',
+                '{"trait_type": "Facial Hair Type", "value": "',
+                Avatar.getFacialHair(bytes4(abi.encodePacked(facialHair.facialHairType))),
+                '"},',
+                '{"trait_type": "Hair Style", "value": "',
+                Avatar.getHair(bytes4(abi.encodePacked(hair.hairStyle))),
+                '"},',
+                '{"trait_type": "Hair Color", "value": "',
+                Avatar.getHairColor(hair.hairColor),
+                '"},',
+                '{"trait_type": "Hat Style", "value": "',
+                Avatar.getHats(bytes4(abi.encodePacked(hat.hatStyle))),
+                '"},',
+                '{"trait_type": "Hat Color", "value": "',
+                Avatar.getHatColor(hat.hatColor),
+                '"},',
+                '{"trait_type": "Mouth Type", "value": "',
+                Avatar.getMouths(bytes4(abi.encodePacked(mouth.mouthStyle))),
+                '"},',
+                '{"trait_type": "Lip Color", "value": "',
+                Avatar.getLipColor(mouth.lipColor),
+                '"},',
+                '{"trait_type": "Circle Color", "value": "',
+                Avatar.getCircleColor(shape.circleColor),
+                '"},',
+                '{"trait_type": "Face Mask", "value": "',
+                Avatar.isFaceMaskOn(faceMask.isOn),
+                '"},',
+                '{"trait_type": "Face Mask Color", "value": "',
+                Avatar.getFaceMaskColor(faceMask.faceMaskColor),
+                '"},',
+                '{"trait_type": "Lashes", "value": "',
+                Avatar.hasLashes(accessory.lashes),
+                '"},',
+                '{"trait_type": "Mask", "value": "',
+                Avatar.hasMask(accessory.mask),
+                '"}'
+            )
+        );
     }
 }
