@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
+import {Avatar} from "src/types/Avatar.sol";
+
 interface IBeanHeads {
     function mintNFT() external returns (uint256);
 
-    function getAttributes(uint256 tokenId) external view returns (string[20] memory);
+    function getAttributes(uint256 tokenId) external view returns (Avatar.AllAttributes memory);
 
     function getOwnerAttributes(address owner) external view returns (string[20][] memory);
 

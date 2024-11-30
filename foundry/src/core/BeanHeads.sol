@@ -32,6 +32,7 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
     mapping(uint256 => Avatar.FacialHairs) private _facialHairs;
     mapping(uint256 => Avatar.FaceMask) private _faceMasks;
     mapping(uint256 => Avatar.Shapes) private _shapes;
+    mapping(uint256 => Avatar.AllAttributes) private _allAttributes;
 
     uint256 private tokenIdCounter;
 
@@ -121,7 +122,11 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
         return tokenId;
     }
 
-    function getAttributes(uint256 tokenId) external view returns (string[20] memory) {}
+    function getAttributes(uint256 tokenId) external view returns (Avatar.AllAttributes memory attributes) {
+        if (tokenId >= tokenIdCounter) revert BeanHeads__TokenDoesNotExist();
+
+        attributes = Avatar.getAllAttributes(tokenId);
+    }
 
     function getOwnerAttributes(address owner) external view returns (string[20][] memory) {}
 
