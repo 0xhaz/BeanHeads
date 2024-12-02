@@ -27,30 +27,6 @@ contract BeanHeadsTest is Test, Helpers {
     }
 
     modifier buildTokenId() {
-        vm.startPrank(USER);
-        uint256 tokenId = beanHeads.buildAvatar(
-            accessory,
-            bodyType,
-            clothes,
-            eyebrowShape,
-            eyeShape,
-            mouthStyle,
-            facialHairType,
-            clothesGraphic,
-            hairStyle,
-            hatStyle,
-            faceMaskColor,
-            clothingColor,
-            hairColor,
-            hatColor,
-            circleColor,
-            lipColor,
-            skinColor,
-            faceMask,
-            lashes,
-            mask
-        );
-        vm.stopPrank();
         _;
     }
 
@@ -137,28 +113,43 @@ contract BeanHeadsTest is Test, Helpers {
         assertEq(avatarShapes.circleColor, circleColor);
     }
 
-    function test_getAttributes() public buildTokenId {
-        Avatar.AllAttributes memory attributes = beanHeads.getAttributes(0);
+    function test_getAttributes() public {
+        vm.startPrank(USER);
 
-        assertEq(attributes.accessory, "ROUND_GLASSES");
-        assertEq(attributes.bodyType, "CHEST");
-        assertEq(attributes.clothes, "TANK_TOP");
-        assertEq(attributes.eyebrowShape, "LEFT_LOWERED_EYEBROW");
-        assertEq(attributes.eyeShape, "DIZZY_EYES");
-        assertEq(attributes.mouthStyle, "SAD");
-        assertEq(attributes.facialHairType, "STUBBLE");
-        assertEq(attributes.clothesGraphic, "GATSBY");
-        assertEq(attributes.hairStyle, "LONG_HAIR");
-        assertEq(attributes.hatStyle, "BEANIE");
-        assertEq(attributes.faceMaskColor, "#123456");
-        assertEq(attributes.clothesColor, "#654321");
-        assertEq(attributes.hairColor, "#aabbcc");
-        assertEq(attributes.hatColor, "#112233");
-        assertEq(attributes.circleColor, "#445566");
-        assertEq(attributes.lipColor, "#998877");
-        assertEq(attributes.skinColor, "#112233");
-        assertEq(attributes.faceMask, "true");
-        assertEq(attributes.lashes, "false");
-        assertEq(attributes.mask, "true");
+        vm.expectEmit(true, true, false, false);
+        emit MintedGenesis(USER, 0);
+
+        uint256 tokenId = beanHeads.buildAvatar(
+            accessory,
+            bodyType,
+            clothes,
+            eyebrowShape,
+            eyeShape,
+            mouthStyle,
+            facialHairType,
+            clothesGraphic,
+            hairStyle,
+            hatStyle,
+            faceMaskColor,
+            clothingColor,
+            hairColor,
+            hatColor,
+            circleColor,
+            lipColor,
+            skinColor,
+            faceMask,
+            lashes,
+            mask
+        );
+
+        vm.stopPrank();
+
+        Avatar.AllAttributes memory attributes = beanHeads.getAttributes(tokenId);
+        string memory formattedAttributes = beanHeads.formatAttributes(attributes);
+
+        assertEq(
+            formattedAttributes,
+            "0,1,3,2,1,4,1,0,0x123456,0x654321,0xaabbcc,0x112233,0x445566,0x998877,0x112233,true,false,true"
+        );
     }
 }

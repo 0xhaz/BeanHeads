@@ -32,7 +32,6 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
     mapping(uint256 => Avatar.FacialHairs) private _facialHairs;
     mapping(uint256 => Avatar.FaceMask) private _faceMasks;
     mapping(uint256 => Avatar.Shapes) private _shapes;
-    mapping(uint256 => Avatar.AllAttributes) private _allAttributes;
 
     uint256 private tokenIdCounter;
 
@@ -79,53 +78,84 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
 
     function mintNFT() public returns (uint256) {}
 
-    function buildAvatar(
-        uint8 accessory,
-        uint8 bodyType,
-        uint8 clothes,
-        uint8 eyebrowShape,
-        uint8 eyeShape,
-        uint8 mouthStyle,
-        uint8 facialHairType,
-        uint8 clothesGraphic,
-        uint8 hairStyle,
-        uint8 hatStyle,
-        bytes3 faceMaskColor,
-        bytes3 clothingColor,
-        bytes3 hairColor,
-        bytes3 hatColor,
-        bytes3 circleColor,
-        bytes3 lipColor,
-        bytes3 skinColor,
-        bool faceMask,
-        bool lashes,
-        bool mask
-    ) public returns (uint256) {
+    function buildAvatar(Avatar.AllAttributes calldata attributes) public returns (uint256) {
         uint256 tokenId = tokenIdCounter;
         tokenIdCounter++;
 
-        _bodies[tokenId] = Avatar.Bodies(bodyType, skinColor);
-        _accessories[tokenId] = Avatar.Accessories(accessory, lashes, mask);
-        _clothes[tokenId] = Avatar.Clothes(clothes, clothesGraphic, clothingColor);
-        _hats[tokenId] = Avatar.Hats(hatStyle, hatColor);
-        _eyes[tokenId] = Avatar.Eyes(eyeShape);
-        _eyebrows[tokenId] = Avatar.Eyebrows(eyebrowShape);
-        _mouths[tokenId] = Avatar.Mouths(mouthStyle, lipColor);
-        _hairs[tokenId] = Avatar.Hairs(hairStyle, hairColor);
-        _facialHairs[tokenId] = Avatar.FacialHairs(facialHairType);
-        _faceMasks[tokenId] = Avatar.FaceMask(faceMask, faceMaskColor);
-        _shapes[tokenId] = Avatar.Shapes(circleColor);
+        _bodies[tokenId] = Avatar.Bodies(attributes.body.bodyType, attributes.body.skinColor);
+        _accessories[tokenId] =
+            Avatar.Accessories(attributes.accessory.accessory, attributes.accessory.lashes, attributes.accessory.mask);
+        _clothes[tokenId] = Avatar.Clothes(
+            attributes.clothes.clothes, attributes.clothes.clothesGraphic, attributes.clothes.clothingColor
+        );
+        _hats[tokenId] = Avatar.Hats(attributes.hat.hatStyle, attributes.hat.hatColor);
+        _eyes[tokenId] = Avatar.Eyes(attributes.eyes.eyeShape);
+        _eyebrows[tokenId] = Avatar.Eyebrows(attributes.eyebrows.eyebrowShape);
+        _mouths[tokenId] = Avatar.Mouths(attributes.mouth.mouthStyle, attributes.mouth.lipColor);
+        _hairs[tokenId] = Avatar.Hairs(attributes.hair.hairStyle, attributes.hair.hairColor);
+        _facialHairs[tokenId] = Avatar.FacialHairs(attributes.facialHair.facialHairType);
+        _faceMasks[tokenId] = Avatar.FaceMask(attributes.faceMask.isOn, attributes.faceMask.faceMaskColor);
+        _shapes[tokenId] = Avatar.Shapes(attributes.shapes.circleColor);
 
         _safeMint(msg.sender, tokenId);
+
         emit MintedGenesis(msg.sender, tokenId);
 
         return tokenId;
     }
 
-    function getAttributes(uint256 tokenId) external view returns (Avatar.AllAttributes memory attributes) {
+    function formatAttributes(Avatar.AllAttributes memory attributes) public pure returns (string memory) {
+        return string(
+            abi.encodePacked(
+                '{"accessory": "',
+                Strings.toString(attributes.accessory.accessory),
+                '", "bodyType": "',
+                Strings.toString(attributes.body.bodyType),
+                '", "skinColor": "',
+                Avatar.colorToHex(attributes.body.skinColor),
+                '", "clothes": "',
+                Strings.toString(attributes.clothes.clothes),
+                '", "clothesColor": "',
+                Avatar.colorToHex(attributes.clothes.clothingColor),
+                '", "clothesGraphic": "',
+                Strings.toString(attributes.clothes.clothesGraphic),
+                '", "eyebrowShape": "',
+                Strings.toString(attributes.eyebrows.eyebrowShape),
+                '", "eyeShape": "',
+                Strings.toString(attributes.eyes.eyeShape),
+                '", "facialHairType": "',
+                Strings.toString(attributes.facialHair.facialHairType),
+                '", "hairStyle": "',
+                Strings.toString(attributes.hair.hairStyle),
+                '", "hairColor": "',
+                Avatar.colorToHex(attributes.hair.hairColor),
+                '", "hatStyle": "',
+                Strings.toString(attributes.hat.hatStyle),
+                '", "hatColor": "',
+                Avatar.colorToHex(attributes.hat.hatColor),
+                '", "mouthStyle": "',
+                Strings.toString(attributes.mouth.mouthStyle),
+                '", "lipColor": "',
+                Avatar.colorToHex(attributes.mouth.lipColor),
+                '", "circleColor": "',
+                Avatar.colorToHex(attributes.shapes.circleColor),
+                '", "faceMask": "',
+                attributes.faceMask.isOn ? "true" : "false",
+                '", "faceMaskColor": "',
+                Avatar.colorToHex(attributes.faceMask.faceMaskColor),
+                '", "lashes": "',
+                attributes.accessory.lashes ? "true" : "false",
+                '", "mask": "',
+                attributes.accessory.mask ? "true" : "false",
+                '"}'
+            )
+        );
+    }
+
+    function getAttributes(uint256 tokenId) external view returns (Avatar.AllAttributes memory) {
         if (tokenId >= tokenIdCounter) revert BeanHeads__TokenDoesNotExist();
 
-        attributes = Avatar.getAllAttributes(tokenId);
+        return _constructAttributes(tokenId);
     }
 
     function getOwnerAttributes(address owner) external view returns (string[20][] memory) {}
@@ -277,5 +307,21 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
                 '"}'
             )
         );
+    }
+
+    function _constructAttributes(uint256 tokenId) internal view returns (Avatar.AllAttributes memory attributes) {
+        attributes = Avatar.AllAttributes({
+            body: _bodies[tokenId],
+            accessory: _accessories[tokenId],
+            clothes: _clothes[tokenId],
+            hat: _hats[tokenId],
+            eyes: _eyes[tokenId],
+            eyebrows: _eyebrows[tokenId],
+            mouth: _mouths[tokenId],
+            hair: _hairs[tokenId],
+            facialHair: _facialHairs[tokenId],
+            faceMask: _faceMasks[tokenId],
+            shapes: _shapes[tokenId]
+        });
     }
 }

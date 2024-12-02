@@ -10,26 +10,17 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 library Avatar {
     struct AllAttributes {
-        string accessory;
-        string bodyType;
-        string skinColor;
-        string clothes;
-        string clothesColor;
-        string clothesGraphic;
-        string eyebrowShape;
-        string eyeShape;
-        string facialHairType;
-        string hairStyle;
-        string hairColor;
-        string hatStyle;
-        string hatColor;
-        string mouthStyle;
-        string lipColor;
-        string circleColor;
-        string faceMask;
-        string faceMaskColor;
-        string lashes;
-        string mask;
+        Bodies body;
+        Accessories accessory;
+        Clothes clothes;
+        Hats hat;
+        Eyes eyes;
+        Eyebrows eyebrows;
+        Mouths mouth;
+        Hairs hair;
+        FacialHairs facialHair;
+        FaceMask faceMask;
+        Shapes shapes;
     }
 
     struct Layer {
@@ -88,6 +79,38 @@ library Avatar {
 
     struct Shapes {
         bytes3 circleColor;
+    }
+
+    struct Core {
+        uint8 accessory;
+        uint8 bodyType;
+        bytes3 skinColor;
+    }
+
+    struct Appearance {
+        uint8 eyebrowShape;
+        uint8 eyeShape;
+        uint8 mouthStyle;
+        uint8 facialHairType;
+        uint8 hairStyle;
+        bytes3 hairColor;
+    }
+
+    struct Clothing {
+        uint8 clothes;
+        uint8 clothesGraphic;
+        bytes3 clothingColor;
+        uint8 hatStyle;
+        bytes3 hatColor;
+    }
+
+    struct Extras {
+        bytes3 circleColor;
+        bytes3 lipColor;
+        bytes3 faceMaskColor;
+        bool faceMask;
+        bool lashes;
+        bool mask;
     }
 
     function getAccessory(bytes4 selector) public pure returns (string memory) {
@@ -397,29 +420,5 @@ library Avatar {
 
     function getAfroBack() internal pure returns (string memory) {
         return getHair(bytes4(ImagesInBytes.AFRO_BACK));
-    }
-
-    function getAllAttributes(uint256 tokenId) public view returns (AllAttributes memory result) {}
-
-    function _getAccessory(uint256 tokenId) private view returns (string memory) {
-        return _getAttribute(tokenId, 0x01, 0x00);
-    }
-
-    function _getBodyType(uint256 tokenId) private view returns (string memory) {
-        return _getAttribute(tokenId, 0x00, 0x00);
-    }
-
-    function _getMask(uint256 tokenId) private view returns (string memory) {
-        return _getAttribute(tokenId, 0x01, 0x02);
-    }
-
-    function _getAttribute(uint256 tokenId, uint256 slot, uint256 offset) private view returns (string memory) {
-        bytes32 attribute;
-        assembly {
-            let slotHash := keccak256(add(slot, tokenId), 0x20)
-            attribute := sload(add(slotHash, offset))
-        }
-
-        return string(abi.encodePacked(attribute));
     }
 }
