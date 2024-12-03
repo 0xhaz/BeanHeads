@@ -9,77 +9,77 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
  */
 
 library Avatar {
-    struct AllAttributes {
-        Bodies body;
-        Accessories accessory;
-        Clothes clothes;
-        Hats hat;
-        Eyes eyes;
-        Eyebrows eyebrows;
-        Mouths mouth;
-        Hairs hair;
-        FacialHairs facialHair;
-        FaceMask faceMask;
-        Shapes shapes;
-    }
+    // struct AllAttributes {
+    //     Accessories accessory;
+    //     Bodies body;
+    //     Clothes clothes;
+    //     Hats hat;
+    //     Eyes eyes;
+    //     Eyebrows eyebrows;
+    //     Mouths mouth;
+    //     Hairs hair;
+    //     FacialHairs facialHair;
+    //     FaceMask faceMask;
+    //     Shapes shapes;
+    // }
 
-    struct Layer {
-        string base; // The primary SVG path for this layer
-        string overlay; // The overlay SVG path for this layer
-    }
+    // struct Layer {
+    //     string base; // The primary SVG path for this layer
+    //     string overlay; // The overlay SVG path for this layer
+    // }
 
-    struct Bodies {
-        uint8 bodyType;
-        bytes3 skinColor;
-    }
+    // struct Bodies {
+    //     uint8 bodyType;
+    //     bytes3 skinColor;
+    // }
 
-    struct Accessories {
-        uint8 accessory;
-        bool lashes;
-        bool mask;
-    }
+    // struct Accessories {
+    //     uint8 accessory;
+    //     bool lashes;
+    //     bool mask;
+    // }
 
-    struct Clothes {
-        uint8 clothes;
-        uint8 clothesGraphic;
-        bytes3 clothingColor;
-    }
+    // struct Clothes {
+    //     uint8 clothes;
+    //     uint8 clothesGraphic;
+    //     bytes3 clothingColor;
+    // }
 
-    struct Hats {
-        uint8 hatStyle;
-        bytes3 hatColor;
-    }
+    // struct Hats {
+    //     uint8 hatStyle;
+    //     bytes3 hatColor;
+    // }
 
-    struct Eyes {
-        uint8 eyeShape;
-    }
+    // struct Eyes {
+    //     uint8 eyeShape;
+    // }
 
-    struct Eyebrows {
-        uint8 eyebrowShape;
-    }
+    // struct Eyebrows {
+    //     uint8 eyebrowShape;
+    // }
 
-    struct Mouths {
-        uint8 mouthStyle;
-        bytes3 lipColor;
-    }
+    // struct Mouths {
+    //     uint8 mouthStyle;
+    //     bytes3 lipColor;
+    // }
 
-    struct Hairs {
-        uint8 hairStyle;
-        bytes3 hairColor;
-    }
+    // struct Hairs {
+    //     uint8 hairStyle;
+    //     bytes3 hairColor;
+    // }
 
-    struct FacialHairs {
-        uint8 facialHairType;
-    }
+    // struct FacialHairs {
+    //     uint8 facialHairType;
+    // }
 
-    struct FaceMask {
-        bool isOn;
-        bytes3 faceMaskColor;
-    }
+    // struct FaceMask {
+    //     bool isOn;
+    //     bytes3 faceMaskColor;
+    // }
 
-    struct Shapes {
-        bytes3 circleColor;
-    }
+    // struct Shapes {
+    //     bytes3 circleColor;
+    // }
 
     struct Core {
         uint8 accessory;
@@ -113,7 +113,7 @@ library Avatar {
         bool mask;
     }
 
-    function getAccessory(bytes4 selector) public pure returns (string memory) {
+    function getAccessory(bytes4 selector) internal pure returns (string memory) {
         bytes4[3] memory accessories = [ImagesInBytes.ROUND_GLASSES, ImagesInBytes.SHADES, ImagesInBytes.TINY_GLASSES];
 
         return selector == accessories[0]
@@ -121,13 +121,13 @@ library Avatar {
             : selector == accessories[1] ? ImagesLib.Shades : selector == accessories[2] ? ImagesLib.TinyGlasses : "";
     }
 
-    function getBody(bytes4 selector) public pure returns (string memory) {
+    function getBody(bytes4 selector) internal pure returns (string memory) {
         bytes4[2] memory bodies = [ImagesInBytes.BREAST, ImagesInBytes.CHEST];
 
         return selector == bodies[0] ? ImagesLib.Breast : selector == bodies[1] ? ImagesLib.Chest : "";
     }
 
-    function getClothing(bytes4 selector) public pure returns (string memory) {
+    function getClothing(bytes4 selector) internal pure returns (string memory) {
         bytes4[6] memory clothingTypes = [
             ImagesInBytes.DRESS_FRONT,
             ImagesInBytes.DRESS_BACK,
@@ -148,11 +148,11 @@ library Avatar {
                         : selector == clothingTypes[4] ? ImagesLib.TankTop : selector == clothingTypes[5] ? ImagesLib.VNeck : "";
     }
 
-    function getClothingColor(bytes3 color) public pure returns (string memory) {
+    function getClothingColor(bytes3 color) internal pure returns (string memory) {
         return string(abi.encodePacked("#", color));
     }
 
-    function getClothingGraphic(bytes4 selector) public pure returns (string memory) {
+    function getClothingGraphic(bytes4 selector) internal pure returns (string memory) {
         bytes4[5] memory clothingGraphics =
             [ImagesInBytes.GATSBY, ImagesInBytes.GRAPHQL, ImagesInBytes.REACT, ImagesInBytes.REDWOOD, ImagesInBytes.VUE];
 
@@ -165,7 +165,7 @@ library Avatar {
                     : selector == clothingGraphics[3] ? ImagesLib.Redwood : selector == clothingGraphics[4] ? ImagesLib.Vue : "";
     }
 
-    function getEyebrows(bytes4 selector) public pure returns (string memory) {
+    function getEyebrows(bytes4 selector) internal pure returns (string memory) {
         bytes4[4] memory eyebrowShapes = [
             ImagesInBytes.ANGRY_EYEBROWS,
             ImagesInBytes.LEFT_LOWERED_EYEBROW,
@@ -182,7 +182,7 @@ library Avatar {
                     : selector == eyebrowShapes[3] ? ImagesLib.SeriousEyebrows : "";
     }
 
-    function getEyes(bytes4 selector) public pure returns (string memory) {
+    function getEyes(bytes4 selector) internal pure returns (string memory) {
         bytes4[10] memory eyeShapes = [
             ImagesInBytes.CONTENT_EYES,
             ImagesInBytes.DIZZY_EYES,
@@ -215,7 +215,7 @@ library Avatar {
                                         : selector == eyeShapes[8] ? ImagesLib.SquintEyes : selector == eyeShapes[9] ? ImagesLib.Wink : "";
     }
 
-    function getFacialHair(bytes4 selector) public pure returns (string memory) {
+    function getFacialHair(bytes4 selector) internal pure returns (string memory) {
         bytes4[2] memory facialHairTypes = [ImagesInBytes.MEDIUM_BEARD, ImagesInBytes.STUBBLE];
 
         return selector == facialHairTypes[0]
@@ -223,7 +223,7 @@ library Avatar {
             : selector == facialHairTypes[1] ? ImagesLib.Stubble : "";
     }
 
-    function getHair(bytes4 selector) public pure returns (string memory) {
+    function getHair(bytes4 selector) internal pure returns (string memory) {
         bytes4[10] memory hairStyles = [
             ImagesInBytes.AFRO_FRONT,
             ImagesInBytes.AFRO_BACK,
@@ -274,21 +274,21 @@ library Avatar {
                                     : hairStyle == 7 ? ImagesLib.LongHairBack : hairStyle == 8 ? ImagesLib.PixieCut : ImagesLib.ShortHair;
     }
 
-    function getHairColor(bytes3 color) public pure returns (string memory) {
+    function getHairColor(bytes3 color) internal pure returns (string memory) {
         return string(abi.encodePacked("#", color));
     }
 
-    function getHats(bytes4 selector) public pure returns (string memory) {
+    function getHats(bytes4 selector) internal pure returns (string memory) {
         bytes4[2] memory hatStyles = [ImagesInBytes.BEANIE, ImagesInBytes.TURBAN];
 
         return selector == hatStyles[0] ? ImagesLib.Beanie : selector == hatStyles[1] ? ImagesLib.Turban : "";
     }
 
-    function getHatColor(bytes3 color) public pure returns (string memory) {
+    function getHatColor(bytes3 color) internal pure returns (string memory) {
         return string(abi.encodePacked("#", color));
     }
 
-    function getMouths(bytes4 selector) public pure returns (string memory) {
+    function getMouths(bytes4 selector) internal pure returns (string memory) {
         bytes4[7] memory mouthShapes = [
             ImagesInBytes.GRIN,
             ImagesInBytes.LIPS,
@@ -312,35 +312,35 @@ library Avatar {
                             : selector == mouthShapes[5] ? ImagesLib.SeriousMouth : selector == mouthShapes[6] ? ImagesLib.Tongue : "";
     }
 
-    function getLipColor(bytes3 color) public pure returns (string memory) {
+    function getLipColor(bytes3 color) internal pure returns (string memory) {
         return string(abi.encodePacked("#", color));
     }
 
-    function getSkinColor(bytes3 color) public pure returns (string memory) {
+    function getSkinColor(bytes3 color) internal pure returns (string memory) {
         return string(abi.encodePacked("#", color));
     }
 
-    function getCircleColor(bytes3 color) public pure returns (string memory) {
+    function getCircleColor(bytes3 color) internal pure returns (string memory) {
         return string(abi.encodePacked("#", color));
     }
 
-    function getFaceMaskColor(bytes3 color) public pure returns (string memory) {
+    function getFaceMaskColor(bytes3 color) internal pure returns (string memory) {
         return string(abi.encodePacked("#", color));
     }
 
-    function isFaceMaskOn(bool value) public pure returns (string memory) {
+    function isFaceMaskOn(bool value) internal pure returns (string memory) {
         return value ? "true" : "false";
     }
 
-    function hasLashes(bool value) public pure returns (string memory) {
+    function hasLashes(bool value) internal pure returns (string memory) {
         return value ? "true" : "false";
     }
 
-    function hasMask(bool value) public pure returns (string memory) {
+    function hasMask(bool value) internal pure returns (string memory) {
         return value ? "true" : "false";
     }
 
-    function renderHair(Hairs memory hair) public pure returns (string memory) {
+    function renderHair(Appearance memory hair) internal pure returns (string memory) {
         if (hair.hairStyle == 6) {
             return string(
                 abi.encodePacked(
