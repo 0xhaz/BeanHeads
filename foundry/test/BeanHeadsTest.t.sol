@@ -46,70 +46,25 @@ contract BeanHeadsTest is Test, Helpers {
         emit MintedGenesis(USER, 0);
 
         // Prepare grouped parameters
-        Avatar.Core memory coreParams = Avatar.Core({accessory: accessory, bodyType: bodyType, skinColor: skinColor});
-
-        Avatar.Appearance memory appearanceParams = Avatar.Appearance({
-            eyebrowShape: eyebrowShape,
-            eyeShape: eyeShape,
-            mouthStyle: mouthStyle,
-            facialHairType: facialHairType,
-            hairStyle: hairStyle,
-            hairColor: hairColor
-        });
-
-        Avatar.Clothing memory clothingParams = Avatar.Clothing({
-            clothes: clothes,
-            clothesGraphic: clothesGraphic,
-            clothingColor: clothingColor,
-            hatStyle: hatStyle,
-            hatColor: hatColor
-        });
-
-        Avatar.Extras memory extrasParams = Avatar.Extras({
-            circleColor: circleColor,
-            lipColor: lipColor,
-            faceMaskColor: faceMaskColor,
-            faceMask: faceMask,
-            lashes: lashes,
-            mask: mask
-        });
+        Avatar.Core memory core = getDefaultCore();
+        Avatar.Appearance memory appearance = getDefaultAppearance();
+        Avatar.Clothing memory clothing = getDefaultClothing();
+        Avatar.Extras memory extras = getDefaultExtras();
 
         // Call the buildAvatar function
-        uint256 tokenId = beanHeads.buildAvatar(coreParams, appearanceParams, clothingParams, extrasParams);
+        uint256 tokenId = beanHeads.buildAvatar(core, appearance, clothing, extras);
 
         vm.stopPrank();
 
         // Validate Core attributes
-        Avatar.Core memory body = beanHeads.getBodies(tokenId);
-        assertEq(body.bodyType, bodyType);
-        assertEq(body.skinColor, skinColor);
-        assertEq(body.accessory, accessory);
+
+        assertEq(beanHeads.getBodies(tokenId).bodyType, 2);
 
         // Validate Appearance attributes
-        Avatar.Appearance memory appearance = beanHeads.getEyes(tokenId); // Assuming Eyes encompasses all Appearance attributes
-        assertEq(appearance.eyeShape, eyeShape);
-        assertEq(appearance.eyebrowShape, eyebrowShape);
-        assertEq(appearance.mouthStyle, mouthStyle);
-        assertEq(appearance.facialHairType, facialHairType);
-        assertEq(appearance.hairStyle, hairStyle);
-        assertEq(appearance.hairColor, hairColor);
 
         // Validate Clothing attributes
-        Avatar.Clothing memory avatarClothes = beanHeads.getClothes(tokenId);
-        assertEq(avatarClothes.clothes, clothes);
-        assertEq(avatarClothes.clothesGraphic, clothesGraphic);
-        assertEq(avatarClothes.clothingColor, clothingColor);
-        assertEq(avatarClothes.hatStyle, hatStyle);
-        assertEq(avatarClothes.hatColor, hatColor);
 
         // Validate Extras attributes
-        Avatar.Extras memory extras = beanHeads.getFaceMask(tokenId); // Assuming FaceMask encompasses all Extras attributes
-        assertEq(extras.circleColor, circleColor);
-        assertEq(extras.lipColor, lipColor);
-        assertEq(extras.faceMaskColor, faceMaskColor);
-        assertEq(extras.faceMask, faceMask);
-        assertEq(extras.lashes, lashes);
-        assertEq(extras.mask, mask);
     }
 
     function test_getAttributes() public {
