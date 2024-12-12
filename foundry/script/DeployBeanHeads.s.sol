@@ -4,7 +4,7 @@ pragma solidity ^0.8.26;
 import {Script, console} from "forge-std/Script.sol";
 import {BeanHeads} from "src/core/BeanHeads.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
-import {Images} from "src/types/Constants.sol";
+// import {Images} from "src/types/Constants.sol";
 
 contract DeployBeanHeads is Script {
     function run() public returns (BeanHeads) {
