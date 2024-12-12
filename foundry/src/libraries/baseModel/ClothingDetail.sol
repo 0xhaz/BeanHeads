@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
-import {SVGBody} from "src/libraries/SVGBody.sol";
+import {SVGBody} from "./SVGBody.sol";
 
 library ClothingDetail {
     error ClothingDetail__InvalidClothingType();
@@ -29,6 +29,7 @@ library ClothingDetail {
         );
     }
 
+    /// @dev SVG content for back dress
     function dressBackSVG() internal pure returns (string memory) {
         return string(
             abi.encodePacked(
@@ -43,20 +44,15 @@ library ClothingDetail {
         );
     }
 
+    /// @dev SVG content for dress
     function dressSVG() internal pure returns (string memory) {
-        return string(
-            abi.encodePacked(
-                '<svg id="dress-container" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">',
-                '<g id="front-dress" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">',
-                dressFrontSVG(),
-                "</g>",
-                '<g id="back-dress" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">',
-                dressBackSVG(),
-                "</g>" "</svg>"
-            )
+        return SVGBody.fullSVG(
+            'id="dress" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+            string(abi.encodePacked(dressFrontSVG(), dressBackSVG()))
         );
     }
 
+    /// @dev SVG content for shirt
     function shirtSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="shirt" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -98,6 +94,7 @@ library ClothingDetail {
         );
     }
 
+    /// @dev SVG content for t-shirt
     function tShirtSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="t-shirt" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -145,6 +142,7 @@ library ClothingDetail {
         );
     }
 
+    /// @dev SVG content for v-neck
     function vNeckSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="v-neck" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',

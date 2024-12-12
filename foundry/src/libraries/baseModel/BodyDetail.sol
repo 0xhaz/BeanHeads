@@ -14,7 +14,7 @@ library BodyDetail {
         string svg;
     }
 
-    /// @dev SVG content
+    /// @dev SVG content for the breast
     function breastSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="breast" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -33,6 +33,7 @@ library BodyDetail {
         );
     }
 
+    /// @dev SVG content for the chest
     function chestSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="chest" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',

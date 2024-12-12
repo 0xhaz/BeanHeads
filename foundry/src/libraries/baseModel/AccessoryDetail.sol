@@ -15,7 +15,7 @@ library AccessoryDetail {
         string svg;
     }
 
-    /// @dev SVG content for accessories
+    /// @dev SVG content for "round glasses" accessories
     function roundGlassesSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="round-glasses" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -39,6 +39,7 @@ library AccessoryDetail {
         );
     }
 
+    /// @dev SVG content for "shades" accessory
     function shadesSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="shades" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -62,6 +63,7 @@ library AccessoryDetail {
         );
     }
 
+    /// @dev SVG content for "tiny glasses" accessory
     function tinyGlassesSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="tiny-glasses" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 990"',

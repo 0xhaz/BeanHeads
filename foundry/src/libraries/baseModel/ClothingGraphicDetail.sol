@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
-import {SVGBody} from "src/libraries/SVGBody.sol";
+import {SVGBody} from "./SVGBody.sol";
 
 library ClothingGraphicDetail {
     error ClothingGraphicDetail__InvalidClothingGraphicType();
@@ -17,7 +17,7 @@ library ClothingGraphicDetail {
         string svg;
     }
 
-    /// @dev SVG content
+    /// @dev SVG content for the Gatsby logo
     function gatsbySVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="gatsby" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -29,6 +29,7 @@ library ClothingGraphicDetail {
         );
     }
 
+    /// @dev SVG content for the GraphQL logo
     function graphqlSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="graphql" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -40,6 +41,7 @@ library ClothingGraphicDetail {
         );
     }
 
+    /// @dev SVG content for the React logo
     function reactSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="react" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -53,6 +55,7 @@ library ClothingGraphicDetail {
         );
     }
 
+    /// @dev SVG content for the Redwood logo
     function redwoodSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="redwood" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -67,6 +70,7 @@ library ClothingGraphicDetail {
         );
     }
 
+    /// @dev SVG content for the Vue logo
     function vueSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="vue" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
