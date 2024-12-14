@@ -17,12 +17,35 @@ library Genesis {
         uint8 accessory;
         uint8 bodyType;
         uint8 clothes;
-        uint8 hatStyle;
-        uint8 eyeShape;
+        uint8 clothesGraphic;
         uint8 eyebrowShape;
-        uint8 mouthStyle;
-        uint8 hairStyle;
+        uint8 eyeShape;
         uint8 facialHairType;
+        uint8 hairStyle;
+        uint8 hatStyle;
+        uint8 mouthStyle;
         bool faceMask;
+        bool shapes;
+        bool lashes;
+        bytes3 skinColor;
+        bytes3 clothingColor;
+        bytes3 hairColor;
+        bytes3 hatColor;
+        bytes3 shapeColor;
+        bytes3 lipColor;
+        bytes3 faceMaskColor;
+    }
+
+    function buildAvatar(SVGParams memory params) internal pure returns (string memory) {
+        string memory svg = string(
+            abi.encodePacked(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">',
+                // AccessoryDetail.getAccessoryById(params.accessory),
+                // BodyDetail.getBodyById(params.bodyType, BodyDetail.BodyColor(uint8(params.skinColor[0]))),
+                "</svg>"
+            )
+        );
+
+        return svg;
     }
 }

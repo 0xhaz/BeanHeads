@@ -4,7 +4,8 @@ pragma solidity ^0.8.26;
 import {SVGBody} from "./SVGBody.sol";
 
 library MouthDetail {
-    error MouthDetail__InvalidMouthType();
+    error MouthDetail__InvalidMouthType(uint8 id);
+    error MouthDetail__InvalidLipsColor(uint8 id);
 
     string constant GRIN = "Grin";
     string constant LIPS = "Lips";
@@ -14,9 +15,63 @@ library MouthDetail {
     string constant SERIOUS_MOUTH = "Serious Mouth";
     string constant TONGUE = "Tongue";
 
+    bytes3 constant LIPS_RED_BASE = 0xdd3e3e;
+    bytes3 constant LIPS_RED_SHADOW = 0xc43333;
+    bytes3 constant LIPS_PURPLE_BASE = 0xb256a1;
+    bytes3 constant LIPS_PURPLE_SHADOW = 0x9c4490;
+    bytes3 constant LIPS_PINK_BASE = 0xd69ac7;
+    bytes3 constant LIPS_PINK_SHADOW = 0xc683b4;
+    bytes3 constant LIPS_TURQUOISE_BASE = 0x5ccbf1;
+    bytes3 constant LIPS_TURQUOISE_SHADOW = 0x49b5cd;
+    bytes3 constant LIPS_GREEN_BASE = 0x4ab749;
+    bytes3 constant LIPS_GREEN_SHADOW = 0x3ca047;
+
     struct Mouth {
         string name;
         string svg;
+    }
+
+    enum LipsColor {
+        LIPS_RED,
+        LIPS_PURPLE,
+        LIPS_PINK,
+        LIPS_TURQUOISE,
+        LIPS_GREEN
+    }
+
+    /// @dev Retrieves the base and shadow color for the lips
+    /// @param id The id of the lips color
+    function getColorsForLips(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
+        if (id == uint8(LipsColor.LIPS_RED)) {
+            return (LIPS_RED_BASE, LIPS_RED_SHADOW);
+        } else if (id == uint8(LipsColor.LIPS_PURPLE)) {
+            return (LIPS_PURPLE_BASE, LIPS_PURPLE_SHADOW);
+        } else if (id == uint8(LipsColor.LIPS_PINK)) {
+            return (LIPS_PINK_BASE, LIPS_PINK_SHADOW);
+        } else if (id == uint8(LipsColor.LIPS_TURQUOISE)) {
+            return (LIPS_TURQUOISE_BASE, LIPS_TURQUOISE_SHADOW);
+        } else if (id == uint8(LipsColor.LIPS_GREEN)) {
+            return (LIPS_GREEN_BASE, LIPS_GREEN_SHADOW);
+        } else {
+            revert MouthDetail__InvalidLipsColor(id);
+        }
+    }
+
+    /// @dev Converts bytes3 to a hex string for SVG
+    function bytesToHex(bytes3 color) internal pure returns (string memory) {
+        bytes memory buffer = new bytes(7);
+        buffer[0] = "#";
+        for (uint256 i = 0; i < 3; i++) {
+            buffer[i * 2 + 1] = _toHexChar(uint8(color[i] >> 4));
+            buffer[i * 2 + 2] = _toHexChar(uint8(color[i] & 0x0f));
+        }
+
+        return string(buffer);
+    }
+
+    /// @dev Helper to convert uint8 to hex char
+    function _toHexChar(uint8 value) private pure returns (bytes1) {
+        return bytes1(value < 10 ? value + 48 : value + 87);
     }
 
     /// @dev Returns the SVG for a grin mouth
@@ -34,15 +89,27 @@ library MouthDetail {
     }
 
     /// @dev Returns the SVG for a lips mouth
-    function lipsMouthSVG() internal pure returns (string memory) {
+    function lipsMouthSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorsForLips(id);
+
         return SVGBody.fullSVG(
             'id="lips-mouth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
                 abi.encodePacked(
                     '<path d="M468.41,635.27a255.08,255.08,0,0,0,55.61,0q-.42-.27-.84-.6c-.71-.54-1.46-1.18-2.38-2l-2.42-2.26c-3.8-3.52-6.34-5.22-9.26-5.73-3.75-.65-7.69,1-12.18,5.81a1,1,0,0,1-1.45,0c-4.49-4.77-8.43-6.46-12.18-5.81-2.92.51-5.46,2.21-9.27,5.73l-2.42,2.26c-.91.84-1.66,1.48-2.37,2Q468.81,635,468.41,635.27Z" style="fill:#010101"/>',
                     '<path d="M560.41,648.36l-.56-2.28C487.07,662.7,440,647.21,440,647.21l-1.83-.32a1.84,1.84,0,0,0,.49,1.78c18.05,18.05,34,30.45,61.79,30.45C529.93,679.12,542.43,666.22,560.41,648.36Z" style="fill:#f3ab98"/>',
-                    '<path d="M558.55,642.44c-3.63,0-5.35-1.31-15.58-10.79-7.49-6.93-12.63-10.36-18.91-11.46-7.83-1.37-15.83-.88-24.36,7.68-8.53-8.56-16.52-9-24.36-7.68-6.28,1.1-11.42,4.53-18.91,11.46-10.23,9.48-11.95,10.79-15.58,10.79a1.84,1.84,0,0,0-1.3,3.14q26.25,26.25,60.15,26.28t60.15-26.28A1.84,1.84,0,0,0,558.55,642.44Z" style="fill:#dd3e3e"/>',
-                    '<path d="M559.57,645.84l-.55-2.21c-70.56,16.12-118.17.53-118.17.53l-1.77-.31a1.82,1.82,0,0,0,.47,1.73q26.25,26.25,60.15,26.28Q533.38,671.86,559.57,645.84Z" style="fill:#c43333"/>',
+                    '<path d="M558.55,642.44c-3.63,0-5.35-1.31-15.58-10.79-7.49-6.93-12.63-10.36-18.91-11.46-7.83-1.37-15.83-.88-24.36,7.68-8.53-8.56-16.52-9-24.36-7.68-6.28,1.1-11.42,4.53-18.91,11.46-10.23,9.48-11.95,10.79-15.58,10.79a1.84,1.84,0,0,0-1.3,3.14q26.25,26.25,60.15,26.28t60.15-26.28A1.84,1.84,0,0,0,558.55,642.44Z" style="fill:',
+                    /// Base color
+                    /// #dd3e3e
+                    bytesToHex(baseColor),
+                    '"',
+                    "/>",
+                    '<path d="M559.57,645.84l-.55-2.21c-70.56,16.12-118.17.53-118.17.53l-1.77-.31a1.82,1.82,0,0,0,.47,1.73q26.25,26.25,60.15,26.28Q533.38,671.86,559.57,645.84Z" style="fill:',
+                    /// Shadow color
+                    /// #c43333
+                    bytesToHex(shadowColor),
+                    '"',
+                    "/>",
                     '<path d="M479.28,650.39c13.45-.94,26.69-1.44,39.89-3,6.59-.76,13.15-1.74,19.67-2.86s13-2.41,19.51-3.8l1.34,5.85q-9.87,2.34-19.92,3.81t-20.16,2.06c-6.75.37-13.5.54-20.25.27A127.84,127.84,0,0,1,479.28,650.39Z" style="fill:#592d3d"/>',
                     '<path d="M441.79,641.31c1.69.43,3.57,1,5.38,1.48s3.65,1.08,5.49,1.63,3.68,1.1,5.52,1.77a27.06,27.06,0,0,1,5.46,2.64,22.06,22.06,0,0,1-6.05.9c-2,0-3.95-.16-5.93-.32s-3.93-.47-5.88-.85a38.82,38.82,0,0,1-5.86-1.55Z" style="fill:#592d3d"/>',
                     '<path d="M558.55,642.44c-3.63,0-5.35-1.31-15.58-10.79-7.49-6.93-12.53-11.29-18.91-11.46-11.21-.3-19.15,6.12-24.76,6.12s-10.45-7.53-24-6.12c-6.34.66-11.42,4.53-18.91,11.46-10.23,9.48-11.95,10.79-15.58,10.79a1.84,1.84,0,0,0-1.3,3.14q26.25,26.25,60.15,26.28t60.15-26.28A1.84,1.84,0,0,0,558.55,642.44Z" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:8px"/>',
@@ -123,11 +190,11 @@ library MouthDetail {
     }
 
     /// @dev Returns the SVG for a mouth based on the given mouth type
-    function getMouthById(uint8 id) internal pure returns (Mouth memory) {
+    function getMouthById(uint8 id, uint8 color) internal pure returns (Mouth memory) {
         if (id == 1) {
             return Mouth(GRIN, grinMouthSVG());
         } else if (id == 2) {
-            return Mouth(LIPS, lipsMouthSVG());
+            return Mouth(LIPS, lipsMouthSVG(color));
         } else if (id == 3) {
             return Mouth(OPEN_MOUTH, openMouthSVG());
         } else if (id == 4) {
@@ -139,7 +206,7 @@ library MouthDetail {
         } else if (id == 7) {
             return Mouth(TONGUE, toungeMouthSVG());
         } else {
-            revert MouthDetail__InvalidMouthType();
+            revert MouthDetail__InvalidMouthType(id);
         }
     }
 }

@@ -2,16 +2,17 @@
 pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
-import {AccessoryDetail} from "src/libraries/AccessoryDetail.sol";
-import {BodyDetail} from "src/libraries/BodyDetail.sol";
-import {ClothingDetail} from "src/libraries/ClothingDetail.sol";
-import {ClothingGraphicDetail} from "src/libraries/ClothingGraphicDetail.sol";
-import {EyebrowDetail} from "src/libraries/EyebrowDetail.sol";
-import {EyesDetail} from "src/libraries/EyesDetail.sol";
-import {FacialHairDetail} from "src/libraries/FacialHairDetail.sol";
-import {HairDetail} from "src/libraries/HairDetail.sol";
-import {HatsDetail} from "src/libraries/HatsDetail.sol";
-import {MouthDetail} from "src/libraries/MouthDetail.sol";
+import {AccessoryDetail} from "src/libraries/baseModel/AccessoryDetail.sol";
+import {BodyDetail} from "src/libraries/baseModel/BodyDetail.sol";
+import {ClothingDetail} from "src/libraries/baseModel/ClothingDetail.sol";
+import {ClothingGraphicDetail} from "src/libraries/baseModel/ClothingGraphicDetail.sol";
+import {EyebrowDetail} from "src/libraries/baseModel/EyebrowDetail.sol";
+import {EyesDetail} from "src/libraries/baseModel/EyesDetail.sol";
+import {FacialHairDetail} from "src/libraries/baseModel/FacialHairDetail.sol";
+import {HairDetail} from "src/libraries/baseModel/HairDetail.sol";
+import {HatsDetail} from "src/libraries/baseModel/HatsDetail.sol";
+import {MouthDetail} from "src/libraries/baseModel/MouthDetail.sol";
+import {OptItems} from "src/libraries/baseModel/OptItems.sol";
 
 contract SVGTest is Test {
     function testSVGOutput() public {
@@ -26,18 +27,58 @@ contract SVGTest is Test {
         string memory roundGlassesSVG = AccessoryDetail.roundGlassesSVG();
         vm.writeFile("./output/round_glasses.svg", roundGlassesSVG);
 
+        string memory shadesSVG = AccessoryDetail.shadesSVG();
+        vm.writeFile("./output/shades.svg", shadesSVG);
+
         /*//////////////////////////////////////////////////////////////
                              BODY TEST
         //////////////////////////////////////////////////////////////*/
 
-        string memory shadesSVG = AccessoryDetail.shadesSVG();
-        vm.writeFile("./output/shades.svg", shadesSVG);
-
-        string memory breastSVG = BodyDetail.breastSVG();
+        string memory breastSVG = BodyDetail.breastSVG(0);
+        // console.log(breastSVG);
         vm.writeFile("./output/breast.svg", breastSVG);
 
-        string memory chestSVG = BodyDetail.chestSVG();
+        BodyDetail.Body memory breastWhite = BodyDetail.getBodyById(1, 0);
+        vm.writeFile("./output/breast_white.svg", breastWhite.svg);
+
+        BodyDetail.Body memory breastBlue = BodyDetail.getBodyById(1, 1);
+        vm.writeFile("./output/breast_blue.svg", breastBlue.svg);
+
+        BodyDetail.Body memory breastBlack = BodyDetail.getBodyById(1, 2);
+        vm.writeFile("./output/breast_black.svg", breastBlack.svg);
+
+        BodyDetail.Body memory breastGreen = BodyDetail.getBodyById(1, 3);
+        vm.writeFile("./output/breast_green.svg", breastGreen.svg);
+
+        BodyDetail.Body memory breastRed = BodyDetail.getBodyById(1, 4);
+        vm.writeFile("./output/breast_red.svg", breastRed.svg);
+
+        string memory chestSVG = BodyDetail.chestSVG(0);
+        // console.log(chestSVG);
         vm.writeFile("./output/chest.svg", chestSVG);
+
+        // Test by Id
+        BodyDetail.Body memory bodyLightSkin = BodyDetail.getBodyById(2, 0);
+        vm.writeFile("./output/body_test_light.svg", bodyLightSkin.svg);
+
+        BodyDetail.Body memory bodyYellowSkin = BodyDetail.getBodyById(2, 1);
+        vm.writeFile("./output/body_test_yellow.svg", bodyYellowSkin.svg);
+
+        BodyDetail.Body memory bodyBrownSkin = BodyDetail.getBodyById(2, 2);
+        vm.writeFile("./output/body_test_brown.svg", bodyBrownSkin.svg);
+
+        BodyDetail.Body memory bodyDarkSkin = BodyDetail.getBodyById(2, 3);
+        vm.writeFile("./output/body_test_dark.svg", bodyDarkSkin.svg);
+
+        BodyDetail.Body memory bodyRedSkin = BodyDetail.getBodyById(2, 4);
+        vm.writeFile("./output/body_test_red.svg", bodyRedSkin.svg);
+
+        BodyDetail.Body memory bodyBlackSkin = BodyDetail.getBodyById(2, 5);
+        vm.writeFile("./output/body_test_black.svg", bodyBlackSkin.svg);
+
+        /*//////////////////////////////////////////////////////////////
+                             CLOTHING TEST
+        //////////////////////////////////////////////////////////////*/
 
         string memory dressSVG = ClothingDetail.dressSVG();
         // console.log(dressSVG);
@@ -177,7 +218,7 @@ contract SVGTest is Test {
         string memory grinMouthSVG = MouthDetail.grinMouthSVG();
         vm.writeFile("./output/grin_mouth.svg", grinMouthSVG);
 
-        string memory lipsMouthSVG = MouthDetail.lipsMouthSVG();
+        string memory lipsMouthSVG = MouthDetail.lipsMouthSVG(0);
         vm.writeFile("./output/lips_mouth.svg", lipsMouthSVG);
 
         string memory openMouthSVG = MouthDetail.openMouthSVG();
@@ -194,5 +235,36 @@ contract SVGTest is Test {
 
         string memory toungeMouthSVG = MouthDetail.toungeMouthSVG();
         vm.writeFile("./output/tounge_mouth.svg", toungeMouthSVG);
+
+        /// test by using function
+        MouthDetail.Mouth memory lipsRed = MouthDetail.getMouthById(2, 0);
+        vm.writeFile("./output/lipsRed_test.svg", lipsRed.svg);
+
+        MouthDetail.Mouth memory purpleLips = MouthDetail.getMouthById(2, 1);
+        vm.writeFile("./output/lipsPurple_test.svg", purpleLips.svg);
+
+        MouthDetail.Mouth memory pinkLips = MouthDetail.getMouthById(2, 2);
+        vm.writeFile("./output/lipsPink_test.svg", pinkLips.svg);
+
+        MouthDetail.Mouth memory turquoiseLips = MouthDetail.getMouthById(2, 3);
+        vm.writeFile("./output/lipsTurquoise_test.svg", turquoiseLips.svg);
+
+        MouthDetail.Mouth memory greenLips = MouthDetail.getMouthById(2, 4);
+        vm.writeFile("./output/lipsGreen_test.svg", greenLips.svg);
+
+        /*//////////////////////////////////////////////////////////////
+                             OPTIONAL ITEMS TEST
+        //////////////////////////////////////////////////////////////*/
+        string memory faceMaskSVG = OptItems.faceMaskSVG();
+        vm.writeFile("./output/face_mask.svg", faceMaskSVG);
+
+        string memory maskSVG = OptItems.maskSVG();
+        vm.writeFile("./output/mask.svg", maskSVG);
+
+        string memory lashesSVG = OptItems.lashesSVG();
+        vm.writeFile("./output/lashes.svg", lashesSVG);
+
+        string memory shapeSVG = OptItems.shapeSVG();
+        vm.writeFile("./output/shape.svg", shapeSVG);
     }
 }

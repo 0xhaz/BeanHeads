@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
-import {SVGBody} from "src/libraries/SVGBody.sol";
+import {SVGBody} from "./SVGBody.sol";
 
 library HairDetail {
     error HairDetail__InvalidHairType();

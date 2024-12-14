@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
-import {SVGBody} from "src/libraries/SVGBody.sol";
+import {SVGBody} from "./SVGBody.sol";
 
 library HatsDetail {
     error HatsDetail__InvalidHatType();
@@ -81,16 +81,10 @@ library HatsDetail {
 
     /// @dev Returns the SVG content for a hat
     function getHatsById(uint8 id) internal pure returns (Hats memory) {
-        if(id == 1) {
-            return Hats({
-                name: BEANIE,
-                svg: beanieHatSVG()
-            });
-        } else if (id == 2){
-            return Hats({
-                name: TURBAN,
-                svg: turbanHatSVG()
-            });
+        if (id == 1) {
+            return Hats({name: BEANIE, svg: beanieHatSVG()});
+        } else if (id == 2) {
+            return Hats({name: TURBAN, svg: turbanHatSVG()});
         } else {
             revert HatsDetail__InvalidHatType();
         }
