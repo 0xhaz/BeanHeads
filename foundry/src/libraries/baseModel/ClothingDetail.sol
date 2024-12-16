@@ -2,27 +2,16 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
+import {Colors, Errors} from "src/types/Constants.sol";
 
 library ClothingDetail {
-    error ClothingDetail__InvalidClothingType(uint8 id);
-    error ClothingDetail__InvalidClothingColor(uint8 id);
+    using Colors for bytes3;
 
     string constant DRESS = "Dress";
     string constant SHIRT = "Shirt";
     string constant TSHIRT = "T-Shirt";
     string constant TANK_TOP = "Tank Top";
     string constant V_NECK = "V-Neck";
-
-    bytes3 constant CLOTHING_WHITE_BASE = 0xFFFFFF;
-    bytes3 constant CLOTHING_WHITE_SHADOW = 0xE2E2E2;
-    bytes3 constant CLOTHING_BLUE_BASE = 0x85c5e5;
-    bytes3 constant CLOTHING_BLUE_SHADOW = 0x67B7D6;
-    bytes3 constant CLOTHING_BLACK_BASE = 0x633749;
-    bytes3 constant CLOTHING_BLACK_SHADOW = 0x5E3244;
-    bytes3 constant CLOTHING_GREEN_BASE = 0x89D86F;
-    bytes3 constant CLOTHING_GREEN_SHADOW = 0x7DC462;
-    bytes3 constant CLOTHING_RED_BASE = 0xD67070;
-    bytes3 constant CLOTHING_RED_SHADOW = 0xC46565;
 
     struct Clothing {
         string name;
@@ -41,17 +30,17 @@ library ClothingDetail {
     /// @param id The id of the clothing color
     function getColorForClothes(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
         if (id == uint8(ClothColor.White)) {
-            return (CLOTHING_WHITE_BASE, CLOTHING_WHITE_SHADOW);
+            return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
         } else if (id == uint8(ClothColor.Blue)) {
-            return (CLOTHING_BLUE_BASE, CLOTHING_BLUE_SHADOW);
+            return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
         } else if (id == uint8(ClothColor.Black)) {
-            return (CLOTHING_BLACK_BASE, CLOTHING_BLACK_SHADOW);
+            return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
         } else if (id == uint8(ClothColor.Green)) {
-            return (CLOTHING_GREEN_BASE, CLOTHING_GREEN_SHADOW);
+            return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
         } else if (id == uint8(ClothColor.Red)) {
-            return (CLOTHING_RED_BASE, CLOTHING_RED_SHADOW);
+            return (Colors.RED_BASE, Colors.RED_SHADOW);
         } else {
-            revert ClothingDetail__InvalidClothingColor(id);
+            revert Errors.InvalidColor(id);
         }
     }
 
@@ -74,7 +63,7 @@ library ClothingDetail {
 
     /// @dev SVG content for front dress
     function dressFrontSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(id);
+        (bytes3 baseColor,) = getColorForClothes(id);
 
         return string(
             abi.encodePacked(
@@ -325,7 +314,7 @@ library ClothingDetail {
         } else if (id == 5) {
             return Clothing({name: V_NECK, svg: vNeckSVG(color)});
         } else {
-            revert ClothingDetail__InvalidClothingType(id);
+            revert Errors.InvalidType(id);
         }
     }
 }

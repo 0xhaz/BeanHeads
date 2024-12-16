@@ -2,10 +2,10 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
+import {Colors, Errors} from "src/types/Constants.sol";
 
 library HairDetail {
-    error HairDetail__InvalidHairType(uint8 id);
-    error HairDetail__InvalidHairColor(uint8 id);
+    using Colors for bytes3;
 
     string constant AFRO_BACK = "Afro Back";
     string constant AFRO_FRONT = "Afro Front";
@@ -20,22 +20,6 @@ library HairDetail {
     string constant LONG_HAIR = "Long Hair";
     string constant PIXIE_CUT = "Pixie Cut";
     string constant SHORT_HAIR = "Short Hair";
-
-    bytes3 constant DEFAULT_STROKE = 0x592d3d;
-    bytes3 constant HAIR_BLONDE_BASE = 0xFEDC58;
-    bytes3 constant HAIR_BLONDE_SHADOW = 0xEDBF2E;
-    bytes3 constant HAIR_ORANGE_BASE = 0xD96E27;
-    bytes3 constant HAIR_ORANGE_SHADOW = 0xC65C22;
-    bytes3 constant HAIR_BLACK_BASE = 0x592d3d;
-    bytes3 constant HAIR_BLACK_SHADOW = 0x592d3d;
-    bytes3 constant HAIR_WHITE_BASE = 0xffffff;
-    bytes3 constant HAIR_WHITE_SHADOW = 0xE2E2E2;
-    bytes3 constant HAIR_BROWN_BASE = 0xA56941;
-    bytes3 constant HAIR_BROWN_SHADOW = 0x8D5638;
-    bytes3 constant HAIR_BLUE_BASE = 0x85c5e5;
-    bytes3 constant HAIR_BLUE_SHADOW = 0x67B7D6;
-    bytes3 constant HAIR_PINK_BASE = 0xD69AC7;
-    bytes3 constant HAIR_PINK_SHADOW = 0xC683B4;
 
     struct Hair {
         string name;
@@ -56,21 +40,21 @@ library HairDetail {
     /// @param id The hair color ID
     function getColorsForHair(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
         if (id == uint8(HairColor.BLONDE)) {
-            return (HAIR_BLONDE_BASE, HAIR_BLONDE_SHADOW);
+            return (Colors.HAIR_BLONDE_BASE, Colors.HAIR_BLONDE_SHADOW);
         } else if (id == uint8(HairColor.ORANGE)) {
-            return (HAIR_ORANGE_BASE, HAIR_ORANGE_SHADOW);
+            return (Colors.HAIR_ORANGE_BASE, Colors.HAIR_ORANGE_SHADOW);
         } else if (id == uint8(HairColor.BLACK)) {
-            return (HAIR_BLACK_BASE, HAIR_BLACK_SHADOW);
+            return (Colors.HAIR_BLACK_BASE, Colors.HAIR_BLACK_SHADOW);
         } else if (id == uint8(HairColor.WHITE)) {
-            return (HAIR_WHITE_BASE, HAIR_WHITE_SHADOW);
+            return (Colors.HAIR_WHITE_BASE, Colors.HAIR_WHITE_SHADOW);
         } else if (id == uint8(HairColor.BROWN)) {
-            return (HAIR_BROWN_BASE, HAIR_BROWN_SHADOW);
+            return (Colors.HAIR_BROWN_BASE, Colors.HAIR_BROWN_SHADOW);
         } else if (id == uint8(HairColor.BLUE)) {
-            return (HAIR_BLUE_BASE, HAIR_BLUE_SHADOW);
+            return (Colors.HAIR_BLUE_BASE, Colors.HAIR_BLUE_SHADOW);
         } else if (id == uint8(HairColor.PINK)) {
-            return (HAIR_PINK_BASE, HAIR_PINK_SHADOW);
+            return (Colors.HAIR_PINK_BASE, Colors.HAIR_PINK_SHADOW);
         } else {
-            revert HairDetail__InvalidHairColor(id);
+            revert Errors.InvalidColor(id);
         }
     }
 
@@ -309,13 +293,13 @@ library HairDetail {
                     bytesToHex(baseColor),
                     " />",
                     '<path d="M502.16,233.15a361.93,361.93,0,0,0-51.86,7.33l-12.68,3.05c-4.2,1.13-8.36,2.37-12.54,3.55l-12.39,4c-4.09,1.46-8.13,3-12.2,4.54a339.08,339.08,0,0,0-46.87,22.71,388.52,388.52,0,0,0-43.25,29.58,233,233,0,0,1,40.79-33.56,258.22,258.22,0,0,1,47.14-24.31c4.17-1.5,8.32-3.06,12.5-4.51,4.24-1.29,8.44-2.7,12.7-3.9s8.58-2.19,12.89-3.21,8.68-1.76,13-2.53A224.82,224.82,0,0,1,502.16,233.15Z" fill=',
-                    bytesToHex(DEFAULT_STROKE),
+                    bytesToHex(Colors.DEFAULT_STROKE),
                     " />",
                     '<path d="M537.23,398.81C526.9,418.12,489.07,428.88,486,424c-3.45-5.4,30.38-44.42,11.16-85.22" fill=',
                     bytesToHex(baseColor),
                     " />",
                     '<path d="M240.15,454.33s185.57,8.28,259.86-72c-5,19.52-15.75,34.09-13.79,37.16,2.89,4.53,38-5.42,48.16-23.35,45.56,19,131.48,41.33,206.15-16.09" fill="none" stroke=',
-                    bytesToHex(DEFAULT_STROKE),
+                    bytesToHex(Colors.DEFAULT_STROKE),
                     ' strokeMiterlimit={10} strokeWidth="12px" />'
                 )
             )
@@ -333,7 +317,7 @@ library HairDetail {
                     '<path d="M501.71,209.52c-166.14,0-300.83,134.68-300.83,300.83V816.78c0,166.14,134.69,300.83,300.83,300.83S802.54,982.92,802.54,816.78V510.35C802.54,344.2,667.85,209.52,501.71,209.52Z" fill=',
                     bytesToHex(baseColor),
                     " stroke=",
-                    bytesToHex(DEFAULT_STROKE),
+                    bytesToHex(Colors.DEFAULT_STROKE),
                     ' strokeMiterlimit={10} strokeWidth="12px" />'
                 )
             )
@@ -416,7 +400,7 @@ library HairDetail {
         } else if (id == 7) {
             return Hair({name: SHORT_HAIR, svg: shortHairSVG(color)});
         } else {
-            revert HairDetail__InvalidHairType(id);
+            revert Errors.InvalidType(id);
         }
     }
 }

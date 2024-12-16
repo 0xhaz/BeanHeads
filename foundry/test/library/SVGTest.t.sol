@@ -430,11 +430,42 @@ contract SVGTest is Test {
                              HAT TEST
         //////////////////////////////////////////////////////////////*/
 
-        string memory beanieSVG = HatsDetail.beanieHatSVG();
+        string memory beanieSVG = HatsDetail.beanieHatSVG(0);
         vm.writeFile("./output/beanie_hat.svg", beanieSVG);
 
-        string memory turbanHatSVG = HatsDetail.turbanHatSVG();
+        string memory turbanHatSVG = HatsDetail.turbanHatSVG(0);
         vm.writeFile("./output/turban_hat.svg", turbanHatSVG);
+
+        /// test by using function
+        HatsDetail.Hats memory beanieWhite = HatsDetail.getHatsById(1, 0);
+        vm.writeFile("./output/beanie_white.svg", beanieWhite.svg);
+
+        HatsDetail.Hats memory beanieBlue = HatsDetail.getHatsById(1, 1);
+        vm.writeFile("./output/beanie_blue.svg", beanieBlue.svg);
+
+        HatsDetail.Hats memory beanieBlack = HatsDetail.getHatsById(1, 2);
+        vm.writeFile("./output/beanie_black.svg", beanieBlack.svg);
+
+        HatsDetail.Hats memory beanieGreen = HatsDetail.getHatsById(1, 3);
+        vm.writeFile("./output/beanie_green.svg", beanieGreen.svg);
+
+        HatsDetail.Hats memory beanieRed = HatsDetail.getHatsById(1, 4);
+        vm.writeFile("./output/beanie_red.svg", beanieRed.svg);
+
+        HatsDetail.Hats memory turbanWhite = HatsDetail.getHatsById(2, 0);
+        vm.writeFile("./output/turban_white.svg", turbanWhite.svg);
+
+        HatsDetail.Hats memory turbanBlue = HatsDetail.getHatsById(2, 1);
+        vm.writeFile("./output/turban_blue.svg", turbanBlue.svg);
+
+        HatsDetail.Hats memory turbanBlack = HatsDetail.getHatsById(2, 2);
+        vm.writeFile("./output/turban_black.svg", turbanBlack.svg);
+
+        HatsDetail.Hats memory turbanGreen = HatsDetail.getHatsById(2, 3);
+        vm.writeFile("./output/turban_green.svg", turbanGreen.svg);
+
+        HatsDetail.Hats memory turbanRed = HatsDetail.getHatsById(2, 4);
+        vm.writeFile("./output/turban_red.svg", turbanRed.svg);
 
         /*//////////////////////////////////////////////////////////////
                              MOUTH TEST
@@ -479,7 +510,7 @@ contract SVGTest is Test {
         /*//////////////////////////////////////////////////////////////
                              OPTIONAL ITEMS TEST
         //////////////////////////////////////////////////////////////*/
-        string memory faceMaskSVG = OptItems.faceMaskSVG();
+        string memory faceMaskSVG = OptItems.faceMaskSVG(0);
         vm.writeFile("./output/face_mask.svg", faceMaskSVG);
 
         string memory maskSVG = OptItems.maskSVG();
@@ -490,5 +521,23 @@ contract SVGTest is Test {
 
         string memory shapeSVG = OptItems.shapeSVG();
         vm.writeFile("./output/shape.svg", shapeSVG);
+
+        /*//////////////////////////////////////////////////////////////
+                             COLOR TEST
+        //////////////////////////////////////////////////////////////*/
+        string memory faceMaskWhite = OptItems.faceMaskSVG(0);
+        vm.writeFile("./output/face_mask_white.svg", faceMaskWhite);
+
+        string memory faceMaskBlue = OptItems.faceMaskSVG(1);
+        vm.writeFile("./output/face_mask_blue.svg", faceMaskBlue);
+
+        string memory faceMaskBlack = OptItems.faceMaskSVG(2);
+        vm.writeFile("./output/face_mask_black.svg", faceMaskBlack);
+
+        string memory faceMaskGreen = OptItems.faceMaskSVG(3);
+        vm.writeFile("./output/face_mask_green.svg", faceMaskGreen);
+
+        string memory faceMaskRed = OptItems.faceMaskSVG(4);
+        vm.writeFile("./output/face_mask_red.svg", faceMaskRed);
     }
 }
