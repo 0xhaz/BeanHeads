@@ -6,14 +6,6 @@ import {SVGBody} from "./SVGBody.sol";
 library FacialHairDetail {
     error FacialHairDetail__InvalidFacialHairType();
 
-    string constant MEDIUM_BEARD = "Medium Beard";
-    string constant STUBBLE = "Stubble";
-
-    struct FacialHair {
-        string name;
-        string svg;
-    }
-
     /// @dev SVG content for a medium beard
     function mediumBeardSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -63,11 +55,13 @@ library FacialHairDetail {
     }
 
     /// @dev Returns the SVG content for a facial hair detail
-    function getFacialHairDetailById(uint8 id) internal pure returns (FacialHair memory) {
-        if (id == 1) {
-            return FacialHair({name: MEDIUM_BEARD, svg: mediumBeardSVG()});
+    function getFacialHairById(uint8 id) internal pure returns (string memory) {
+        if (id == 0) {
+            return "";
+        } else if (id == 1) {
+            return mediumBeardSVG();
         } else if (id == 2) {
-            return FacialHair({name: STUBBLE, svg: stubbleSVG()});
+            return stubbleSVG();
         } else {
             revert FacialHairDetail__InvalidFacialHairType();
         }

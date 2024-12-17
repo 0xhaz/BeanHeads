@@ -6,15 +6,6 @@ import {SVGBody} from "./SVGBody.sol";
 library AccessoryDetail {
     error AccessoryDetail__InvalidAccessory();
 
-    string constant ROUND_GLASSES = "Round Glasses";
-    string constant SHADES = "Shades";
-    string constant TINY_GLASSES = "Tiny Glasses";
-
-    struct Accessory {
-        string name;
-        string svg;
-    }
-
     /// @dev SVG content for "round glasses" accessories
     function roundGlassesSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -87,13 +78,15 @@ library AccessoryDetail {
     }
 
     /// @dev Returns the SVG and name for a specific accessory ID
-    function getAccessoryById(uint8 id) public pure returns (Accessory memory) {
-        if (id == 1) {
-            return Accessory({name: ROUND_GLASSES, svg: roundGlassesSVG()});
+    function getAccessoryById(uint8 id) public pure returns (string memory) {
+        if (id == 0) {
+            return "";
+        } else if (id == 1) {
+            return roundGlassesSVG();
         } else if (id == 2) {
-            return Accessory({name: SHADES, svg: shadesSVG()});
+            return shadesSVG();
         } else if (id == 3) {
-            return Accessory({name: TINY_GLASSES, svg: tinyGlassesSVG()});
+            return tinyGlassesSVG();
         } else {
             revert AccessoryDetail__InvalidAccessory();
         }

@@ -6,7 +6,6 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
-// import {Avatar} from "src/types/Avatar.sol";
 
 /**
  * @title BeanHeads
@@ -17,14 +16,8 @@ import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
     using Base64 for bytes;
     using Strings for uint256;
-    // using Avatar for *;
 
     error BeanHeads__TokenDoesNotExist();
-
-    // mapping(uint256 => Avatar.Core) private _core;
-    // mapping(uint256 => Avatar.Appearance) private _appearance;
-    // mapping(uint256 => Avatar.Clothing) private _clothes;
-    // mapping(uint256 => Avatar.Extras) private _extras;
 
     uint256 private tokenIdCounter;
 
@@ -32,197 +25,7 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
 
     constructor() ERC721("BeanHeads", "BEAN") Ownable(msg.sender) {}
 
-    // function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    //     if (_ownerOf(tokenId) == address(0)) revert BeanHeads__TokenDoesNotExist();
-
-    //     Avatar.Core memory body = Avatar.Core({
-    //         accessory: _core[tokenId].accessory,
-    //         bodyType: _core[tokenId].bodyType,
-    //         skinColor: _core[tokenId].skinColor
-    //     });
-    //     Avatar.Appearance memory appearance = Avatar.Appearance({
-    //         eyebrowShape: _appearance[tokenId].eyebrowShape,
-    //         eyeShape: _appearance[tokenId].eyeShape,
-    //         mouthStyle: _appearance[tokenId].mouthStyle,
-    //         facialHairType: _appearance[tokenId].facialHairType,
-    //         hairStyle: _appearance[tokenId].hairStyle,
-    //         hairColor: _appearance[tokenId].hairColor
-    //     });
-    //     Avatar.Clothing memory clothes = Avatar.Clothing({
-    //         clothes: _clothes[tokenId].clothes,
-    //         clothesGraphic: _clothes[tokenId].clothesGraphic,
-    //         clothingColor: _clothes[tokenId].clothingColor,
-    //         hatStyle: _clothes[tokenId].hatStyle,
-    //         hatColor: _clothes[tokenId].hatColor
-    //     });
-    //     Avatar.Extras memory extras = Avatar.Extras({
-    //         circleColor: _extras[tokenId].circleColor,
-    //         lipColor: _extras[tokenId].lipColor,
-    //         faceMaskColor: _extras[tokenId].faceMaskColor,
-    //         faceMask: _extras[tokenId].faceMask,
-    //         lashes: _extras[tokenId].lashes,
-    //         mask: _extras[tokenId].mask
-    //     });
-
-    //     string memory attributes = _buildAttributesJSON(body, appearance, clothes, extras);
-
-    //     return string(
-    //         abi.encodePacked(
-    //             _baseURI(),
-    //             Base64.encode(
-    //                 bytes(
-    //                     abi.encodePacked(
-    //                         '{"name": "BeanHead #',
-    //                         Strings.toString(tokenId),
-    //                         '", "description": "BeanHeads is a customizable avatar on-chain NFT collection", "attributes": [',
-    //                         attributes,
-    //                         "]}"
-    //                     )
-    //                 )
-    //             )
-    //         )
-    //     );
-    // }
-
     function mintNFT() public returns (uint256) {}
-
-    // function buildAvatar(
-    //     Avatar.Core calldata coreParams,
-    //     Avatar.Appearance calldata appearanceParams,
-    //     Avatar.Clothing calldata clothParams,
-    //     Avatar.Extras calldata extraParams
-    // ) public returns (uint256) {
-    //     uint256 tokenId = tokenIdCounter;
-    //     tokenIdCounter++;
-
-    //     Avatar.Core memory body = Avatar.Core({
-    //         accessory: _core[tokenId].accessory,
-    //         bodyType: _core[tokenId].bodyType,
-    //         skinColor: _core[tokenId].skinColor
-    //     });
-    //     Avatar.Appearance memory appearance = Avatar.Appearance({
-    //         eyebrowShape: _appearance[tokenId].eyebrowShape,
-    //         eyeShape: _appearance[tokenId].eyeShape,
-    //         mouthStyle: _appearance[tokenId].mouthStyle,
-    //         facialHairType: _appearance[tokenId].facialHairType,
-    //         hairStyle: _appearance[tokenId].hairStyle,
-    //         hairColor: _appearance[tokenId].hairColor
-    //     });
-    //     Avatar.Clothing memory clothes = Avatar.Clothing({
-    //         clothes: _clothes[tokenId].clothes,
-    //         clothesGraphic: _clothes[tokenId].clothesGraphic,
-    //         clothingColor: _clothes[tokenId].clothingColor,
-    //         hatStyle: _clothes[tokenId].hatStyle,
-    //         hatColor: _clothes[tokenId].hatColor
-    //     });
-    //     Avatar.Extras memory extras = Avatar.Extras({
-    //         circleColor: _extras[tokenId].circleColor,
-    //         lipColor: _extras[tokenId].lipColor,
-    //         faceMaskColor: _extras[tokenId].faceMaskColor,
-    //         faceMask: _extras[tokenId].faceMask,
-    //         lashes: _extras[tokenId].lashes,
-    //         mask: _extras[tokenId].mask
-    //     });
-
-    //     _core[tokenId] = body;
-    //     _appearance[tokenId] = appearance;
-    //     _clothes[tokenId] = clothes;
-    //     _extras[tokenId] = extras;
-
-    //     _safeMint(msg.sender, tokenId);
-
-    //     emit MintedGenesis(msg.sender, tokenId);
-
-    //     return tokenId;
-    // }
-
-    // function formatAttributes(
-    //     Avatar.Core calldata coreParams,
-    //     Avatar.Appearance calldata appearanceParams,
-    //     Avatar.Clothing calldata clothParams,
-    //     Avatar.Extras calldata extraParams
-    // ) public pure returns (string memory) {
-    //     return string(
-    //         abi.encodePacked(
-    //             '{"accessory": "',
-    //             Strings.toString(coreParams.accessory),
-    //             '", "bodyType": "',
-    //             Strings.toString(coreParams.bodyType),
-    //             '", "skinColor": "',
-    //             Avatar.colorToHex(coreParams.skinColor),
-    //             '", "clothes": "',
-    //             Strings.toString(clothParams.clothes),
-    //             '", "clothesColor": "',
-    //             Avatar.colorToHex(clothParams.clothingColor),
-    //             '", "clothesGraphic": "',
-    //             Strings.toString(clothParams.clothesGraphic),
-    //             '", "eyebrowShape": "',
-    //             Strings.toString(appearanceParams.eyebrowShape),
-    //             '", "eyeShape": "',
-    //             Strings.toString(appearanceParams.eyeShape),
-    //             '", "facialHairType": "',
-    //             Strings.toString(appearanceParams.facialHairType),
-    //             '", "hairStyle": "',
-    //             Strings.toString(appearanceParams.hairStyle),
-    //             '", "hairColor": "',
-    //             Avatar.colorToHex(appearanceParams.hairColor),
-    //             '", "hatStyle": "',
-    //             Strings.toString(clothParams.hatStyle),
-    //             '", "hatColor": "',
-    //             Avatar.colorToHex(clothParams.hatColor),
-    //             '", "mouthStyle": "',
-    //             Strings.toString(appearanceParams.mouthStyle),
-    //             '", "lipColor": "',
-    //             Avatar.colorToHex(extraParams.lipColor),
-    //             '", "circleColor": "',
-    //             Avatar.colorToHex(extraParams.circleColor),
-    //             '", "faceMask": "',
-    //             extraParams.faceMask ? "true" : "false",
-    //             '", "faceMaskColor": "',
-    //             Avatar.colorToHex(extraParams.faceMaskColor),
-    //             '", "lashes": "',
-    //             extraParams.lashes ? "true" : "false",
-    //             '", "mask": "',
-    //             extraParams.mask ? "true" : "false",
-    //             '"}'
-    //         )
-    //     );
-    // }
-
-    // function getAttributes(uint256 tokenId) external view returns (string memory) {
-    //     if (tokenId >= tokenIdCounter) revert BeanHeads__TokenDoesNotExist();
-
-    //     Avatar.Core memory body = Avatar.Core({
-    //         accessory: _core[tokenId].accessory,
-    //         bodyType: _core[tokenId].bodyType,
-    //         skinColor: _core[tokenId].skinColor
-    //     });
-    //     Avatar.Appearance memory appearance = Avatar.Appearance({
-    //         eyebrowShape: _appearance[tokenId].eyebrowShape,
-    //         eyeShape: _appearance[tokenId].eyeShape,
-    //         mouthStyle: _appearance[tokenId].mouthStyle,
-    //         facialHairType: _appearance[tokenId].facialHairType,
-    //         hairStyle: _appearance[tokenId].hairStyle,
-    //         hairColor: _appearance[tokenId].hairColor
-    //     });
-    //     Avatar.Clothing memory clothes = Avatar.Clothing({
-    //         clothes: _clothes[tokenId].clothes,
-    //         clothesGraphic: _clothes[tokenId].clothesGraphic,
-    //         clothingColor: _clothes[tokenId].clothingColor,
-    //         hatStyle: _clothes[tokenId].hatStyle,
-    //         hatColor: _clothes[tokenId].hatColor
-    //     });
-    //     Avatar.Extras memory extras = Avatar.Extras({
-    //         circleColor: _extras[tokenId].circleColor,
-    //         lipColor: _extras[tokenId].lipColor,
-    //         faceMaskColor: _extras[tokenId].faceMaskColor,
-    //         faceMask: _extras[tokenId].faceMask,
-    //         lashes: _extras[tokenId].lashes,
-    //         mask: _extras[tokenId].mask
-    //     });
-
-    //     return _buildAttributesJSON(body, appearance, clothes, extras);
-    // }
 
     function getOwnerAttributes(address owner) external view returns (string[20][] memory) {}
 

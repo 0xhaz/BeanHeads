@@ -34,47 +34,47 @@ contract SVGTest is Test {
                              BODY TEST
         //////////////////////////////////////////////////////////////*/
 
-        string memory breastSVG = BodyDetail.breastSVG(0);
+        string memory breastSVG = BodyDetail.breastSVG(0, 1);
         // console.log(breastSVG);
         vm.writeFile("./output/breast.svg", breastSVG);
 
-        BodyDetail.Body memory breastWhite = BodyDetail.getBodyById(1, 0);
-        vm.writeFile("./output/breast_white.svg", breastWhite.svg);
+        string memory breastWhite = BodyDetail.getBodyById(1, 0);
+        vm.writeFile("./output/breast_white.svg", breastWhite);
 
-        BodyDetail.Body memory breastBlue = BodyDetail.getBodyById(1, 1);
-        vm.writeFile("./output/breast_blue.svg", breastBlue.svg);
+        string memory breastBlue = BodyDetail.getBodyById(1, 1);
+        vm.writeFile("./output/breast_blue.svg", breastBlue);
 
-        BodyDetail.Body memory breastBlack = BodyDetail.getBodyById(1, 2);
-        vm.writeFile("./output/breast_black.svg", breastBlack.svg);
+        string memory breastBlack = BodyDetail.getBodyById(1, 2);
+        vm.writeFile("./output/breast_black.svg", breastBlack);
 
-        BodyDetail.Body memory breastGreen = BodyDetail.getBodyById(1, 3);
-        vm.writeFile("./output/breast_green.svg", breastGreen.svg);
+        string memory breastGreen = BodyDetail.getBodyById(1, 3);
+        vm.writeFile("./output/breast_green.svg", breastGreen);
 
-        BodyDetail.Body memory breastRed = BodyDetail.getBodyById(1, 4);
-        vm.writeFile("./output/breast_red.svg", breastRed.svg);
+        string memory breastRed = BodyDetail.getBodyById(1, 4);
+        vm.writeFile("./output/breast_red.svg", breastRed);
 
         string memory chestSVG = BodyDetail.chestSVG(0);
         // console.log(chestSVG);
         vm.writeFile("./output/chest.svg", chestSVG);
 
         // Test by Id
-        BodyDetail.Body memory bodyLightSkin = BodyDetail.getBodyById(2, 0);
-        vm.writeFile("./output/body_test_light.svg", bodyLightSkin.svg);
+        string memory bodyLightSkin = BodyDetail.getBodyById(2, 0);
+        vm.writeFile("./output/body_test_light.svg", bodyLightSkin);
 
-        BodyDetail.Body memory bodyYellowSkin = BodyDetail.getBodyById(2, 1);
-        vm.writeFile("./output/body_test_yellow.svg", bodyYellowSkin.svg);
+        string memory bodyYellowSkin = BodyDetail.getBodyById(2, 1);
+        vm.writeFile("./output/body_test_yellow.svg", bodyYellowSkin);
 
-        BodyDetail.Body memory bodyBrownSkin = BodyDetail.getBodyById(2, 2);
-        vm.writeFile("./output/body_test_brown.svg", bodyBrownSkin.svg);
+        string memory bodyBrownSkin = BodyDetail.getBodyById(2, 2);
+        vm.writeFile("./output/body_test_brown.svg", bodyBrownSkin);
 
-        BodyDetail.Body memory bodyDarkSkin = BodyDetail.getBodyById(2, 3);
-        vm.writeFile("./output/body_test_dark.svg", bodyDarkSkin.svg);
+        string memory bodyDarkSkin = BodyDetail.getBodyById(2, 3);
+        vm.writeFile("./output/body_test_dark.svg", bodyDarkSkin);
 
-        BodyDetail.Body memory bodyRedSkin = BodyDetail.getBodyById(2, 4);
-        vm.writeFile("./output/body_test_red.svg", bodyRedSkin.svg);
+        string memory bodyRedSkin = BodyDetail.getBodyById(2, 4);
+        vm.writeFile("./output/body_test_red.svg", bodyRedSkin);
 
-        BodyDetail.Body memory bodyBlackSkin = BodyDetail.getBodyById(2, 5);
-        vm.writeFile("./output/body_test_black.svg", bodyBlackSkin.svg);
+        string memory bodyBlackSkin = BodyDetail.getBodyById(2, 5);
+        vm.writeFile("./output/body_test_black.svg", bodyBlackSkin);
 
         /*//////////////////////////////////////////////////////////////
                              CLOTHING TEST
@@ -98,80 +98,80 @@ contract SVGTest is Test {
         vm.writeFile("./output/v_neck.svg", vNeckSVG);
 
         // Test by using function
-        ClothingDetail.Clothing memory whiteDress = ClothingDetail.getClothingById(1, 0);
-        vm.writeFile("./output/white_dress.svg", whiteDress.svg);
+        string memory whiteDress = ClothingDetail.getClothingById(1, 0);
+        vm.writeFile("./output/white_dress.svg", whiteDress);
 
-        ClothingDetail.Clothing memory blueDress = ClothingDetail.getClothingById(1, 1);
-        vm.writeFile("./output/blue_dress.svg", blueDress.svg);
+        string memory blueDress = ClothingDetail.getClothingById(1, 1);
+        vm.writeFile("./output/blue_dress.svg", blueDress);
 
-        ClothingDetail.Clothing memory blackDress = ClothingDetail.getClothingById(1, 2);
-        vm.writeFile("./output/black_dress.svg", blackDress.svg);
+        string memory blackDress = ClothingDetail.getClothingById(1, 2);
+        vm.writeFile("./output/black_dress.svg", blackDress);
 
-        ClothingDetail.Clothing memory greenDress = ClothingDetail.getClothingById(1, 3);
-        vm.writeFile("./output/green_dress.svg", greenDress.svg);
+        string memory greenDress = ClothingDetail.getClothingById(1, 3);
+        vm.writeFile("./output/green_dress.svg", greenDress);
 
-        ClothingDetail.Clothing memory redDress = ClothingDetail.getClothingById(1, 4);
-        vm.writeFile("./output/red_dress.svg", redDress.svg);
+        string memory redDress = ClothingDetail.getClothingById(1, 4);
+        vm.writeFile("./output/red_dress.svg", redDress);
 
-        ClothingDetail.Clothing memory shirtWhite = ClothingDetail.getClothingById(2, 0);
-        vm.writeFile("./output/white_shirt.svg", shirtWhite.svg);
+        string memory shirtWhite = ClothingDetail.getClothingById(2, 0);
+        vm.writeFile("./output/white_shirt.svg", shirtWhite);
 
-        ClothingDetail.Clothing memory shirtBlue = ClothingDetail.getClothingById(2, 1);
-        vm.writeFile("./output/blue_shirt.svg", shirtBlue.svg);
+        string memory shirtBlue = ClothingDetail.getClothingById(2, 1);
+        vm.writeFile("./output/blue_shirt.svg", shirtBlue);
 
-        ClothingDetail.Clothing memory shirtBlack = ClothingDetail.getClothingById(2, 2);
-        vm.writeFile("./output/black_shirt.svg", shirtBlack.svg);
+        string memory shirtBlack = ClothingDetail.getClothingById(2, 2);
+        vm.writeFile("./output/black_shirt.svg", shirtBlack);
 
-        ClothingDetail.Clothing memory shirtGreen = ClothingDetail.getClothingById(2, 3);
-        vm.writeFile("./output/green_shirt.svg", shirtGreen.svg);
+        string memory shirtGreen = ClothingDetail.getClothingById(2, 3);
+        vm.writeFile("./output/green_shirt.svg", shirtGreen);
 
-        ClothingDetail.Clothing memory shirtRed = ClothingDetail.getClothingById(2, 4);
-        vm.writeFile("./output/red_shirt.svg", shirtRed.svg);
+        string memory shirtRed = ClothingDetail.getClothingById(2, 4);
+        vm.writeFile("./output/red_shirt.svg", shirtRed);
 
-        ClothingDetail.Clothing memory tShirtWhite = ClothingDetail.getClothingById(3, 0);
-        vm.writeFile("./output/white_t_shirt.svg", tShirtWhite.svg);
+        string memory tShirtWhite = ClothingDetail.getClothingById(3, 0);
+        vm.writeFile("./output/white_t_shirt.svg", tShirtWhite);
 
-        ClothingDetail.Clothing memory tShirtBlue = ClothingDetail.getClothingById(3, 1);
-        vm.writeFile("./output/blue_t_shirt.svg", tShirtBlue.svg);
+        string memory tShirtBlue = ClothingDetail.getClothingById(3, 1);
+        vm.writeFile("./output/blue_t_shirt.svg", tShirtBlue);
 
-        ClothingDetail.Clothing memory tShirtBlack = ClothingDetail.getClothingById(3, 2);
-        vm.writeFile("./output/black_t_shirt.svg", tShirtBlack.svg);
+        string memory tShirtBlack = ClothingDetail.getClothingById(3, 2);
+        vm.writeFile("./output/black_t_shirt.svg", tShirtBlack);
 
-        ClothingDetail.Clothing memory tShirtGreen = ClothingDetail.getClothingById(3, 3);
-        vm.writeFile("./output/green_t_shirt.svg", tShirtGreen.svg);
+        string memory tShirtGreen = ClothingDetail.getClothingById(3, 3);
+        vm.writeFile("./output/green_t_shirt.svg", tShirtGreen);
 
-        ClothingDetail.Clothing memory tShirtRed = ClothingDetail.getClothingById(3, 4);
-        vm.writeFile("./output/red_t_shirt.svg", tShirtRed.svg);
+        string memory tShirtRed = ClothingDetail.getClothingById(3, 4);
+        vm.writeFile("./output/red_t_shirt.svg", tShirtRed);
 
-        ClothingDetail.Clothing memory tankTopWhite = ClothingDetail.getClothingById(4, 0);
-        vm.writeFile("./output/white_tank_top.svg", tankTopWhite.svg);
+        string memory tankTopWhite = ClothingDetail.getClothingById(4, 0);
+        vm.writeFile("./output/white_tank_top.svg", tankTopWhite);
 
-        ClothingDetail.Clothing memory tankTopBlue = ClothingDetail.getClothingById(4, 1);
-        vm.writeFile("./output/blue_tank_top.svg", tankTopBlue.svg);
+        string memory tankTopBlue = ClothingDetail.getClothingById(4, 1);
+        vm.writeFile("./output/blue_tank_top.svg", tankTopBlue);
 
-        ClothingDetail.Clothing memory tankTopBlack = ClothingDetail.getClothingById(4, 2);
-        vm.writeFile("./output/black_tank_top.svg", tankTopBlack.svg);
+        string memory tankTopBlack = ClothingDetail.getClothingById(4, 2);
+        vm.writeFile("./output/black_tank_top.svg", tankTopBlack);
 
-        ClothingDetail.Clothing memory tankTopGreen = ClothingDetail.getClothingById(4, 3);
-        vm.writeFile("./output/green_tank_top.svg", tankTopGreen.svg);
+        string memory tankTopGreen = ClothingDetail.getClothingById(4, 3);
+        vm.writeFile("./output/green_tank_top.svg", tankTopGreen);
 
-        ClothingDetail.Clothing memory tankTopRed = ClothingDetail.getClothingById(4, 4);
-        vm.writeFile("./output/red_tank_top.svg", tankTopRed.svg);
+        string memory tankTopRed = ClothingDetail.getClothingById(4, 4);
+        vm.writeFile("./output/red_tank_top.svg", tankTopRed);
 
-        ClothingDetail.Clothing memory vNeckWhite = ClothingDetail.getClothingById(5, 0);
-        vm.writeFile("./output/white_v_neck.svg", vNeckWhite.svg);
+        string memory vNeckWhite = ClothingDetail.getClothingById(5, 0);
+        vm.writeFile("./output/white_v_neck.svg", vNeckWhite);
 
-        ClothingDetail.Clothing memory vNeckBlue = ClothingDetail.getClothingById(5, 1);
-        vm.writeFile("./output/blue_v_neck.svg", vNeckBlue.svg);
+        string memory vNeckBlue = ClothingDetail.getClothingById(5, 1);
+        vm.writeFile("./output/blue_v_neck.svg", vNeckBlue);
 
-        ClothingDetail.Clothing memory vNeckBlack = ClothingDetail.getClothingById(5, 2);
-        vm.writeFile("./output/black_v_neck.svg", vNeckBlack.svg);
+        string memory vNeckBlack = ClothingDetail.getClothingById(5, 2);
+        vm.writeFile("./output/black_v_neck.svg", vNeckBlack);
 
-        ClothingDetail.Clothing memory vNeckGreen = ClothingDetail.getClothingById(5, 3);
-        vm.writeFile("./output/green_v_neck.svg", vNeckGreen.svg);
+        string memory vNeckGreen = ClothingDetail.getClothingById(5, 3);
+        vm.writeFile("./output/green_v_neck.svg", vNeckGreen);
 
-        ClothingDetail.Clothing memory vNeckRed = ClothingDetail.getClothingById(5, 4);
-        vm.writeFile("./output/red_v_neck.svg", vNeckRed.svg);
+        string memory vNeckRed = ClothingDetail.getClothingById(5, 4);
+        vm.writeFile("./output/red_v_neck.svg", vNeckRed);
 
         /*//////////////////////////////////////////////////////////////
                              CLOTHING GRAPPHIC TEST
@@ -253,6 +253,13 @@ contract SVGTest is Test {
         string memory stubbleSVG = FacialHairDetail.stubbleSVG();
         vm.writeFile("./output/stubble.svg", stubbleSVG);
 
+        /// Test by using function
+        string memory mediumBeard = FacialHairDetail.getFacialHairById(1);
+        vm.writeFile("./output/medium_beard.svg", mediumBeard);
+
+        string memory stubble = FacialHairDetail.getFacialHairById(2);
+        vm.writeFile("./output/stubble.svg", stubble);
+
         /*//////////////////////////////////////////////////////////////
                              HAIR TEST
         //////////////////////////////////////////////////////////////*/
@@ -279,152 +286,152 @@ contract SVGTest is Test {
         vm.writeFile("./output/short_hair.svg", shortHairSVG);
 
         // Test by using function
-        HairDetail.Hair memory afroBlonde = HairDetail.getHairDetailById(1, 0);
-        vm.writeFile("./output/afro_blonde.svg", afroBlonde.svg);
+        string memory afroBlonde = HairDetail.getHairById(1, 0);
+        vm.writeFile("./output/afro_blonde.svg", afroBlonde);
 
-        HairDetail.Hair memory afroOrange = HairDetail.getHairDetailById(1, 1);
-        vm.writeFile("./output/afro_orange.svg", afroOrange.svg);
+        string memory afroOrange = HairDetail.getHairById(1, 1);
+        vm.writeFile("./output/afro_orange.svg", afroOrange);
 
-        HairDetail.Hair memory afroBlack = HairDetail.getHairDetailById(1, 2);
-        vm.writeFile("./output/afro_black.svg", afroBlack.svg);
+        string memory afroBlack = HairDetail.getHairById(1, 2);
+        vm.writeFile("./output/afro_black.svg", afroBlack);
 
-        HairDetail.Hair memory afroWhite = HairDetail.getHairDetailById(1, 3);
-        vm.writeFile("./output/afro_white.svg", afroWhite.svg);
+        string memory afroWhite = HairDetail.getHairById(1, 3);
+        vm.writeFile("./output/afro_white.svg", afroWhite);
 
-        HairDetail.Hair memory afroBrown = HairDetail.getHairDetailById(1, 4);
-        vm.writeFile("./output/afro_brown.svg", afroBrown.svg);
+        string memory afroBrown = HairDetail.getHairById(1, 4);
+        vm.writeFile("./output/afro_brown.svg", afroBrown);
 
-        HairDetail.Hair memory afroBlue = HairDetail.getHairDetailById(1, 5);
-        vm.writeFile("./output/afro_blue.svg", afroBlue.svg);
+        string memory afroBlue = HairDetail.getHairById(1, 5);
+        vm.writeFile("./output/afro_blue.svg", afroBlue);
 
-        HairDetail.Hair memory afroPink = HairDetail.getHairDetailById(1, 6);
-        vm.writeFile("./output/afro_pink.svg", afroPink.svg);
+        string memory afroPink = HairDetail.getHairById(1, 6);
+        vm.writeFile("./output/afro_pink.svg", afroPink);
 
-        HairDetail.Hair memory baldBlonde = HairDetail.getHairDetailById(2, 0);
-        vm.writeFile("./output/bald_blonde.svg", baldBlonde.svg);
+        string memory baldBlonde = HairDetail.getHairById(2, 0);
+        vm.writeFile("./output/bald_blonde.svg", baldBlonde);
 
-        HairDetail.Hair memory baldOrange = HairDetail.getHairDetailById(2, 1);
-        vm.writeFile("./output/bald_orange.svg", baldOrange.svg);
+        string memory baldOrange = HairDetail.getHairById(2, 1);
+        vm.writeFile("./output/bald_orange.svg", baldOrange);
 
-        HairDetail.Hair memory baldBlack = HairDetail.getHairDetailById(2, 2);
-        vm.writeFile("./output/bald_black.svg", baldBlack.svg);
+        string memory baldBlack = HairDetail.getHairById(2, 2);
+        vm.writeFile("./output/bald_black.svg", baldBlack);
 
-        HairDetail.Hair memory baldWhite = HairDetail.getHairDetailById(2, 3);
-        vm.writeFile("./output/bald_white.svg", baldWhite.svg);
+        string memory baldWhite = HairDetail.getHairById(2, 3);
+        vm.writeFile("./output/bald_white.svg", baldWhite);
 
-        HairDetail.Hair memory baldBrown = HairDetail.getHairDetailById(2, 4);
-        vm.writeFile("./output/bald_brown.svg", baldBrown.svg);
+        string memory baldBrown = HairDetail.getHairById(2, 4);
+        vm.writeFile("./output/bald_brown.svg", baldBrown);
 
-        HairDetail.Hair memory baldBlue = HairDetail.getHairDetailById(2, 5);
-        vm.writeFile("./output/bald_blue.svg", baldBlue.svg);
+        string memory baldBlue = HairDetail.getHairById(2, 5);
+        vm.writeFile("./output/bald_blue.svg", baldBlue);
 
-        HairDetail.Hair memory baldPink = HairDetail.getHairDetailById(2, 6);
-        vm.writeFile("./output/bald_pink.svg", baldPink.svg);
+        string memory baldPink = HairDetail.getHairById(2, 6);
+        vm.writeFile("./output/bald_pink.svg", baldPink);
 
-        HairDetail.Hair memory bobBlonde = HairDetail.getHairDetailById(3, 0);
-        vm.writeFile("./output/bob_blonde.svg", bobBlonde.svg);
+        string memory bobBlonde = HairDetail.getHairById(3, 0);
+        vm.writeFile("./output/bob_blonde.svg", bobBlonde);
 
-        HairDetail.Hair memory bobOrange = HairDetail.getHairDetailById(3, 1);
-        vm.writeFile("./output/bob_orange.svg", bobOrange.svg);
+        string memory bobOrange = HairDetail.getHairById(3, 1);
+        vm.writeFile("./output/bob_orange.svg", bobOrange);
 
-        HairDetail.Hair memory bobBlack = HairDetail.getHairDetailById(3, 2);
-        vm.writeFile("./output/bob_black.svg", bobBlack.svg);
+        string memory bobBlack = HairDetail.getHairById(3, 2);
+        vm.writeFile("./output/bob_black.svg", bobBlack);
 
-        HairDetail.Hair memory bobWhite = HairDetail.getHairDetailById(3, 3);
-        vm.writeFile("./output/bob_white.svg", bobWhite.svg);
+        string memory bobWhite = HairDetail.getHairById(3, 3);
+        vm.writeFile("./output/bob_white.svg", bobWhite);
 
-        HairDetail.Hair memory bobBrown = HairDetail.getHairDetailById(3, 4);
-        vm.writeFile("./output/bob_brown.svg", bobBrown.svg);
+        string memory bobBrown = HairDetail.getHairById(3, 4);
+        vm.writeFile("./output/bob_brown.svg", bobBrown);
 
-        HairDetail.Hair memory bobBlue = HairDetail.getHairDetailById(3, 5);
-        vm.writeFile("./output/bob_blue.svg", bobBlue.svg);
+        string memory bobBlue = HairDetail.getHairById(3, 5);
+        vm.writeFile("./output/bob_blue.svg", bobBlue);
 
-        HairDetail.Hair memory bobPink = HairDetail.getHairDetailById(3, 6);
-        vm.writeFile("./output/bob_pink.svg", bobPink.svg);
+        string memory bobPink = HairDetail.getHairById(3, 6);
+        vm.writeFile("./output/bob_pink.svg", bobPink);
 
-        HairDetail.Hair memory bunBlonde = HairDetail.getHairDetailById(4, 0);
-        vm.writeFile("./output/bun_blonde.svg", bunBlonde.svg);
+        string memory bunBlonde = HairDetail.getHairById(4, 0);
+        vm.writeFile("./output/bun_blonde.svg", bunBlonde);
 
-        HairDetail.Hair memory bunOrange = HairDetail.getHairDetailById(4, 1);
-        vm.writeFile("./output/bun_orange.svg", bunOrange.svg);
+        string memory bunOrange = HairDetail.getHairById(4, 1);
+        vm.writeFile("./output/bun_orange.svg", bunOrange);
 
-        HairDetail.Hair memory bunBlack = HairDetail.getHairDetailById(4, 2);
-        vm.writeFile("./output/bun_black.svg", bunBlack.svg);
+        string memory bunBlack = HairDetail.getHairById(4, 2);
+        vm.writeFile("./output/bun_black.svg", bunBlack);
 
-        HairDetail.Hair memory bunWhite = HairDetail.getHairDetailById(4, 3);
-        vm.writeFile("./output/bun_white.svg", bunWhite.svg);
+        string memory bunWhite = HairDetail.getHairById(4, 3);
+        vm.writeFile("./output/bun_white.svg", bunWhite);
 
-        HairDetail.Hair memory bunBrown = HairDetail.getHairDetailById(4, 4);
-        vm.writeFile("./output/bun_brown.svg", bunBrown.svg);
+        string memory bunBrown = HairDetail.getHairById(4, 4);
+        vm.writeFile("./output/bun_brown.svg", bunBrown);
 
-        HairDetail.Hair memory bunBlue = HairDetail.getHairDetailById(4, 5);
-        vm.writeFile("./output/bun_blue.svg", bunBlue.svg);
+        string memory bunBlue = HairDetail.getHairById(4, 5);
+        vm.writeFile("./output/bun_blue.svg", bunBlue);
 
-        HairDetail.Hair memory bunPink = HairDetail.getHairDetailById(4, 6);
-        vm.writeFile("./output/bun_pink.svg", bunPink.svg);
+        string memory bunPink = HairDetail.getHairById(4, 6);
+        vm.writeFile("./output/bun_pink.svg", bunPink);
 
-        HairDetail.Hair memory longBlonde = HairDetail.getHairDetailById(5, 0);
-        vm.writeFile("./output/long_blonde.svg", longBlonde.svg);
+        string memory longBlonde = HairDetail.getHairById(5, 0);
+        vm.writeFile("./output/long_blonde.svg", longBlonde);
 
-        HairDetail.Hair memory longOrange = HairDetail.getHairDetailById(5, 1);
-        vm.writeFile("./output/long_orange.svg", longOrange.svg);
+        string memory longOrange = HairDetail.getHairById(5, 1);
+        vm.writeFile("./output/long_orange.svg", longOrange);
 
-        HairDetail.Hair memory longBlack = HairDetail.getHairDetailById(5, 2);
-        vm.writeFile("./output/long_black.svg", longBlack.svg);
+        string memory longBlack = HairDetail.getHairById(5, 2);
+        vm.writeFile("./output/long_black.svg", longBlack);
 
-        HairDetail.Hair memory longWhite = HairDetail.getHairDetailById(5, 3);
-        vm.writeFile("./output/long_white.svg", longWhite.svg);
+        string memory longWhite = HairDetail.getHairById(5, 3);
+        vm.writeFile("./output/long_white.svg", longWhite);
 
-        HairDetail.Hair memory longBrown = HairDetail.getHairDetailById(5, 4);
-        vm.writeFile("./output/long_brown.svg", longBrown.svg);
+        string memory longBrown = HairDetail.getHairById(5, 4);
+        vm.writeFile("./output/long_brown.svg", longBrown);
 
-        HairDetail.Hair memory longBlue = HairDetail.getHairDetailById(5, 5);
-        vm.writeFile("./output/long_blue.svg", longBlue.svg);
+        string memory longBlue = HairDetail.getHairById(5, 5);
+        vm.writeFile("./output/long_blue.svg", longBlue);
 
-        HairDetail.Hair memory longPink = HairDetail.getHairDetailById(5, 6);
-        vm.writeFile("./output/long_pink.svg", longPink.svg);
+        string memory longPink = HairDetail.getHairById(5, 6);
+        vm.writeFile("./output/long_pink.svg", longPink);
 
-        HairDetail.Hair memory pixieBlonde = HairDetail.getHairDetailById(6, 0);
-        vm.writeFile("./output/pixie_blonde.svg", pixieBlonde.svg);
+        string memory pixieBlonde = HairDetail.getHairById(6, 0);
+        vm.writeFile("./output/pixie_blonde.svg", pixieBlonde);
 
-        HairDetail.Hair memory pixieOrange = HairDetail.getHairDetailById(6, 1);
-        vm.writeFile("./output/pixie_orange.svg", pixieOrange.svg);
+        string memory pixieOrange = HairDetail.getHairById(6, 1);
+        vm.writeFile("./output/pixie_orange.svg", pixieOrange);
 
-        HairDetail.Hair memory pixieBlack = HairDetail.getHairDetailById(6, 2);
-        vm.writeFile("./output/pixie_black.svg", pixieBlack.svg);
+        string memory pixieBlack = HairDetail.getHairById(6, 2);
+        vm.writeFile("./output/pixie_black.svg", pixieBlack);
 
-        HairDetail.Hair memory pixieWhite = HairDetail.getHairDetailById(6, 3);
-        vm.writeFile("./output/pixie_white.svg", pixieWhite.svg);
+        string memory pixieWhite = HairDetail.getHairById(6, 3);
+        vm.writeFile("./output/pixie_white.svg", pixieWhite);
 
-        HairDetail.Hair memory pixieBrown = HairDetail.getHairDetailById(6, 4);
-        vm.writeFile("./output/pixie_brown.svg", pixieBrown.svg);
+        string memory pixieBrown = HairDetail.getHairById(6, 4);
+        vm.writeFile("./output/pixie_brown.svg", pixieBrown);
 
-        HairDetail.Hair memory pixieBlue = HairDetail.getHairDetailById(6, 5);
-        vm.writeFile("./output/pixie_blue.svg", pixieBlue.svg);
+        string memory pixieBlue = HairDetail.getHairById(6, 5);
+        vm.writeFile("./output/pixie_blue.svg", pixieBlue);
 
-        HairDetail.Hair memory pixiePink = HairDetail.getHairDetailById(6, 6);
-        vm.writeFile("./output/pixie_pink.svg", pixiePink.svg);
+        string memory pixiePink = HairDetail.getHairById(6, 6);
+        vm.writeFile("./output/pixie_pink.svg", pixiePink);
 
-        HairDetail.Hair memory shortBlonde = HairDetail.getHairDetailById(7, 0);
-        vm.writeFile("./output/short_blonde.svg", shortBlonde.svg);
+        string memory shortBlonde = HairDetail.getHairById(7, 0);
+        vm.writeFile("./output/short_blonde.svg", shortBlonde);
 
-        HairDetail.Hair memory shortOrange = HairDetail.getHairDetailById(7, 1);
-        vm.writeFile("./output/short_orange.svg", shortOrange.svg);
+        string memory shortOrange = HairDetail.getHairById(7, 1);
+        vm.writeFile("./output/short_orange.svg", shortOrange);
 
-        HairDetail.Hair memory shortBlack = HairDetail.getHairDetailById(7, 2);
-        vm.writeFile("./output/short_black.svg", shortBlack.svg);
+        string memory shortBlack = HairDetail.getHairById(7, 2);
+        vm.writeFile("./output/short_black.svg", shortBlack);
 
-        HairDetail.Hair memory shortWhite = HairDetail.getHairDetailById(7, 3);
-        vm.writeFile("./output/short_white.svg", shortWhite.svg);
+        string memory shortWhite = HairDetail.getHairById(7, 3);
+        vm.writeFile("./output/short_white.svg", shortWhite);
 
-        HairDetail.Hair memory shortBrown = HairDetail.getHairDetailById(7, 4);
-        vm.writeFile("./output/short_brown.svg", shortBrown.svg);
+        string memory shortBrown = HairDetail.getHairById(7, 4);
+        vm.writeFile("./output/short_brown.svg", shortBrown);
 
-        HairDetail.Hair memory shortBlue = HairDetail.getHairDetailById(7, 5);
-        vm.writeFile("./output/short_blue.svg", shortBlue.svg);
+        string memory shortBlue = HairDetail.getHairById(7, 5);
+        vm.writeFile("./output/short_blue.svg", shortBlue);
 
-        HairDetail.Hair memory shortPink = HairDetail.getHairDetailById(7, 6);
-        vm.writeFile("./output/short_pink.svg", shortPink.svg);
+        string memory shortPink = HairDetail.getHairById(7, 6);
+        vm.writeFile("./output/short_pink.svg", shortPink);
 
         /*//////////////////////////////////////////////////////////////
                              HAT TEST
@@ -437,35 +444,35 @@ contract SVGTest is Test {
         vm.writeFile("./output/turban_hat.svg", turbanHatSVG);
 
         /// test by using function
-        HatsDetail.Hats memory beanieWhite = HatsDetail.getHatsById(1, 0);
-        vm.writeFile("./output/beanie_white.svg", beanieWhite.svg);
+        string memory beanieWhite = HatsDetail.getHatsById(1, 0);
+        vm.writeFile("./output/beanie_white.svg", beanieWhite);
 
-        HatsDetail.Hats memory beanieBlue = HatsDetail.getHatsById(1, 1);
-        vm.writeFile("./output/beanie_blue.svg", beanieBlue.svg);
+        string memory beanieBlue = HatsDetail.getHatsById(1, 1);
+        vm.writeFile("./output/beanie_blue.svg", beanieBlue);
 
-        HatsDetail.Hats memory beanieBlack = HatsDetail.getHatsById(1, 2);
-        vm.writeFile("./output/beanie_black.svg", beanieBlack.svg);
+        string memory beanieBlack = HatsDetail.getHatsById(1, 2);
+        vm.writeFile("./output/beanie_black.svg", beanieBlack);
 
-        HatsDetail.Hats memory beanieGreen = HatsDetail.getHatsById(1, 3);
-        vm.writeFile("./output/beanie_green.svg", beanieGreen.svg);
+        string memory beanieGreen = HatsDetail.getHatsById(1, 3);
+        vm.writeFile("./output/beanie_green.svg", beanieGreen);
 
-        HatsDetail.Hats memory beanieRed = HatsDetail.getHatsById(1, 4);
-        vm.writeFile("./output/beanie_red.svg", beanieRed.svg);
+        string memory beanieRed = HatsDetail.getHatsById(1, 4);
+        vm.writeFile("./output/beanie_red.svg", beanieRed);
 
-        HatsDetail.Hats memory turbanWhite = HatsDetail.getHatsById(2, 0);
-        vm.writeFile("./output/turban_white.svg", turbanWhite.svg);
+        string memory turbanWhite = HatsDetail.getHatsById(2, 0);
+        vm.writeFile("./output/turban_white.svg", turbanWhite);
 
-        HatsDetail.Hats memory turbanBlue = HatsDetail.getHatsById(2, 1);
-        vm.writeFile("./output/turban_blue.svg", turbanBlue.svg);
+        string memory turbanBlue = HatsDetail.getHatsById(2, 1);
+        vm.writeFile("./output/turban_blue.svg", turbanBlue);
 
-        HatsDetail.Hats memory turbanBlack = HatsDetail.getHatsById(2, 2);
-        vm.writeFile("./output/turban_black.svg", turbanBlack.svg);
+        string memory turbanBlack = HatsDetail.getHatsById(2, 2);
+        vm.writeFile("./output/turban_black.svg", turbanBlack);
 
-        HatsDetail.Hats memory turbanGreen = HatsDetail.getHatsById(2, 3);
-        vm.writeFile("./output/turban_green.svg", turbanGreen.svg);
+        string memory turbanGreen = HatsDetail.getHatsById(2, 3);
+        vm.writeFile("./output/turban_green.svg", turbanGreen);
 
-        HatsDetail.Hats memory turbanRed = HatsDetail.getHatsById(2, 4);
-        vm.writeFile("./output/turban_red.svg", turbanRed.svg);
+        string memory turbanRed = HatsDetail.getHatsById(2, 4);
+        vm.writeFile("./output/turban_red.svg", turbanRed);
 
         /*//////////////////////////////////////////////////////////////
                              MOUTH TEST
@@ -492,20 +499,20 @@ contract SVGTest is Test {
         vm.writeFile("./output/tounge_mouth.svg", toungeMouthSVG);
 
         /// test by using function
-        MouthDetail.Mouth memory lipsRed = MouthDetail.getMouthById(2, 0);
-        vm.writeFile("./output/lipsRed_test.svg", lipsRed.svg);
+        string memory lipsRed = MouthDetail.getMouthById(2, 0);
+        vm.writeFile("./output/lipsRed_test.svg", lipsRed);
 
-        MouthDetail.Mouth memory purpleLips = MouthDetail.getMouthById(2, 1);
-        vm.writeFile("./output/lipsPurple_test.svg", purpleLips.svg);
+        string memory purpleLips = MouthDetail.getMouthById(2, 1);
+        vm.writeFile("./output/lipsPurple_test.svg", purpleLips);
 
-        MouthDetail.Mouth memory pinkLips = MouthDetail.getMouthById(2, 2);
-        vm.writeFile("./output/lipsPink_test.svg", pinkLips.svg);
+        string memory pinkLips = MouthDetail.getMouthById(2, 2);
+        vm.writeFile("./output/lipsPink_test.svg", pinkLips);
 
-        MouthDetail.Mouth memory turquoiseLips = MouthDetail.getMouthById(2, 3);
-        vm.writeFile("./output/lipsTurquoise_test.svg", turquoiseLips.svg);
+        string memory turquoiseLips = MouthDetail.getMouthById(2, 3);
+        vm.writeFile("./output/lipsTurquoise_test.svg", turquoiseLips);
 
-        MouthDetail.Mouth memory greenLips = MouthDetail.getMouthById(2, 4);
-        vm.writeFile("./output/lipsGreen_test.svg", greenLips.svg);
+        string memory greenLips = MouthDetail.getMouthById(2, 4);
+        vm.writeFile("./output/lipsGreen_test.svg", greenLips);
 
         /*//////////////////////////////////////////////////////////////
                              OPTIONAL ITEMS TEST
@@ -519,7 +526,7 @@ contract SVGTest is Test {
         string memory lashesSVG = OptItems.lashesSVG();
         vm.writeFile("./output/lashes.svg", lashesSVG);
 
-        string memory shapeSVG = OptItems.shapeSVG();
+        string memory shapeSVG = OptItems.shapeSVG(1);
         vm.writeFile("./output/shape.svg", shapeSVG);
 
         /*//////////////////////////////////////////////////////////////

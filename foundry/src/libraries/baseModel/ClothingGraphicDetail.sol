@@ -6,17 +6,6 @@ import {SVGBody} from "./SVGBody.sol";
 library ClothingGraphicDetail {
     error ClothingGraphicDetail__InvalidClothingGraphicType();
 
-    string constant GATSBY = "Gatsby";
-    string constant GRAPHQL = "GraphQL";
-    string constant REACT = "React";
-    string constant REDWOOD = "Redwood";
-    string constant VUE = "Vue";
-
-    struct ClothingGraphic {
-        string name;
-        string svg;
-    }
-
     /// @dev SVG content for the Gatsby logo
     function gatsbySVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -84,17 +73,19 @@ library ClothingGraphicDetail {
     }
 
     /// @dev Returns the SVG and name for a specific clothing graphic ID
-    function getClothingGraphicById(uint8 id) internal pure returns (ClothingGraphic memory) {
-        if (id == 1) {
-            return ClothingGraphic({name: GATSBY, svg: gatsbySVG()});
+    function getClothingGraphicById(uint8 id) internal pure returns (string memory) {
+        if (id == 0) {
+            return "";
+        } else if (id == 1) {
+            return gatsbySVG();
         } else if (id == 2) {
-            return ClothingGraphic({name: GRAPHQL, svg: graphqlSVG()});
+            return graphqlSVG();
         } else if (id == 3) {
-            return ClothingGraphic({name: REACT, svg: reactSVG()});
+            return reactSVG();
         } else if (id == 4) {
-            return ClothingGraphic({name: REDWOOD, svg: redwoodSVG()});
+            return redwoodSVG();
         } else if (id == 5) {
-            return ClothingGraphic({name: VUE, svg: vueSVG()});
+            return vueSVG();
         } else {
             revert ClothingGraphicDetail__InvalidClothingGraphicType();
         }

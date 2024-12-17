@@ -3,17 +3,11 @@ pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
 import {Colors, Errors} from "src/types/Constants.sol";
+import {BytesConverter} from "src/libraries/BytesConverter.sol";
 
 library HatsDetail {
     using Colors for bytes3;
-
-    string constant BEANIE = "Beanie";
-    string constant TURBAN = "Turban";
-
-    struct Hats {
-        string name;
-        string svg;
-    }
+    using BytesConverter for bytes3;
 
     enum HatColor {
         WHITE,
@@ -46,23 +40,6 @@ library HatsDetail {
         }
     }
 
-    /// @dev Converts bytes3 to a string for the color
-    function bytesToHex(bytes3 color) internal pure returns (string memory) {
-        bytes memory buffer = new bytes(7);
-        buffer[0] = "#";
-        for (uint256 i; i < 3; ++i) {
-            uint8 value = uint8(color[i]);
-            buffer[2 * i + 1] = _toHexChar(value >> 4);
-            buffer[2 * i + 2] = _toHexChar(value & 0x0f);
-        }
-        return string(buffer);
-    }
-
-    /// @dev Helper to convert uint8 to hex char
-    function _toHexChar(uint8 value) private pure returns (bytes1) {
-        return bytes1(value < 10 ? value + 48 : value + 87);
-    }
-
     /// @dev SVG content for a beanie hat
     function beanieHatSVG(uint8 id) internal pure returns (string memory) {
         (bytes3 baseColor, bytes3 shadowColor) = getColorForHat(id);
@@ -75,13 +52,13 @@ library HatsDetail {
                     '<path d="M491.44,204.62a47.47,47.47,0,0,0,46.46-57.31c-30.78-4.77-62.7-2-93.77,6-.1,1.26-.17,2.53-.17,3.82A47.48,47.48,0,0,0,491.44,204.62Z" style="fill:#e2e2e2"/>',
                     '<circle cx="491.44" cy="157.14" r="47.48" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
                     '<path d="M240.26,423.13a254.67,254.67,0,0,1,6.54-57.5q1.29-5.55,2.81-11c2.9-32.3,20-58.94,42.86-82.73,4.76-3.81,5.71-12.37,10.47-17.13,16.18-14.27,30.45-28.55,48.53-40,74.22-47.58,172.23-73.27,251.21-29.5,16.17,8.56,34.25,13.32,47.57,24.74,25.7,21.88,43.77,47.58,69.47,68.51,22.83,19,26.64,49.48,34.74,76.07q1.53,5.44,2.81,11a254.67,254.67,0,0,1,6.54,57.5Z" style="fill:',
-                    bytesToHex(baseColor),
+                    BytesConverter.bytesToHex(baseColor),
                     '"/>',
                     '<path d="M246.8,365.63a254.67,254.67,0,0,0-6.54,57.5h83C321.7,342.47,301,275.11,406,193,330.68,221.59,262.05,284.38,246.8,365.63Z" style="fill:',
-                    bytesToHex(shadowColor),
+                    BytesConverter.bytesToHex(shadowColor),
                     '"/>',
                     '<path d="M258.18,321.12a109.41,109.41,0,0,0-8.57,33.51q-1.52,5.44-2.81,11a254.67,254.67,0,0,0-6.54,57.5H440.31a827.17,827.17,0,0,1,127.59,0H763.81a254.67,254.67,0,0,0-6.54-57.5q-1.29-5.55-2.81-11c-3.46-11.37-6.15-23.44-9.86-35C582.71,259.73,419,261,258.18,321.12Z" style="fill:',
-                    bytesToHex(shadowColor),
+                    BytesConverter.bytesToHex(shadowColor),
                     '"/>',
                     '<path d="M240.26,423.13a254.67,254.67,0,0,1,6.54-57.5q1.29-5.55,2.81-11c2.9-32.3,20-58.94,42.86-82.73,4.76-3.81,5.71-12.37,10.47-17.13,16.18-14.27,30.45-28.55,48.53-40,74.22-47.58,172.23-73.27,251.21-29.5,16.17,8.56,34.25,13.32,47.57,24.74,25.7,21.88,43.77,47.58,69.47,68.51,22.83,19,26.64,49.48,34.74,76.07q1.53,5.44,2.81,11a254.67,254.67,0,0,1,6.54,57.5Z" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12.856184465220856px"/>',
                     '<path d="M225.35,356.43c183.42-78,371.14-79.06,555.94,0,17.53,7.5,17.43,139.87,0,133.81-180.47-62.83-371.33-63.5-555.94,0C203.39,497.79,205.53,364.86,225.35,356.43Z" style="fill:#fff"/>',
@@ -123,19 +100,19 @@ library HatsDetail {
                 abi.encodePacked(
                     '<path d="M765.63,495.43s.3-2.94.8-8.24C759.75,345.82,643,233.25,500,233.25c-147.32,0-266.75,119.43-266.75,266.75,0,7.28.31,14.49.89,21.63,12.11-39.32,161.32-77.95,298.44-133.08C631.75,452.24,765.63,495.43,765.63,495.43Z" style="opacity:.15"/>',
                     '<path d="M747.94,163.66l0,0C684.65,74.76,266,93.83,204.16,155.69c-66.94,66.94,29.18,351,29.18,351,0-41.1,160.33-82.31,303.37-139.83,99.17,63.69,228.92,108.54,228.92,108.54S793.59,209.32,747.94,163.66Z" style="fill:',
-                    bytesToHex(baseColor),
+                    BytesConverter.bytesToHex(baseColor),
                     '"/>',
                     '<path d="M610.06,159.09c-36.6-4-184.31-1.44-322.45,25.65A481,481,0,0,0,235,197.59c-4.25,1.37-8.49,2.76-12.62,4.33s-8.24,3.18-12.18,5a112.44,112.44,0,0,0-11.34,5.93c-3.54,2.16-10.85,8.81-13.51,11.39l-7.3-15.56a69.81,69.81,0,0,1,12.33-9.59,116.58,116.58,0,0,1,13-6.93,217.66,217.66,0,0,1,26.74-10.11,460.64,460.64,0,0,1,54.55-12.9c18.3-3.27,36.69-5.71,55.1-7.7s35.8-7.94,54.26-8.88C494.59,148.61,592.19,154.62,610.06,159.09Z" style="fill:',
-                    bytesToHex(shadowColor),
+                    BytesConverter.bytesToHex(shadowColor),
                     '"/>',
                     '<path d="M188.17,320.14c3.47-1.42,6.8-2.75,10.2-4.07s6.78-2.61,10.18-3.87c6.79-2.57,13.62-5,20.45-7.36q20.52-7.09,41.26-13.47c6.91-2.14,13.82-4.25,20.78-6.22l10.42-3c3.47-1,6.94-2,10.44-2.93l20.94-5.59,21-5.25C382,261.7,484.59,232.18,513.37,230c-7,1.8-168.2,54.82-176.74,57.39L316,293.56q-20.57,6.22-41,12.91c-6.83,2.16-13.6,4.47-20.38,6.76s-13.54,4.65-20.3,7l-10.1,3.61q-5.07,1.77-10.08,3.64l-10,3.71c-3.32,1.23-6.69,2.52-9.9,3.78Z" style="fill:',
-                    bytesToHex(shadowColor),
+                    BytesConverter.bytesToHex(shadowColor),
                     '"/>',
                     '<path d="M711.7,270.48c-39.92,36.15-102.55,67-169.48,94.19l16.51,15.78h0S659.21,340.49,711.7,270.48Z" style="fill:',
-                    bytesToHex(shadowColor),
+                    BytesConverter.bytesToHex(shadowColor),
                     '"/>',
                     '<path d="M214.45,457.18a24.45,24.45,0,0,1,.66-5.43,27,27,0,0,1,1.75-4.9,36.8,36.8,0,0,1,5.26-8,72.69,72.69,0,0,1,13-11.7,206,206,0,0,1,28.63-16.72c19.57-9.69,39.67-17.6,59.8-25.27s40.4-14.82,60.64-22S424.76,349,445,341.87c40.42-14.25,79.8-31.3,119.21-47.95,9.86-4.14,93.82-54.66,102.72-60.67-8.32,6.8-67.53,50.51-99.82,67.22-39.1,18-78.43,35.84-118.64,50.95-20.13,7.5-40.29,14.87-60.43,22.25s-40.27,14.71-60.19,22.46c-10,3.88-19.86,7.85-29.66,12s-19.51,8.46-28.95,13.15A195.93,195.93,0,0,0,242.3,437a64.46,64.46,0,0,0-10.93,9.68c-3,3.49-7.94,11.25-7.92,14.53Z" style="fill:',
-                    bytesToHex(shadowColor),
+                    BytesConverter.bytesToHex(shadowColor),
                     '"/>',
                     '<path d="M747.94,163.66l0,0C684.65,74.76,266,93.83,204.16,155.69c-66.94,66.94,29.18,351,29.18,351,0-41.1,160.33-82.31,303.37-139.83,99.17,63.69,228.92,108.54,228.92,108.54S793.59,209.32,747.94,163.66Z" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
                     '<path d="M534.47,361.33c16.1-6.69,32.19-13.37,48.12-20.36l6-2.61,5.95-2.67,6-2.66,5.91-2.76,5.92-2.73c2-.91,3.92-1.88,5.88-2.81,3.91-1.89,7.83-3.75,11.69-5.74q23.34-11.6,45.56-25.15a427.09,427.09,0,0,0,43-29.7c-1.44,1.66-2.86,3.34-4.34,5s-2.9,3.33-4.49,4.84c-3.12,3.11-6.22,6.29-9.55,9.17-1.64,1.49-3.31,2.92-5,4.39s-3.41,2.8-5.12,4.21-3.45,2.76-5.2,4.11l-5.32,4A448.92,448.92,0,0,1,634.62,328c-3.84,2.18-7.74,4.23-11.63,6.29s-7.8,4.1-11.74,6.08l-5.9,3-6,2.87c-4,1.91-7.92,3.84-11.93,5.64q-24,11.06-48.52,20.65Z" style="fill:#592d3d"/>',
@@ -149,11 +126,13 @@ library HatsDetail {
     }
 
     /// @dev Returns the SVG content for a hat
-    function getHatsById(uint8 id, uint8 color) internal pure returns (Hats memory) {
-        if (id == 1) {
-            return Hats({name: BEANIE, svg: beanieHatSVG(color)});
+    function getHatsById(uint8 id, uint8 color) internal pure returns (string memory) {
+        if (id == 0) {
+            return "";
+        } else if (id == 1) {
+            return beanieHatSVG(color);
         } else if (id == 2) {
-            return Hats({name: TURBAN, svg: turbanHatSVG(color)});
+            return turbanHatSVG(color);
         } else {
             revert Errors.InvalidType(id);
         }

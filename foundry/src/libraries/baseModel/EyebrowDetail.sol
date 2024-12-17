@@ -6,17 +6,6 @@ import {SVGBody} from "./SVGBody.sol";
 library EyebrowDetail {
     error EyebrowDetail__InvalidEyebrowType();
 
-    string constant ANGRY_EYEBROWS = "Angry Eyebrows";
-    string constant CONCERNED_EYEBROWS = "Concerned Eyebrows";
-    string constant LEFT_LOWERED_EYEBROW = "Left Lowered Eyebrow";
-    string constant NORMAL_EYEBROWS = "Normal Eyebrows";
-    string constant SERIOUS_EYEBROWS = "Serious Eyebrows";
-
-    struct Eyebrow {
-        string name;
-        string svg;
-    }
-
     /// @dev SVG content for the Angry Eyebrows
     function angryEyebrowSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -83,17 +72,17 @@ library EyebrowDetail {
     }
 
     /// @dev Returns the SVG and name for a specific eyebrow type
-    function getEyebrowById(uint8 id) internal pure returns (Eyebrow memory) {
+    function getEyebrowById(uint8 id) internal pure returns (string memory) {
         if (id == 1) {
-            return Eyebrow({name: ANGRY_EYEBROWS, svg: angryEyebrowSVG()});
+            return angryEyebrowSVG();
         } else if (id == 2) {
-            return Eyebrow({name: CONCERNED_EYEBROWS, svg: concernedEyebrowSVG()});
+            return concernedEyebrowSVG();
         } else if (id == 3) {
-            return Eyebrow({name: LEFT_LOWERED_EYEBROW, svg: leftLoweredEyebrowSVG()});
+            return leftLoweredEyebrowSVG();
         } else if (id == 4) {
-            return Eyebrow({name: NORMAL_EYEBROWS, svg: normalEyebrowSVG()});
+            return normalEyebrowSVG();
         } else if (id == 5) {
-            return Eyebrow({name: SERIOUS_EYEBROWS, svg: seriousEyebrowSVG()});
+            return seriousEyebrowSVG();
         } else {
             revert EyebrowDetail__InvalidEyebrowType();
         }

@@ -3,22 +3,10 @@ pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
 import {Colors, Errors} from "src/types/Constants.sol";
+import {BytesConverter} from "src/libraries/BytesConverter.sol";
 
 library MouthDetail {
     using Colors for bytes3;
-
-    string constant GRIN = "Grin";
-    string constant LIPS = "Lips";
-    string constant OPEN_MOUTH = "Open Mouth";
-    string constant OPEN_SMILE = "Open Smile";
-    string constant SAD = "Sad";
-    string constant SERIOUS_MOUTH = "Serious Mouth";
-    string constant TONGUE = "Tongue";
-
-    struct Mouth {
-        string name;
-        string svg;
-    }
 
     enum LipsColor {
         LIPS_RED,
@@ -46,23 +34,6 @@ library MouthDetail {
         }
     }
 
-    /// @dev Converts bytes3 to a hex string for SVG
-    function bytesToHex(bytes3 color) internal pure returns (string memory) {
-        bytes memory buffer = new bytes(7);
-        buffer[0] = "#";
-        for (uint256 i = 0; i < 3; i++) {
-            buffer[i * 2 + 1] = _toHexChar(uint8(color[i] >> 4));
-            buffer[i * 2 + 2] = _toHexChar(uint8(color[i] & 0x0f));
-        }
-
-        return string(buffer);
-    }
-
-    /// @dev Helper to convert uint8 to hex char
-    function _toHexChar(uint8 value) private pure returns (bytes1) {
-        return bytes1(value < 10 ? value + 48 : value + 87);
-    }
-
     /// @dev Returns the SVG for a grin mouth
     function grinMouthSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -88,11 +59,11 @@ library MouthDetail {
                     '<path d="M468.41,635.27a255.08,255.08,0,0,0,55.61,0q-.42-.27-.84-.6c-.71-.54-1.46-1.18-2.38-2l-2.42-2.26c-3.8-3.52-6.34-5.22-9.26-5.73-3.75-.65-7.69,1-12.18,5.81a1,1,0,0,1-1.45,0c-4.49-4.77-8.43-6.46-12.18-5.81-2.92.51-5.46,2.21-9.27,5.73l-2.42,2.26c-.91.84-1.66,1.48-2.37,2Q468.81,635,468.41,635.27Z" style="fill:#010101"/>',
                     '<path d="M560.41,648.36l-.56-2.28C487.07,662.7,440,647.21,440,647.21l-1.83-.32a1.84,1.84,0,0,0,.49,1.78c18.05,18.05,34,30.45,61.79,30.45C529.93,679.12,542.43,666.22,560.41,648.36Z" style="fill:#f3ab98"/>',
                     '<path d="M558.55,642.44c-3.63,0-5.35-1.31-15.58-10.79-7.49-6.93-12.63-10.36-18.91-11.46-7.83-1.37-15.83-.88-24.36,7.68-8.53-8.56-16.52-9-24.36-7.68-6.28,1.1-11.42,4.53-18.91,11.46-10.23,9.48-11.95,10.79-15.58,10.79a1.84,1.84,0,0,0-1.3,3.14q26.25,26.25,60.15,26.28t60.15-26.28A1.84,1.84,0,0,0,558.55,642.44Z" style="fill:',
-                    bytesToHex(baseColor),
+                    BytesConverter.bytesToHex(baseColor),
                     '"',
                     "/>",
                     '<path d="M559.57,645.84l-.55-2.21c-70.56,16.12-118.17.53-118.17.53l-1.77-.31a1.82,1.82,0,0,0,.47,1.73q26.25,26.25,60.15,26.28Q533.38,671.86,559.57,645.84Z" style="fill:',
-                    bytesToHex(shadowColor),
+                    BytesConverter.bytesToHex(shadowColor),
                     '"',
                     "/>",
                     '<path d="M479.28,650.39c13.45-.94,26.69-1.44,39.89-3,6.59-.76,13.15-1.74,19.67-2.86s13-2.41,19.51-3.8l1.34,5.85q-9.87,2.34-19.92,3.81t-20.16,2.06c-6.75.37-13.5.54-20.25.27A127.84,127.84,0,0,1,479.28,650.39Z" style="fill:#592d3d"/>',
@@ -175,21 +146,21 @@ library MouthDetail {
     }
 
     /// @dev Returns the SVG for a mouth based on the given mouth type
-    function getMouthById(uint8 id, uint8 color) internal pure returns (Mouth memory) {
+    function getMouthById(uint8 id, uint8 color) internal pure returns (string memory) {
         if (id == 1) {
-            return Mouth(GRIN, grinMouthSVG());
+            return grinMouthSVG();
         } else if (id == 2) {
-            return Mouth(LIPS, lipsMouthSVG(color));
+            return lipsMouthSVG(color);
         } else if (id == 3) {
-            return Mouth(OPEN_MOUTH, openMouthSVG());
+            return openMouthSVG();
         } else if (id == 4) {
-            return Mouth(OPEN_SMILE, openSmileMouthSVG());
+            return openSmileMouthSVG();
         } else if (id == 5) {
-            return Mouth(SAD, sadMouthSVG());
+            return sadMouthSVG();
         } else if (id == 6) {
-            return Mouth(SERIOUS_MOUTH, seriousMouthSVG());
+            return seriousMouthSVG();
         } else if (id == 7) {
-            return Mouth(TONGUE, toungeMouthSVG());
+            return toungeMouthSVG();
         } else {
             revert Errors.InvalidType(id);
         }

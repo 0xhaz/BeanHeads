@@ -6,21 +6,6 @@ import {SVGBody} from "./SVGBody.sol";
 library EyesDetail {
     error EyesDetail__InvalidEyeShape();
 
-    string constant CONTENT_EYES = "Content Eyes";
-    string constant DIZZY_EYES = "Dizzy Eyes";
-    string constant HAPPY_EYES = "Happy Eyes";
-    string constant HEART_EYES = "Heart Eyes";
-    string constant LEFT_TWITCH_EYE = "Left Twitch Eye";
-    string constant NORMAL_EYES = "Normal Eyes";
-    string constant SIMPLE_EYES = "Simple Eyes";
-    string constant SQUINT_EYES = "Squint Eyes";
-    string constant WINK_EYE = "Wink Eye";
-
-    struct Eye {
-        string name;
-        string svg;
-    }
-
     /// @dev SVG content for the Content Eyes
     function contentEyeSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -172,25 +157,25 @@ library EyesDetail {
     }
 
     /// @dev Returns the SVG and name for the given eye type
-    function getEyeById(uint8 id) internal pure returns (Eye memory) {
+    function getEyeById(uint8 id) internal pure returns (string memory) {
         if (id == 1) {
-            return Eye({name: CONTENT_EYES, svg: normalEyeSVG()});
+            return contentEyeSVG();
         } else if (id == 2) {
-            return Eye({name: DIZZY_EYES, svg: dizzyEyeSVG()});
+            return simpleEyeSVG();
         } else if (id == 3) {
-            return Eye({name: HAPPY_EYES, svg: happyEyeSVG()});
+            return squintEyeSVG();
         } else if (id == 4) {
-            return Eye({name: HEART_EYES, svg: heartEyeSVG()});
+            return winkEyeSVG();
         } else if (id == 5) {
-            return Eye({name: LEFT_TWITCH_EYE, svg: leftTwitchEyeSVG()});
+            return leftTwitchEyeSVG();
         } else if (id == 6) {
-            return Eye({name: NORMAL_EYES, svg: normalEyeSVG()});
+            return normalEyeSVG();
         } else if (id == 7) {
-            return Eye({name: SIMPLE_EYES, svg: simpleEyeSVG()});
+            return simpleEyeSVG();
         } else if (id == 8) {
-            return Eye({name: SQUINT_EYES, svg: squintEyeSVG()});
+            return squintEyeSVG();
         } else if (id == 9) {
-            return Eye({name: WINK_EYE, svg: winkEyeSVG()});
+            return winkEyeSVG();
         } else {
             revert EyesDetail__InvalidEyeShape();
         }
