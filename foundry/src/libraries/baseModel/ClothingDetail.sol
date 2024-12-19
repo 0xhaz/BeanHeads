@@ -4,9 +4,13 @@ pragma solidity ^0.8.26;
 import {SVGBody} from "./SVGBody.sol";
 import {Colors, Errors} from "src/types/Constants.sol";
 import {BytesConverter} from "src/libraries/BytesConverter.sol";
+import {BodyDetail} from "src/libraries/baseModel/BodyDetail.sol";
 
 library ClothingDetail {
     using Colors for bytes3;
+
+    uint8 constant WOMEN = 1;
+    uint8 constant MEN = 2;
 
     enum ClothColor {
         WHITE,
@@ -14,6 +18,18 @@ library ClothingDetail {
         BLACK,
         GREEN,
         RED
+    }
+
+    /// fetch body type by id
+    /// @dev It returns women body type if the id is 1, otherwise
+    /// it returns 2 as a men body type
+    function getGender(uint8 id, uint8 color) internal pure returns (string memory bodyType) {
+        bodyType = BodyDetail.getBodyById(id, color);
+        if (id == WOMEN) {
+            return BodyDetail.womanBodySVG(id, color);
+        } else {
+            return BodyDetail.chestSVG(color);
+        }
     }
 
     /// @dev Retrieves the base and shadow color for the clothing
