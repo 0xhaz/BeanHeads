@@ -45,7 +45,7 @@ library Genesis {
                 BodyDetail.getBodyById(params.bodyType, params.skinColor),
                 "</g>",
                 "<g>",
-                ClothingDetail.getClothingById(params.clothes, params.clothingColor),
+                ClothingDetail.getClothingById(params.bodyType, params.clothes, params.clothingColor),
                 "</g>",
                 "<g>",
                 HairDetail.getHairById(params.hairStyle, params.hairColor),

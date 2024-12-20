@@ -98,79 +98,79 @@ contract SVGTest is Test {
         vm.writeFile("./output/v_neck.svg", vNeckSVG);
 
         // Test by using function
-        string memory whiteDress = ClothingDetail.getClothingById(1, 0);
+        string memory whiteDress = ClothingDetail.getClothingById(1, 1, 0);
         vm.writeFile("./output/white_dress.svg", whiteDress);
 
-        string memory blueDress = ClothingDetail.getClothingById(1, 1);
+        string memory blueDress = ClothingDetail.getClothingById(1, 1, 1);
         vm.writeFile("./output/blue_dress.svg", blueDress);
 
-        string memory blackDress = ClothingDetail.getClothingById(1, 2);
+        string memory blackDress = ClothingDetail.getClothingById(1, 1, 2);
         vm.writeFile("./output/black_dress.svg", blackDress);
 
-        string memory greenDress = ClothingDetail.getClothingById(1, 3);
+        string memory greenDress = ClothingDetail.getClothingById(1, 1, 3);
         vm.writeFile("./output/green_dress.svg", greenDress);
 
-        string memory redDress = ClothingDetail.getClothingById(1, 4);
+        string memory redDress = ClothingDetail.getClothingById(1, 1, 4);
         vm.writeFile("./output/red_dress.svg", redDress);
 
-        string memory shirtWhite = ClothingDetail.getClothingById(2, 0);
+        string memory shirtWhite = ClothingDetail.getClothingById(2, 1, 0);
         vm.writeFile("./output/white_shirt.svg", shirtWhite);
 
-        string memory shirtBlue = ClothingDetail.getClothingById(2, 1);
+        string memory shirtBlue = ClothingDetail.getClothingById(2, 1, 1);
         vm.writeFile("./output/blue_shirt.svg", shirtBlue);
 
-        string memory shirtBlack = ClothingDetail.getClothingById(2, 2);
+        string memory shirtBlack = ClothingDetail.getClothingById(2, 1, 2);
         vm.writeFile("./output/black_shirt.svg", shirtBlack);
 
-        string memory shirtGreen = ClothingDetail.getClothingById(2, 3);
+        string memory shirtGreen = ClothingDetail.getClothingById(2, 1, 3);
         vm.writeFile("./output/green_shirt.svg", shirtGreen);
 
-        string memory shirtRed = ClothingDetail.getClothingById(2, 4);
+        string memory shirtRed = ClothingDetail.getClothingById(2, 2, 4);
         vm.writeFile("./output/red_shirt.svg", shirtRed);
 
-        string memory tShirtWhite = ClothingDetail.getClothingById(3, 0);
+        string memory tShirtWhite = ClothingDetail.getClothingById(3, 1, 0);
         vm.writeFile("./output/white_t_shirt.svg", tShirtWhite);
 
-        string memory tShirtBlue = ClothingDetail.getClothingById(3, 1);
+        string memory tShirtBlue = ClothingDetail.getClothingById(3, 1, 1);
         vm.writeFile("./output/blue_t_shirt.svg", tShirtBlue);
 
-        string memory tShirtBlack = ClothingDetail.getClothingById(3, 2);
+        string memory tShirtBlack = ClothingDetail.getClothingById(1, 3, 2);
         vm.writeFile("./output/black_t_shirt.svg", tShirtBlack);
 
-        string memory tShirtGreen = ClothingDetail.getClothingById(3, 3);
+        string memory tShirtGreen = ClothingDetail.getClothingById(1, 3, 3);
         vm.writeFile("./output/green_t_shirt.svg", tShirtGreen);
 
-        string memory tShirtRed = ClothingDetail.getClothingById(3, 4);
+        string memory tShirtRed = ClothingDetail.getClothingById(1, 3, 4);
         vm.writeFile("./output/red_t_shirt.svg", tShirtRed);
 
-        string memory tankTopWhite = ClothingDetail.getClothingById(4, 0);
+        string memory tankTopWhite = ClothingDetail.getClothingById(1, 4, 0);
         vm.writeFile("./output/white_tank_top.svg", tankTopWhite);
 
-        string memory tankTopBlue = ClothingDetail.getClothingById(4, 1);
+        string memory tankTopBlue = ClothingDetail.getClothingById(1, 4, 1);
         vm.writeFile("./output/blue_tank_top.svg", tankTopBlue);
 
-        string memory tankTopBlack = ClothingDetail.getClothingById(4, 2);
+        string memory tankTopBlack = ClothingDetail.getClothingById(1, 4, 2);
         vm.writeFile("./output/black_tank_top.svg", tankTopBlack);
 
-        string memory tankTopGreen = ClothingDetail.getClothingById(4, 3);
+        string memory tankTopGreen = ClothingDetail.getClothingById(1, 4, 3);
         vm.writeFile("./output/green_tank_top.svg", tankTopGreen);
 
-        string memory tankTopRed = ClothingDetail.getClothingById(4, 4);
+        string memory tankTopRed = ClothingDetail.getClothingById(1, 4, 4);
         vm.writeFile("./output/red_tank_top.svg", tankTopRed);
 
-        string memory vNeckWhite = ClothingDetail.getClothingById(5, 0);
+        string memory vNeckWhite = ClothingDetail.getClothingById(1, 5, 0);
         vm.writeFile("./output/white_v_neck.svg", vNeckWhite);
 
-        string memory vNeckBlue = ClothingDetail.getClothingById(5, 1);
+        string memory vNeckBlue = ClothingDetail.getClothingById(1, 5, 1);
         vm.writeFile("./output/blue_v_neck.svg", vNeckBlue);
 
-        string memory vNeckBlack = ClothingDetail.getClothingById(5, 2);
+        string memory vNeckBlack = ClothingDetail.getClothingById(1, 5, 2);
         vm.writeFile("./output/black_v_neck.svg", vNeckBlack);
 
-        string memory vNeckGreen = ClothingDetail.getClothingById(5, 3);
+        string memory vNeckGreen = ClothingDetail.getClothingById(1, 5, 3);
         vm.writeFile("./output/green_v_neck.svg", vNeckGreen);
 
-        string memory vNeckRed = ClothingDetail.getClothingById(5, 4);
+        string memory vNeckRed = ClothingDetail.getClothingById(1, 5, 4);
         vm.writeFile("./output/red_v_neck.svg", vNeckRed);
 
         /*//////////////////////////////////////////////////////////////
