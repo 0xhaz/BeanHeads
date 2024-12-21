@@ -77,7 +77,7 @@ library ClothingDetail {
                 BytesConverter.bytesToHex(baseColor),
                 ' stroke=#592d3d strokeMiterlimit={10} strokeWidth="12px" />',
                 '<path d="M455.75,938.92a85.36,85.36,0,0,1-85.36-85.36,86.38,86.38,0,0,1,.44-8.71,69.31,69.31,0,0,0,96.31,93.29A85.67,85.67,0,0,1,455.75,938.92Z" fill=',
-                BytesConverter.bytesToHex(shadowColor),
+                BytesConverter.bytesToHex(baseColor),
                 " />",
                 '<path d="M361.9,878.86a69.06,69.06,0,0,1,18.63-47.28c4.22-4.52,44.27,6.19,67.81,27.26,23.11,20.69,43.23,54.49,40.35,58.75A69.31,69.31,0,0,1,361.9,878.86Z" fill="none" stroke=#592d3d strokeMiterlimit={10} strokeWidth="12px" />',
                 '<path d="M401.89,848.39a83.45,83.45,0,0,1,20.25,6.87A84.36,84.36,0,0,1,440.28,867a106.06,106.06,0,0,1,14.65,15.71,100,100,0,0,1,11.18,18.17c-5.06-5-9.84-10.13-14.75-15.07s-9.84-9.8-15-14.26a154.79,154.79,0,0,0-16.53-12.18C414,855.57,408,852.06,401.89,848.39Z" fill=#ffffff />'
@@ -326,43 +326,43 @@ library ClothingDetail {
     }
 
     /// @dev Returns the SVG and name for a specific clothing item
-    function getClothingById(uint8 bodyId, uint8 id, uint8 color) internal pure returns (string memory) {
+    function getClothingById(uint8 bodyId, uint8 clothId, uint8 color) internal pure returns (string memory) {
         string memory clothingSVG;
 
-        if (id == 0) {
+        if (clothId == 0) {
             return "";
-        } else if (id == 1) {
+        } else if (clothId == 1) {
             if (bodyId == WOMEN) {
                 clothingSVG = string(abi.encodePacked("<g>", adjustBreastColor(color), dressSVG(color), "</g>"));
             } else {
                 clothingSVG = dressSVG(color);
             }
-        } else if (id == 2) {
+        } else if (clothId == 2) {
             if (bodyId == WOMEN) {
                 clothingSVG = string(abi.encodePacked("<g>", adjustBreastColor(color), shirtSVG(color), "</g>"));
             } else {
                 clothingSVG = shirtSVG(color);
             }
-        } else if (id == 3) {
+        } else if (clothId == 3) {
             if (bodyId == WOMEN) {
                 clothingSVG = string(abi.encodePacked("<g>", adjustBreastColor(color), tShirtSVG(color), "</g>"));
             } else {
                 clothingSVG = tShirtSVG(color);
             }
-        } else if (id == 4) {
+        } else if (clothId == 4) {
             if (bodyId == WOMEN) {
                 clothingSVG = string(abi.encodePacked("<g>", adjustBreastColor(color), tankTopSVG(color), "</g>"));
             } else {
                 clothingSVG = tankTopSVG(color);
             }
-        } else if (id == 5) {
+        } else if (clothId == 5) {
             if (bodyId == WOMEN) {
                 clothingSVG = string(abi.encodePacked("<g>", adjustBreastColor(color), vNeckSVG(color), "</g>"));
             } else {
                 clothingSVG = vNeckSVG(color);
             }
         } else {
-            revert Errors.InvalidType(id);
+            revert Errors.InvalidType(clothId);
         }
 
         return clothingSVG;
