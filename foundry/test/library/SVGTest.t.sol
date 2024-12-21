@@ -34,7 +34,7 @@ contract SVGTest is Test {
                              BODY TEST
         //////////////////////////////////////////////////////////////*/
 
-        string memory breastSVG = BodyDetail.breastSVG(0, 1);
+        string memory breastSVG = BodyDetail.breastSVGWithBody(0);
         // console.log(breastSVG);
         vm.writeFile("./output/breast.svg", breastSVG);
 
