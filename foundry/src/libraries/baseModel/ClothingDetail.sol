@@ -86,7 +86,7 @@ library ClothingDetail {
     }
 
     /// @dev SVG content for front dress
-    function dressFrontSVG(uint8 bodyTypeId, uint8 id, uint8 skinColor) internal pure returns (string memory) {
+    function dressFrontSVG(uint8 bodyTypeId, uint8 id) internal pure returns (string memory) {
         (bytes3 baseColor,) = getColorForClothes(id);
 
         if (bodyTypeId == WOMEN) {
@@ -103,7 +103,7 @@ library ClothingDetail {
                     'stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
                     '<path d="M320.63,822.65c.28.24.83.61,1.27.92s1,.64,1.45.95c1,.6,2,1.21,3.08,1.77,2.08,1.16,4.23,2.25,6.43,3.28s4.42,2,6.65,3c1.12.5,2.23,1,3.34,1.58s2.22,1.1,3.31,1.76a40.85,40.85,0,0,1-7.42-1.08q-3.63-.9-7.17-2.15a65,65,0,0,1-7-2.89c-1.13-.56-2.26-1.16-3.36-1.84-.55-.34-1.09-.69-1.64-1.06a15.93,15.93,0,0,1-1.67-1.31Z" style="fill:#592d3d"/>',
                     "<g>",
-                    BodyDetail.onlyBreastSVG(id, skinColor),
+                    BodyDetail.onlyBreastSVG(id),
                     "</g>"
                 )
             );
@@ -168,15 +168,15 @@ library ClothingDetail {
     }
 
     /// @dev SVG content for dress
-    function dressSVG(uint8 bodyTypeId, uint8 id, uint8 skinColor) internal pure returns (string memory) {
+    function dressSVG(uint8 bodyTypeId, uint8 id) internal pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="dress" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
-            string(abi.encodePacked(dressFrontSVG(bodyTypeId, id, skinColor), dressBackSVG(id)))
+            string(abi.encodePacked(dressFrontSVG(bodyTypeId, id), dressBackSVG(id)))
         );
     }
 
     /// @dev SVG content for shirt
-    function shirtSVG(uint8 bodyTypeId, uint8 id, uint8 skinColor) internal pure returns (string memory) {
+    function shirtSVG(uint8 bodyTypeId, uint8 id) internal pure returns (string memory) {
         (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(id);
 
         if (bodyTypeId == WOMEN) {
@@ -248,7 +248,7 @@ library ClothingDetail {
                         '<circle cx="515.77" cy="982.93" r="4.8" style="fill:#592d3d"/>',
                         '<path d="M490.89,836.19c-.05-.06,0,0,0,0l.07.05a.88.88,0,0,1,.17.12l.38.29c.25.21.52.42.78.65.53.45,1.09.93,1.7,1.39s1.27.9,2,1.42a27.37,27.37,0,0,1,2.71,2.33,5.61,5.61,0,0,1-3.13,2.43,9.41,9.41,0,0,1-3.7.27,11,11,0,0,1-3.63-1,9.72,9.72,0,0,1-1.65-1,8.85,8.85,0,0,1-.77-.63c-.12-.11-.25-.23-.37-.36l-.2-.21-.25-.29Z" style="fill:#592d3d"/>',
                         "<g>",
-                        BodyDetail.onlyBreastSVG(id, skinColor),
+                        BodyDetail.onlyBreastSVG(id),
                         "</g>"
                     )
                 )
@@ -328,47 +328,91 @@ library ClothingDetail {
     }
 
     /// @dev SVG content for t-shirt
-    function tShirtSVG(uint8 id) internal pure returns (string memory) {
+    function tShirtSVG(uint8 bodyTypeId, uint8 id) internal pure returns (string memory) {
         (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(id);
 
-        return SVGBody.fullSVG(
-            'id="t-shirt" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
-            string(
-                abi.encodePacked(
-                    '<path d="M677.8,906.35c.21-37.11-1.21-70.07-7.73-95.39C660,785.6,641.89,770.48,610,770.48L632.79,905S655.31,915.24,677.8,906.35Z" style="fill:#f3ab98"/>',
-                    '<path d="M686.41,895.79a20.31,20.31,0,0,1-3.7,2.43" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M326.11,809.88c-6.83,25.57-8,59.13-7.74,97,19.9,8.54,50.42-2.15,50.42-2.15l17.33-132.24C355.25,772.46,336.85,786.36,326.11,809.88Z" style="fill:#f3ab98"/>',
-                    '<path d="M613.76,758.72H559.55v.1a62.78,62.78,0,0,1-1.44,13.39,60.92,60.92,0,0,1-1.74,6.33,50.88,50.88,0,0,1-10,16.83,48.2,48.2,0,0,1-4.5,4.43c-25.17,18.2-65.17,19.2-89.48-.58a51.79,51.79,0,0,1-7.11-7.6,50.84,50.84,0,0,1-9.1-19.41,62.41,62.41,0,0,1-1.07-6.59,61,61,0,0,1-.37-6.8v-.1H380.53A13.28,13.28,0,0,0,367.26,772v284.68A13.28,13.28,0,0,0,380.53,1070H619.47a13.28,13.28,0,0,0,13.27-13.28V778.6C632.74,766.38,626.85,758.72,613.76,758.72Z" style="fill:',
-                    BytesConverter.bytesToHex(baseColor),
-                    '"/>',
-                    '<path d="M610,758.72c63.54,0,73.4,56,73.9,133.17-18.6,11.62-48.91,1.31-48.91,1.31Z" style="fill:',
-                    BytesConverter.bytesToHex(baseColor),
-                    '"/>',
-                    '<path d="M632.74,831.87,610,870l11.38,130h11.61V894.35l17.28,2.89C644.6,825.07,632.74,831.87,632.74,831.87Z" style="fill:',
-                    BytesConverter.bytesToHex(shadowColor),
-                    '"/>',
-                    '<path d="M386.12,758.72c-61.78,0-75.83,53.8-76.85,127.66,19,19.86,58,4.58,58,4.58Z" style="fill:',
-                    BytesConverter.bytesToHex(baseColor),
-                    '"/>',
-                    '<path d="M367.23,831.87V891l-17.31,4.31C355.59,825.19,367.23,831.87,367.23,831.87Z" style="fill:',
-                    BytesConverter.bytesToHex(shadowColor),
-                    '"/>',
-                    '<path d="M610,758.72c67.41,0,78.45,56.29,78.9,133.78-26.2,12.43-53.91.7-53.91.7" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M386.12,758.72c-66.79,0-80.08,54.7-80.76,130.72C326,904.22,367.22,891,367.22,891" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M380.53,1070H497.15C388,1070,396.24,838.82,367.26,838.82v217.86A13.28,13.28,0,0,0,380.53,1070Z" style="fill:',
-                    BytesConverter.bytesToHex(shadowColor),
-                    '"/>',
-                    '<path d="M361.26,860.85c-.19-3.67-.11-7.34.05-11s.47-7.35.86-11c.2-1.84.4-3.67.65-5.51s.49-3.67.85-5.51a44.18,44.18,0,0,1,3.59-11,43.74,43.74,0,0,1,3.58,11c.37,1.84.63,3.67.86,5.51s.45,3.67.65,5.51c.38,3.67.68,7.34.85,11s.25,7.34.06,11Z" style="fill:#592d3d"/>',
-                    '<path d="M632.74,870v8c.26,34,.26,69,0,102.75,0,2.87,0,5.72,0,8.53v67.41A13.28,13.28,0,0,1,619.47,1070H380.53a13.28,13.28,0,0,1-13.27-13.28V998.52c0-2.51,0-5.07,0-7.65-.25-34.87-.25-69.87,0-105.3V860.85" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M626.74,870c-.19-4.17-.1-8.35.06-12.53s.47-8.35.85-12.53c.2-2.09.41-4.18.65-6.27s.49-4.17.86-6.26a54.55,54.55,0,0,1,3.58-12.53,55.09,55.09,0,0,1,3.59,12.53c.36,2.09.62,4.18.85,6.26s.45,4.18.65,6.27c.38,4.18.69,8.35.85,12.53s.25,8.36.06,12.53Z" style="fill:#592d3d"/>',
-                    '<path d="M380.53,758.82l233.23-.1" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M559.55,758.82a62.78,62.78,0,0,1-1.44,13.39,60.92,60.92,0,0,1-1.74,6.33,50.88,50.88,0,0,1-10,16.83,48.2,48.2,0,0,1-4.5,4.43c-25.17,18.2-65.17,19.2-89.48-.58a51.79,51.79,0,0,1-7.11-7.6,50.84,50.84,0,0,1-9.1-19.41,62.41,62.41,0,0,1-1.07-6.59,61,61,0,0,1-.37-6.8" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M503.4,828.39a66.61,66.61,0,0,1-18.39,1.1,69.79,69.79,0,0,1-18.2-3.76,61.46,61.46,0,0,1-16.5-8.64l-1.86-1.41c-.61-.48-1.2-1-1.79-1.52a32.24,32.24,0,0,1-3.33-3.28,43.83,43.83,0,0,1-5.38-7.51,87.37,87.37,0,0,0,6.74,6.09c.58.48,1.17.95,1.75,1.4s1.23.82,1.84,1.24,1.22.84,1.85,1.23l1.91,1.16a88.05,88.05,0,0,0,16.1,7.46,106.26,106.26,0,0,0,17.25,4.45A173.7,173.7,0,0,0,503.4,828.39Z" style="fill:#592d3d"/>',
-                    '<path d="M307.83,892.5a24.54,24.54,0,0,0,3.68,2.77" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M674.7,882.69a19.88,19.88,0,0,1-6.76,2.52,34.83,34.83,0,0,1-7.2.65,40.16,40.16,0,0,1-7.18-.79c-1.18-.21-2.33-.56-3.49-.87s-2.27-.77-3.37-1.24c1.21,0,2.38.18,3.56.28l3.52.29c1.17,0,2.33.2,3.5.21s2.32.11,3.48.12q3.5.06,7-.19A49.31,49.31,0,0,0,674.7,882.69Z" style="fill:#592d3d"/>'
+        if (bodyTypeId == WOMEN) {
+            return SVGBody.fullSVG(
+                'id="t-shirt" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+                string(
+                    abi.encodePacked(
+                        '<path d="M677.8,906.35c.21-37.11-1.21-70.07-7.73-95.39C660,785.6,641.89,770.48,610,770.48L632.79,905S655.31,915.24,677.8,906.35Z" style="fill:#f3ab98"/>',
+                        '<path d="M686.41,895.79a20.31,20.31,0,0,1-3.7,2.43" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M326.11,809.88c-6.83,25.57-8,59.13-7.74,97,19.9,8.54,50.42-2.15,50.42-2.15l17.33-132.24C355.25,772.46,336.85,786.36,326.11,809.88Z" style="fill:#f3ab98"/>',
+                        '<path d="M613.76,758.72H559.55v.1a62.78,62.78,0,0,1-1.44,13.39,60.92,60.92,0,0,1-1.74,6.33,50.88,50.88,0,0,1-10,16.83,48.2,48.2,0,0,1-4.5,4.43c-25.17,18.2-65.17,19.2-89.48-.58a51.79,51.79,0,0,1-7.11-7.6,50.84,50.84,0,0,1-9.1-19.41,62.41,62.41,0,0,1-1.07-6.59,61,61,0,0,1-.37-6.8v-.1H380.53A13.28,13.28,0,0,0,367.26,772v284.68A13.28,13.28,0,0,0,380.53,1070H619.47a13.28,13.28,0,0,0,13.27-13.28V778.6C632.74,766.38,626.85,758.72,613.76,758.72Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M610,758.72c63.54,0,73.4,56,73.9,133.17-18.6,11.62-48.91,1.31-48.91,1.31Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M632.74,831.87,610,870l11.38,130h11.61V894.35l17.28,2.89C644.6,825.07,632.74,831.87,632.74,831.87Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M386.12,758.72c-61.78,0-75.83,53.8-76.85,127.66,19,19.86,58,4.58,58,4.58Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M367.23,831.87V891l-17.31,4.31C355.59,825.19,367.23,831.87,367.23,831.87Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M610,758.72c67.41,0,78.45,56.29,78.9,133.78-26.2,12.43-53.91.7-53.91.7" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M386.12,758.72c-66.79,0-80.08,54.7-80.76,130.72C326,904.22,367.22,891,367.22,891" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M380.53,1070H497.15C388,1070,396.24,838.82,367.26,838.82v217.86A13.28,13.28,0,0,0,380.53,1070Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M361.26,860.85c-.19-3.67-.11-7.34.05-11s.47-7.35.86-11c.2-1.84.4-3.67.65-5.51s.49-3.67.85-5.51a44.18,44.18,0,0,1,3.59-11,43.74,43.74,0,0,1,3.58,11c.37,1.84.63,3.67.86,5.51s.45,3.67.65,5.51c.38,3.67.68,7.34.85,11s.25,7.34.06,11Z" style="fill:#592d3d"/>',
+                        '<path d="M632.74,870v8c.26,34,.26,69,0,102.75,0,2.87,0,5.72,0,8.53v67.41A13.28,13.28,0,0,1,619.47,1070H380.53a13.28,13.28,0,0,1-13.27-13.28V998.52c0-2.51,0-5.07,0-7.65-.25-34.87-.25-69.87,0-105.3V860.85" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M626.74,870c-.19-4.17-.1-8.35.06-12.53s.47-8.35.85-12.53c.2-2.09.41-4.18.65-6.27s.49-4.17.86-6.26a54.55,54.55,0,0,1,3.58-12.53,55.09,55.09,0,0,1,3.59,12.53c.36,2.09.62,4.18.85,6.26s.45,4.18.65,6.27c.38,4.18.69,8.35.85,12.53s.25,8.36.06,12.53Z" style="fill:#592d3d"/>',
+                        '<path d="M380.53,758.82l233.23-.1" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M559.55,758.82a62.78,62.78,0,0,1-1.44,13.39,60.92,60.92,0,0,1-1.74,6.33,50.88,50.88,0,0,1-10,16.83,48.2,48.2,0,0,1-4.5,4.43c-25.17,18.2-65.17,19.2-89.48-.58a51.79,51.79,0,0,1-7.11-7.6,50.84,50.84,0,0,1-9.1-19.41,62.41,62.41,0,0,1-1.07-6.59,61,61,0,0,1-.37-6.8" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M503.4,828.39a66.61,66.61,0,0,1-18.39,1.1,69.79,69.79,0,0,1-18.2-3.76,61.46,61.46,0,0,1-16.5-8.64l-1.86-1.41c-.61-.48-1.2-1-1.79-1.52a32.24,32.24,0,0,1-3.33-3.28,43.83,43.83,0,0,1-5.38-7.51,87.37,87.37,0,0,0,6.74,6.09c.58.48,1.17.95,1.75,1.4s1.23.82,1.84,1.24,1.22.84,1.85,1.23l1.91,1.16a88.05,88.05,0,0,0,16.1,7.46,106.26,106.26,0,0,0,17.25,4.45A173.7,173.7,0,0,0,503.4,828.39Z" style="fill:#592d3d"/>',
+                        '<path d="M307.83,892.5a24.54,24.54,0,0,0,3.68,2.77" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M674.7,882.69a19.88,19.88,0,0,1-6.76,2.52,34.83,34.83,0,0,1-7.2.65,40.16,40.16,0,0,1-7.18-.79c-1.18-.21-2.33-.56-3.49-.87s-2.27-.77-3.37-1.24c1.21,0,2.38.18,3.56.28l3.52.29c1.17,0,2.33.2,3.5.21s2.32.11,3.48.12q3.5.06,7-.19A49.31,49.31,0,0,0,674.7,882.69Z" style="fill:#592d3d"/>',
+                        "<g>",
+                        BodyDetail.onlyBreastSVG(id),
+                        "</g>"
+                    )
                 )
-            )
-        );
+            );
+        } else {
+            return SVGBody.fullSVG(
+                'id="t-shirt" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+                string(
+                    abi.encodePacked(
+                        '<path d="M677.8,906.35c.21-37.11-1.21-70.07-7.73-95.39C660,785.6,641.89,770.48,610,770.48L632.79,905S655.31,915.24,677.8,906.35Z" style="fill:#f3ab98"/>',
+                        '<path d="M686.41,895.79a20.31,20.31,0,0,1-3.7,2.43" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M326.11,809.88c-6.83,25.57-8,59.13-7.74,97,19.9,8.54,50.42-2.15,50.42-2.15l17.33-132.24C355.25,772.46,336.85,786.36,326.11,809.88Z" style="fill:#f3ab98"/>',
+                        '<path d="M613.76,758.72H559.55v.1a62.78,62.78,0,0,1-1.44,13.39,60.92,60.92,0,0,1-1.74,6.33,50.88,50.88,0,0,1-10,16.83,48.2,48.2,0,0,1-4.5,4.43c-25.17,18.2-65.17,19.2-89.48-.58a51.79,51.79,0,0,1-7.11-7.6,50.84,50.84,0,0,1-9.1-19.41,62.41,62.41,0,0,1-1.07-6.59,61,61,0,0,1-.37-6.8v-.1H380.53A13.28,13.28,0,0,0,367.26,772v284.68A13.28,13.28,0,0,0,380.53,1070H619.47a13.28,13.28,0,0,0,13.27-13.28V778.6C632.74,766.38,626.85,758.72,613.76,758.72Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M610,758.72c63.54,0,73.4,56,73.9,133.17-18.6,11.62-48.91,1.31-48.91,1.31Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M632.74,831.87,610,870l11.38,130h11.61V894.35l17.28,2.89C644.6,825.07,632.74,831.87,632.74,831.87Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M386.12,758.72c-61.78,0-75.83,53.8-76.85,127.66,19,19.86,58,4.58,58,4.58Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M367.23,831.87V891l-17.31,4.31C355.59,825.19,367.23,831.87,367.23,831.87Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M610,758.72c67.41,0,78.45,56.29,78.9,133.78-26.2,12.43-53.91.7-53.91.7" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M386.12,758.72c-66.79,0-80.08,54.7-80.76,130.72C326,904.22,367.22,891,367.22,891" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M380.53,1070H497.15C388,1070,396.24,838.82,367.26,838.82v217.86A13.28,13.28,0,0,0,380.53,1070Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M361.26,860.85c-.19-3.67-.11-7.34.05-11s.47-7.35.86-11c.2-1.84.4-3.67.65-5.51s.49-3.67.85-5.51a44.18,44.18,0,0,1,3.59-11,43.74,43.74,0,0,1,3.58,11c.37,1.84.63,3.67.86,5.51s.45,3.67.65,5.51c.38,3.67.68,7.34.85,11s.25,7.34.06,11Z" style="fill:#592d3d"/>',
+                        '<path d="M632.74,870v8c.26,34,.26,69,0,102.75,0,2.87,0,5.72,0,8.53v67.41A13.28,13.28,0,0,1,619.47,1070H380.53a13.28,13.28,0,0,1-13.27-13.28V998.52c0-2.51,0-5.07,0-7.65-.25-34.87-.25-69.87,0-105.3V860.85" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M626.74,870c-.19-4.17-.1-8.35.06-12.53s.47-8.35.85-12.53c.2-2.09.41-4.18.65-6.27s.49-4.17.86-6.26a54.55,54.55,0,0,1,3.58-12.53,55.09,55.09,0,0,1,3.59,12.53c.36,2.09.62,4.18.85,6.26s.45,4.18.65,6.27c.38,4.18.69,8.35.85,12.53s.25,8.36.06,12.53Z" style="fill:#592d3d"/>',
+                        '<path d="M380.53,758.82l233.23-.1" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M559.55,758.82a62.78,62.78,0,0,1-1.44,13.39,60.92,60.92,0,0,1-1.74,6.33,50.88,50.88,0,0,1-10,16.83,48.2,48.2,0,0,1-4.5,4.43c-25.17,18.2-65.17,19.2-89.48-.58a51.79,51.79,0,0,1-7.11-7.6,50.84,50.84,0,0,1-9.1-19.41,62.41,62.41,0,0,1-1.07-6.59,61,61,0,0,1-.37-6.8" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M503.4,828.39a66.61,66.61,0,0,1-18.39,1.1,69.79,69.79,0,0,1-18.2-3.76,61.46,61.46,0,0,1-16.5-8.64l-1.86-1.41c-.61-.48-1.2-1-1.79-1.52a32.24,32.24,0,0,1-3.33-3.28,43.83,43.83,0,0,1-5.38-7.51,87.37,87.37,0,0,0,6.74,6.09c.58.48,1.17.95,1.75,1.4s1.23.82,1.84,1.24,1.22.84,1.85,1.23l1.91,1.16a88.05,88.05,0,0,0,16.1,7.46,106.26,106.26,0,0,0,17.25,4.45A173.7,173.7,0,0,0,503.4,828.39Z" style="fill:#592d3d"/>',
+                        '<path d="M307.83,892.5a24.54,24.54,0,0,0,3.68,2.77" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M674.7,882.69a19.88,19.88,0,0,1-6.76,2.52,34.83,34.83,0,0,1-7.2.65,40.16,40.16,0,0,1-7.18-.79c-1.18-.21-2.33-.56-3.49-.87s-2.27-.77-3.37-1.24c1.21,0,2.38.18,3.56.28l3.52.29c1.17,0,2.33.2,3.5.21s2.32.11,3.48.12q3.5.06,7-.19A49.31,49.31,0,0,0,674.7,882.69Z" style="fill:#592d3d"/>'
+                    )
+                )
+            );
+        }
     }
 
     function tankTopSVG(uint8 id) internal pure returns (string memory) {
@@ -449,16 +493,16 @@ library ClothingDetail {
         } else if (clothId == 1) {
             if (bodyId == WOMEN) {
                 clothingSVG =
-                    string(abi.encodePacked("<g>", adjustBreastColor(color), dressSVG(bodyId, clothId, color), "</g>"));
+                    string(abi.encodePacked("<g>", adjustBreastColor(color), dressSVG(bodyId, clothId), "</g>"));
             } else {
-                clothingSVG = dressSVG(bodyId, clothId, color);
+                clothingSVG = dressSVG(bodyId, clothId);
             }
         } else if (clothId == 2) {
             if (bodyId == WOMEN) {
                 clothingSVG =
-                    string(abi.encodePacked("<g>", adjustBreastColor(color), shirtSVG(bodyId, clothId, color), "</g>"));
+                    string(abi.encodePacked("<g>", adjustBreastColor(color), shirtSVG(bodyId, clothId), "</g>"));
             } else {
-                clothingSVG = shirtSVG(bodyId, clothId, color);
+                clothingSVG = shirtSVG(bodyId, clothId);
             }
         } else if (clothId == 3) {
             if (bodyId == WOMEN) {

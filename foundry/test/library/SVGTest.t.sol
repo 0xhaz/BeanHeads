@@ -38,7 +38,7 @@ contract SVGTest is Test {
         // console.log(breastSVG);
         vm.writeFile("./output/breast.svg", breastSVG);
 
-        string memory onlyBreastSVG = BodyDetail.onlyBreastSVG(1, 0);
+        string memory onlyBreastSVG = BodyDetail.onlyBreastSVG(1);
         // console.log(onlyBreastSVG);
         vm.writeFile("./output/only_breast.svg", onlyBreastSVG);
 
@@ -84,11 +84,11 @@ contract SVGTest is Test {
                              CLOTHING TEST
         //////////////////////////////////////////////////////////////*/
 
-        string memory dressSVG = ClothingDetail.dressSVG(1, 1, 0);
+        string memory dressSVG = ClothingDetail.dressSVG(1, 1);
         // console.log(dressSVG);
         vm.writeFile("./output/dress.svg", dressSVG);
 
-        string memory shirtSVG = ClothingDetail.shirtSVG(1, 1, 0);
+        string memory shirtSVG = ClothingDetail.shirtSVG(1, 1);
         // console.log(shirtSVG);
         vm.writeFile("./output/shirt.svg", shirtSVG);
 
