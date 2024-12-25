@@ -8,7 +8,7 @@ contract GenesisTest is Test {
     /// Helper function to create a Genesis struct
     Genesis.SVGParams params = Genesis.SVGParams({
         bodyType: 1,
-        clothes: 3,
+        clothes: 1,
         hairStyle: 2,
         clothesGraphic: 0,
         eyebrowShape: 2,
