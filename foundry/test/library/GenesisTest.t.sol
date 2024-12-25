@@ -17,7 +17,7 @@ contract GenesisTest is Test {
         facialHairType: 0,
         hatStyle: 0,
         mouthStyle: 4,
-        skinColor: 1,
+        skinColor: 0,
         clothingColor: 3,
         hairColor: 1,
         hatColor: 1,

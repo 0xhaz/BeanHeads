@@ -92,10 +92,10 @@ contract SVGTest is Test {
         // console.log(shirtSVG);
         vm.writeFile("./output/shirt.svg", shirtSVG);
 
-        string memory tShirtSVG = ClothingDetail.tShirtSVG(0);
+        string memory tShirtSVG = ClothingDetail.tShirtSVG(1, 0);
         vm.writeFile("./output/t_shirt.svg", tShirtSVG);
 
-        string memory tankTopSVG = ClothingDetail.tankTopSVG(0);
+        string memory tankTopSVG = ClothingDetail.tankTopSVG(1, 0);
         vm.writeFile("./output/tank_top.svg", tankTopSVG);
 
         string memory vNeckSVG = ClothingDetail.vNeckSVG(0);
