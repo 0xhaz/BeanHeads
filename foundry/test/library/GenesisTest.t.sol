@@ -9,7 +9,7 @@ contract GenesisTest is Test {
     Genesis.SVGParams params = Genesis.SVGParams({
         bodyType: 1,
         clothes: 1,
-        hairStyle: 2,
+        hairStyle: 1,
         clothesGraphic: 0,
         eyebrowShape: 2,
         accessory: 1,
