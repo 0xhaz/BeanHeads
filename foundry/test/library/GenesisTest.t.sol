@@ -30,8 +30,8 @@ contract GenesisTest is Test {
     });
 
     function test_buildAvatar() public {
-        string memory svg = Genesis.buildAvatar(params);
-        vm.writeFile("./output/genesis.svg", svg);
-        console.log(svg);
+        string memory avatar = Genesis.buildAvatar(params);
+        vm.writeFile("./output/genesis.svg", avatar);
+        console.log(avatar);
     }
 }
