@@ -87,11 +87,8 @@ library HairDetail {
     }
 
     /// @dev Combines the SVG content for the "Afro Back" and "Afro Front" hair types
-    function afroHairSVG(uint8 id) internal pure returns (string memory) {
-        return SVGBody.fullSVG(
-            'id="afro-hair" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
-            string(abi.encodePacked(afroBackSVG(id), afroFrontSVG(id)))
-        );
+    function afroHairSVG(uint8 id) internal pure returns (string memory, string memory) {
+        return (afroBackSVG(id), afroFrontSVG(id));
     }
 
     /// @dev SVG content for the "Bald Hair" hair type
@@ -127,15 +124,13 @@ library HairDetail {
 
     /// @dev SVG content for the "Bob Cut" hair type
     function bobCutFrontSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
+        (bytes3 baseColor,) = getColorsForHair(id);
 
         return SVGBody.fullSVG(
             'id="bob-cut-front" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
                 abi.encodePacked(
-                    '<rect x="290.23" y="414.02" width="439.24" height="64.15" style="fill:',
-                    BytesConverter.bytesToHex(shadowColor),
-                    '"/>',
+                    '<rect x="290.23" y="414.02" width="439.24" height="64.15" style="fill:none "/>',
                     '<path d="M710,667.66q-4.71,5.82-9.71,11.37C697.79,681.8,702.87,677.91,710,667.66Zm15-316.55C694.5,296.7,641.5,259.24,580.22,242l-6.35-1.71c-22.7-6.28-46.62-7-71.32-7-26.69,0-52.46,2.74-76.77,10l-4.26,1.27A283.11,283.11,0,0,0,332.67,294q-4.37,3.58-8.57,7.32c-28.34,23.69-50.34,53.69-65.47,87.9q-2.2,4.92-4.16,9.93a212.31,212.31,0,0,0-9.41,30.61C213,556.34,262.89,634,307.17,681.6c4.37,4.7-57.93-101.85-17.42-216,7.73-.29,20.24-.51,36.19-.67l15.5-50.61,17.44,50.38c27.4-.13,59.88-.15,93.88-.12l12.32-52.36L479,464.6c74.37.14,151.44.52,195.28.77l13.2-52.17,15,52.33,8.21.05C760.78,572,728.5,641.13,710,667.66A265.62,265.62,0,0,0,769.3,500C769.3,413.58,725,351.11,725,351.11Z" style="fill:',
                     BytesConverter.bytesToHex(baseColor),
                     '"/>',
@@ -186,11 +181,8 @@ library HairDetail {
     }
 
     /// @dev Combines the SVG content for the "Bob Cut" hair type
-    function bobCutSVG(uint8 id) internal pure returns (string memory) {
-        return SVGBody.fullSVG(
-            'id="bob-cut" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
-            string(abi.encodePacked(bobCutBackSVG(id), bobCutFrontSVG(id)))
-        );
+    function bobCutSVG(uint8 id) internal pure returns (string memory, string memory) {
+        return (bobCutBackSVG(id), bobCutFrontSVG(id));
     }
 
     /// @dev SVG content for the "Bun" hair type
@@ -262,9 +254,9 @@ library HairDetail {
                     '<path d="M537.23,398.81C526.9,418.12,489.07,428.88,486,424c-3.45-5.4,30.38-44.42,11.16-85.22" fill=',
                     BytesConverter.bytesToHex(baseColor),
                     " />",
-                    '<path d="M240.15,454.33s185.57,8.28,259.86-72c-5,19.52-15.75,34.09-13.79,37.16,2.89,4.53,38-5.42,48.16-23.35,45.56,19,131.48,41.33,206.15-16.09" fill="none" stroke=',
+                    '<path d="M240.15,454.33s185.57,8.28,259.86-72c-5,19.52-15.75,34.09-13.79,37.16,2.89,4.53,38-5.42,48.16-23.35,45.56,19,131.48,41.33,206.15-16.09" style="fill:none;stroke:',
                     BytesConverter.bytesToHex(Colors.DEFAULT_STROKE),
-                    ' strokeMiterlimit={10} strokeWidth="12px" />'
+                    ';stroke-miterlimit:10;stroke-width:12px" />'
                 )
             )
         );
@@ -289,11 +281,8 @@ library HairDetail {
     }
 
     /// @dev Combines the SVG content for the "Long Hair" hair type
-    function longHairSVG(uint8 id) internal pure returns (string memory) {
-        return SVGBody.fullSVG(
-            'id="long-hair" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
-            string(abi.encodePacked("<g>", longHairBackSVG(id), "</g>", "<g>", longHairFrontSVG(id), "</g>"))
-        );
+    function longHairSVG(uint8 id) internal pure returns (string memory, string memory) {
+        return (longHairBackSVG(id), longHairFrontSVG(id));
     }
 
     /// @dev SVG content for the "Pixie Cut" hair type
@@ -350,15 +339,15 @@ library HairDetail {
     /// @dev Returns the SVG and name for the given hair type
     function getHairById(uint8 id, uint8 color) internal pure returns (string memory) {
         if (id == 1) {
-            return afroHairSVG(color);
+            return "";
         } else if (id == 2) {
             return baldHairSVG(color);
         } else if (id == 3) {
-            return bobCutSVG(color);
+            return "";
         } else if (id == 4) {
             return bunHairSVG(color);
         } else if (id == 5) {
-            return longHairSVG(color);
+            return "";
         } else if (id == 6) {
             return pixieCutSVG(color);
         } else if (id == 7) {

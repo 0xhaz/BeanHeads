@@ -73,8 +73,8 @@ library BodyDetail {
     }
 
     /// @dev SVG content for the breast
-    function breastSVGWithBody(uint8 braColor, uint8 skinColor) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = ClothingDetail.getColorForClothes(braColor);
+    function breastSVGWithBody(uint8 skinColor, uint8 clothingColor) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = ClothingDetail.getColorForClothes(clothingColor);
         (bytes3 skinBaseColor, bytes3 skinShadowColor) = getColorsForBody(skinColor);
 
         return SVGBody.fullSVG(
@@ -254,15 +254,15 @@ library BodyDetail {
     /// @dev Combines chest and breast SVGs into a single SVG
     /// @param color The breast color id
     /// @return Combined SVG for chest and breast
-    function womanBodySVG(uint8 chestId, uint8 color) internal pure returns (string memory) {
-        string memory chest = chestSVG(chestId);
-        string memory breast = breastSVGWithBody(color, chestId);
+    // function womanBodySVG(uint8 color) internal pure returns (string memory) {
+    //     // string memory chest = chestSVG(color);
+    //     string memory breast = breastSVGWithBody(color);
 
-        return SVGBody.fullSVG(
-            'id="woman-body" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
-            string(abi.encodePacked("<g>", chest, "</g>", "<g>", breast, "</g>"))
-        );
-    }
+    //     return SVGBody.fullSVG(
+    //         'id="woman-body" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+    //         string(abi.encodePacked( /*"<g>", chest, "</g>",*/ "<g>", breast, "</g>"))
+    //     );
+    // }
 
     /// @dev Returns the SVG and name for a specific body ID
     /// 2: Chest, 1: Breast
@@ -272,9 +272,9 @@ library BodyDetail {
     /// 2,3: Chest with dark skin
     /// 2,4: Chest with red skin
     /// 2,5: Chest with black skin
-    function getBodyById(uint8 id, uint8 color) internal pure returns (string memory) {
+    function getBodyById(uint8 id, uint8 color, uint8 clothingColor) internal pure returns (string memory) {
         if (id == 1) {
-            return womanBodySVG(id, color);
+            return breastSVGWithBody(color, clothingColor);
         } else if (id == 2) {
             return chestSVG(color);
         } else {

@@ -15,12 +15,12 @@ import {MouthDetail} from "src/libraries/baseModel/MouthDetail.sol";
 
 library Genesis {
     struct SVGParams {
+        uint8 accessory;
         uint8 bodyType;
         uint8 clothes;
         uint8 hairStyle;
         uint8 clothesGraphic;
         uint8 eyebrowShape;
-        uint8 accessory;
         uint8 eyeShape;
         uint8 facialHairType;
         uint8 hatStyle;
@@ -38,11 +38,19 @@ library Genesis {
     }
 
     function buildAvatar(SVGParams memory params) internal pure returns (string memory) {
+        (string memory hairBack, string memory hairFront) = getHairComponentsById(params.hairStyle, params.hairColor);
+
         string memory svg = string(
             abi.encodePacked(
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">',
                 "<g>",
-                BodyDetail.getBodyById(params.bodyType, params.skinColor),
+                hairBack,
+                "</g>",
+                "<g>",
+                BodyDetail.getBodyById(params.bodyType, params.skinColor, params.clothingColor),
+                "</g>",
+                "<g>",
+                hairFront,
                 "</g>",
                 "<g>",
                 ClothingDetail.getClothingById(params.bodyType, params.clothes, params.clothingColor),
@@ -52,12 +60,6 @@ library Genesis {
                 "</g>",
                 "<g>",
                 ClothingGraphicDetail.getClothingGraphicById(params.clothesGraphic),
-                "</g>",
-                "<g>",
-                EyebrowDetail.getEyebrowById(params.eyebrowShape),
-                "</g>",
-                "<g>",
-                AccessoryDetail.getAccessoryById(params.accessory),
                 "</g>",
                 "<g>",
                 EyesDetail.getEyeById(params.eyeShape),
@@ -70,6 +72,12 @@ library Genesis {
                 "</g>",
                 "<g>",
                 MouthDetail.getMouthById(params.mouthStyle, params.lipColor),
+                "</g>",
+                "<g>",
+                EyebrowDetail.getEyebrowById(params.eyebrowShape),
+                "</g>",
+                "<g>",
+                AccessoryDetail.getAccessoryById(params.accessory),
                 "</g>",
                 "<g>",
                 isFaceMaskOn(params.faceMask, params.faceMaskColor),
@@ -106,5 +114,21 @@ library Genesis {
             return OptItems.lashesSVG();
         }
         return "";
+    }
+
+    function getHairComponentsById(uint8 id, uint8 color)
+        private
+        pure
+        returns (string memory back, string memory front)
+    {
+        if (id == 1) {
+            (back, front) = HairDetail.afroHairSVG(color);
+        } else if (id == 3) {
+            (back, front) = HairDetail.bobCutSVG(color);
+        } else if (id == 5) {
+            (back, front) = HairDetail.longHairSVG(color);
+        } else {
+            return ("", "");
+        }
     }
 }

@@ -161,11 +161,11 @@ library EyesDetail {
         if (id == 1) {
             return contentEyeSVG();
         } else if (id == 2) {
-            return simpleEyeSVG();
+            return dizzyEyeSVG();
         } else if (id == 3) {
-            return squintEyeSVG();
+            return happyEyeSVG();
         } else if (id == 4) {
-            return winkEyeSVG();
+            return heartEyeSVG();
         } else if (id == 5) {
             return leftTwitchEyeSVG();
         } else if (id == 6) {

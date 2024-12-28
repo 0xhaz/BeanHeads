@@ -58,8 +58,8 @@ library ClothingDetail {
     }
 
     /// @dev SVG content for back dress
-    function dressBackSVG(uint8 bodyTypeId, uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(id);
+    function dressBackSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
 
         if (bodyTypeId == WOMEN) {
             return string(
@@ -78,7 +78,7 @@ library ClothingDetail {
                     '<path d="M626.76,869.38a65.79,65.79,0,0,1,.65-8.53q.57-4.25,1.46-8.47c.3-1.41.6-2.82.94-4.22s.69-2.81,1.15-4.21a29.21,29.21,0,0,1,4.18-8.28,28.9,28.9,0,0,1,3,8.78c.26,1.45.42,2.89.55,4.33s.25,2.88.35,4.31c.18,2.87.28,5.74.25,8.59a67.65,67.65,0,0,1-.54,8.54Z" style="fill:#592d3d"/>',
                     '<path d="M557.91,889.36c4.41-.78,8.76-1.39,13.1-2l13-1.93c4.31-.65,8.61-1.36,12.91-2.1s8.61-1.58,13.07-2.2a62.58,62.58,0,0,1-12.33,5.26,87,87,0,0,1-13,3,94.61,94.61,0,0,1-13.33,1.11A65.72,65.72,0,0,1,557.91,889.36Z" style="fill:#592d3d"/>',
                     "<g>",
-                    BodyDetail.onlyBreastSVG(id),
+                    BodyDetail.onlyBreastSVG(color),
                     "</g>"
                 )
             );
@@ -116,8 +116,8 @@ library ClothingDetail {
     }
 
     /// @dev SVG content for shirt
-    function shirtSVG(uint8 bodyTypeId, uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(id);
+    function shirtSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
 
         if (bodyTypeId == WOMEN) {
             return SVGBody.fullSVG(
@@ -188,7 +188,7 @@ library ClothingDetail {
                         '<circle cx="515.77" cy="982.93" r="4.8" style="fill:#592d3d"/>',
                         '<path d="M490.89,836.19c-.05-.06,0,0,0,0l.07.05a.88.88,0,0,1,.17.12l.38.29c.25.21.52.42.78.65.53.45,1.09.93,1.7,1.39s1.27.9,2,1.42a27.37,27.37,0,0,1,2.71,2.33,5.61,5.61,0,0,1-3.13,2.43,9.41,9.41,0,0,1-3.7.27,11,11,0,0,1-3.63-1,9.72,9.72,0,0,1-1.65-1,8.85,8.85,0,0,1-.77-.63c-.12-.11-.25-.23-.37-.36l-.2-.21-.25-.29Z" style="fill:#592d3d"/>',
                         "<g>",
-                        BodyDetail.onlyBreastSVG(id),
+                        BodyDetail.onlyBreastSVG(color),
                         "</g>"
                     )
                 )
@@ -268,8 +268,8 @@ library ClothingDetail {
     }
 
     /// @dev SVG content for t-shirt
-    function tShirtSVG(uint8 bodyTypeId, uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(id);
+    function tShirtSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
 
         if (bodyTypeId == WOMEN) {
             return SVGBody.fullSVG(
@@ -308,7 +308,7 @@ library ClothingDetail {
                         '<path d="M307.83,892.5a24.54,24.54,0,0,0,3.68,2.77" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
                         '<path d="M674.7,882.69a19.88,19.88,0,0,1-6.76,2.52,34.83,34.83,0,0,1-7.2.65,40.16,40.16,0,0,1-7.18-.79c-1.18-.21-2.33-.56-3.49-.87s-2.27-.77-3.37-1.24c1.21,0,2.38.18,3.56.28l3.52.29c1.17,0,2.33.2,3.5.21s2.32.11,3.48.12q3.5.06,7-.19A49.31,49.31,0,0,0,674.7,882.69Z" style="fill:#592d3d"/>',
                         "<g>",
-                        BodyDetail.onlyBreastSVG(id),
+                        BodyDetail.onlyBreastSVG(color),
                         "</g>"
                     )
                 )
@@ -355,8 +355,8 @@ library ClothingDetail {
         }
     }
 
-    function tankTopSVG(uint8 bodyTypeId, uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(id);
+    function tankTopSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
 
         if (bodyTypeId == WOMEN) {
             return SVGBody.fullSVG(
@@ -378,7 +378,7 @@ library ClothingDetail {
                         '<path d="M368.1,833c21.58-5.27,12.43-74.73,12.43-74.73l233.23-.1s3.93,76.62,19.18,82.92" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
                         '<path d="M589,758.26a175.22,175.22,0,0,1-2.11,27.22q-1,6.57-2.57,12.88a116.51,116.51,0,0,1-14.71,34.22,92,92,0,0,1-6.61,9c-37.06,37-95.95,39-131.74-1.19A98.26,98.26,0,0,1,420.8,825a124.07,124.07,0,0,1-13.4-39.48q-1-6.57-1.58-13.39c-.35-4.54-.54-9.15-.54-13.82" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
                         "<g>",
-                        BodyDetail.onlyBreastSVG(id),
+                        BodyDetail.onlyBreastSVG(color),
                         "</g>"
                     )
                 )
@@ -409,46 +409,89 @@ library ClothingDetail {
     }
 
     /// @dev SVG content for v-neck
-    function vNeckSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(id);
+    function vNeckSVG(uint8 bodyId, uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
 
-        return SVGBody.fullSVG(
-            'id="v-neck" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
-            string(
-                abi.encodePacked(
-                    '<path d="M680.7,905.78c.2-37.1-1.21-70.07-7.74-95.39-10.08-25.35-28.18-40.47-60.12-40.47l22.85,134.47S658.2,914.68,680.7,905.78Z" style="fill:#f2aa97"/>',
-                    '<path d="M689.3,895.23a20.28,20.28,0,0,1-3.69,2.42" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M329,809.32c-6.82,25.57-8,59.13-7.74,97,19.9,8.55,50.43-2.15,50.43-2.15L389,771.89C358.14,771.89,339.74,785.79,329,809.32Z" style="fill:#f2aa97"/>',
-                    '<path d="M616.66,758.16l-38.44.1c0,53.72-75.33,111.14-75.33,111.14s-80.8-60.58-80.8-111.14l-38.66-.1a13.28,13.28,0,0,0-13.28,13.27v284.69a13.28,13.28,0,0,0,13.28,13.27H622.36a13.27,13.27,0,0,0,13.27-13.27V778C635.63,765.82,629.75,758.16,616.66,758.16Z" style="fill:',
-                    BytesConverter.bytesToHex(baseColor),
-                    '"/>',
-                    '<path d="M612.84,758.16c63.54,0,73.4,56,73.9,133.16-18.59,11.62-48.91,1.32-48.91,1.32Z" style="fill:',
-                    BytesConverter.bytesToHex(baseColor),
-                    '"/>',
-                    '<path d="M635.63,831.31,612.84,869.4l11.39,130h11.6V893.78l17.28,2.89C647.49,824.5,635.63,831.31,635.63,831.31Z" style="fill:',
-                    BytesConverter.bytesToHex(shadowColor),
-                    '"/>',
-                    '<path d="M389,758.16c-61.78,0-75.82,53.79-76.85,127.66,19,19.85,57.95,4.58,57.95,4.58Z" style="fill:',
-                    BytesConverter.bytesToHex(baseColor),
-                    '"/>',
-                    '<path d="M370.12,831.31V890.4l-17.31,4.3C358.48,824.63,370.12,831.31,370.12,831.31Z" style="fill:',
-                    BytesConverter.bytesToHex(shadowColor),
-                    '"/>',
-                    '<path d="M612.84,758.16c67.42,0,78.45,56.28,78.9,133.78-26.2,12.42-53.91.7-53.91.7" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M389,758.16c-66.79,0-80.08,54.69-80.75,130.71,20.59,14.79,61.85,1.53,61.85,1.53" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M383.43,1069.39H500c-109.19,0-100.91-231.14-129.89-231.14v217.87A13.28,13.28,0,0,0,383.43,1069.39Z" style="fill:',
-                    BytesConverter.bytesToHex(shadowColor),
-                    '"/>',
-                    '<path d="M364.15,860.29c-.19-3.67-.11-7.35.06-11s.47-7.34.85-11c.2-1.83.41-3.67.65-5.51s.49-3.67.85-5.5a44.05,44.05,0,0,1,3.59-11,44.05,44.05,0,0,1,3.59,11c.36,1.83.62,3.67.85,5.5s.45,3.68.65,5.51q.58,5.52.86,11c.16,3.67.24,7.35,0,11Z" style="fill:#592d3d"/>',
-                    '<path d="M635.63,869.4v8c.26,34,.26,69,0,102.76,0,2.87,0,5.72,0,8.53v67.41a13.27,13.27,0,0,1-13.27,13.27H383.43a13.28,13.28,0,0,1-13.28-13.27V990.3c-.26-34.86-.26-69.86,0-105.3V860.29" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M629.63,869.4c-.19-4.18-.1-8.36.06-12.53s.47-8.36.86-12.53c.2-2.09.4-4.18.64-6.27s.49-4.18.86-6.27a54.83,54.83,0,0,1,3.58-12.53,54.37,54.37,0,0,1,3.59,12.53c.36,2.09.63,4.18.85,6.27s.45,4.18.65,6.27c.39,4.17.69,8.35.85,12.53s.26,8.35.06,12.53Z" style="fill:#592d3d"/>',
-                    '<path d="M383.43,758.26l233.23-.1" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M310.72,891.94a24.84,24.84,0,0,0,3.68,2.76" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
-                    '<path d="M677.59,882.13a20.25,20.25,0,0,1-6.75,2.52,34.91,34.91,0,0,1-7.21.64,39.94,39.94,0,0,1-7.17-.78c-1.18-.22-2.34-.57-3.49-.87s-2.28-.78-3.38-1.24c1.21,0,2.39.17,3.56.27l3.52.29c1.17,0,2.33.2,3.5.21s2.33.11,3.49.12c2.32.05,4.64,0,7-.18A50.81,50.81,0,0,0,677.59,882.13Z" style="fill:#592d3d"/>',
-                    '<path d="M578.22,758.26c0,53.72-75.33,111.14-75.33,111.14s-80.8-60.58-80.8-111.14" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>'
+        if (bodyId == WOMEN) {
+            return SVGBody.fullSVG(
+                'id="v-neck" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+                string(
+                    abi.encodePacked(
+                        '<path d="M680.7,905.78c.2-37.1-1.21-70.07-7.74-95.39-10.08-25.35-28.18-40.47-60.12-40.47l22.85,134.47S658.2,914.68,680.7,905.78Z" style="fill:#f2aa97"/>',
+                        '<path d="M689.3,895.23a20.28,20.28,0,0,1-3.69,2.42" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M329,809.32c-6.82,25.57-8,59.13-7.74,97,19.9,8.55,50.43-2.15,50.43-2.15L389,771.89C358.14,771.89,339.74,785.79,329,809.32Z" style="fill:#f2aa97"/>',
+                        '<path d="M616.66,758.16l-38.44.1c0,53.72-75.33,111.14-75.33,111.14s-80.8-60.58-80.8-111.14l-38.66-.1a13.28,13.28,0,0,0-13.28,13.27v284.69a13.28,13.28,0,0,0,13.28,13.27H622.36a13.27,13.27,0,0,0,13.27-13.27V778C635.63,765.82,629.75,758.16,616.66,758.16Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M612.84,758.16c63.54,0,73.4,56,73.9,133.16-18.59,11.62-48.91,1.32-48.91,1.32Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M635.63,831.31,612.84,869.4l11.39,130h11.6V893.78l17.28,2.89C647.49,824.5,635.63,831.31,635.63,831.31Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M389,758.16c-61.78,0-75.82,53.79-76.85,127.66,19,19.85,57.95,4.58,57.95,4.58Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M370.12,831.31V890.4l-17.31,4.3C358.48,824.63,370.12,831.31,370.12,831.31Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M612.84,758.16c67.42,0,78.45,56.28,78.9,133.78-26.2,12.42-53.91.7-53.91.7" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M389,758.16c-66.79,0-80.08,54.69-80.75,130.71,20.59,14.79,61.85,1.53,61.85,1.53" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M383.43,1069.39H500c-109.19,0-100.91-231.14-129.89-231.14v217.87A13.28,13.28,0,0,0,383.43,1069.39Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M364.15,860.29c-.19-3.67-.11-7.35.06-11s.47-7.34.85-11c.2-1.83.41-3.67.65-5.51s.49-3.67.85-5.5a44.05,44.05,0,0,1,3.59-11,44.05,44.05,0,0,1,3.59,11c.36,1.83.62,3.67.85,5.5s.45,3.68.65,5.51q.58,5.52.86,11c.16,3.67.24,7.35,0,11Z" style="fill:#592d3d"/>',
+                        '<path d="M635.63,869.4v8c.26,34,.26,69,0,102.76,0,2.87,0,5.72,0,8.53v67.41a13.27,13.27,0,0,1-13.27,13.27H383.43a13.28,13.28,0,0,1-13.28-13.27V990.3c-.26-34.86-.26-69.86,0-105.3V860.29" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M629.63,869.4c-.19-4.18-.1-8.36.06-12.53s.47-8.36.86-12.53c.2-2.09.4-4.18.64-6.27s.49-4.18.86-6.27a54.83,54.83,0,0,1,3.58-12.53,54.37,54.37,0,0,1,3.59,12.53c.36,2.09.63,4.18.85,6.27s.45,4.18.65,6.27c.39,4.17.69,8.35.85,12.53s.26,8.35.06,12.53Z" style="fill:#592d3d"/>',
+                        '<path d="M383.43,758.26l233.23-.1" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M310.72,891.94a24.84,24.84,0,0,0,3.68,2.76" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M677.59,882.13a20.25,20.25,0,0,1-6.75,2.52,34.91,34.91,0,0,1-7.21.64,39.94,39.94,0,0,1-7.17-.78c-1.18-.22-2.34-.57-3.49-.87s-2.28-.78-3.38-1.24c1.21,0,2.39.17,3.56.27l3.52.29c1.17,0,2.33.2,3.5.21s2.33.11,3.49.12c2.32.05,4.64,0,7-.18A50.81,50.81,0,0,0,677.59,882.13Z" style="fill:#592d3d"/>',
+                        '<path d="M578.22,758.26c0,53.72-75.33,111.14-75.33,111.14s-80.8-60.58-80.8-111.14" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        "<g>",
+                        BodyDetail.onlyBreastSVG(color),
+                        "</g>"
+                    )
                 )
-            )
-        );
+            );
+        } else {
+            return SVGBody.fullSVG(
+                'id="v-neck" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+                string(
+                    abi.encodePacked(
+                        '<path d="M680.7,905.78c.2-37.1-1.21-70.07-7.74-95.39-10.08-25.35-28.18-40.47-60.12-40.47l22.85,134.47S658.2,914.68,680.7,905.78Z" style="fill:#f2aa97"/>',
+                        '<path d="M689.3,895.23a20.28,20.28,0,0,1-3.69,2.42" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M329,809.32c-6.82,25.57-8,59.13-7.74,97,19.9,8.55,50.43-2.15,50.43-2.15L389,771.89C358.14,771.89,339.74,785.79,329,809.32Z" style="fill:#f2aa97"/>',
+                        '<path d="M616.66,758.16l-38.44.1c0,53.72-75.33,111.14-75.33,111.14s-80.8-60.58-80.8-111.14l-38.66-.1a13.28,13.28,0,0,0-13.28,13.27v284.69a13.28,13.28,0,0,0,13.28,13.27H622.36a13.27,13.27,0,0,0,13.27-13.27V778C635.63,765.82,629.75,758.16,616.66,758.16Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M612.84,758.16c63.54,0,73.4,56,73.9,133.16-18.59,11.62-48.91,1.32-48.91,1.32Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M635.63,831.31,612.84,869.4l11.39,130h11.6V893.78l17.28,2.89C647.49,824.5,635.63,831.31,635.63,831.31Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M389,758.16c-61.78,0-75.82,53.79-76.85,127.66,19,19.85,57.95,4.58,57.95,4.58Z" style="fill:',
+                        BytesConverter.bytesToHex(baseColor),
+                        '"/>',
+                        '<path d="M370.12,831.31V890.4l-17.31,4.3C358.48,824.63,370.12,831.31,370.12,831.31Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M612.84,758.16c67.42,0,78.45,56.28,78.9,133.78-26.2,12.42-53.91.7-53.91.7" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M389,758.16c-66.79,0-80.08,54.69-80.75,130.71,20.59,14.79,61.85,1.53,61.85,1.53" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M383.43,1069.39H500c-109.19,0-100.91-231.14-129.89-231.14v217.87A13.28,13.28,0,0,0,383.43,1069.39Z" style="fill:',
+                        BytesConverter.bytesToHex(shadowColor),
+                        '"/>',
+                        '<path d="M364.15,860.29c-.19-3.67-.11-7.35.06-11s.47-7.34.85-11c.2-1.83.41-3.67.65-5.51s.49-3.67.85-5.5a44.05,44.05,0,0,1,3.59-11,44.05,44.05,0,0,1,3.59,11c.36,1.83.62,3.67.85,5.5s.45,3.68.65,5.51q.58,5.52.86,11c.16,3.67.24,7.35,0,11Z" style="fill:#592d3d"/>',
+                        '<path d="M635.63,869.4v8c.26,34,.26,69,0,102.76,0,2.87,0,5.72,0,8.53v67.41a13.27,13.27,0,0,1-13.27,13.27H383.43a13.28,13.28,0,0,1-13.28-13.27V990.3c-.26-34.86-.26-69.86,0-105.3V860.29" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M629.63,869.4c-.19-4.18-.1-8.36.06-12.53s.47-8.36.86-12.53c.2-2.09.4-4.18.64-6.27s.49-4.18.86-6.27a54.83,54.83,0,0,1,3.58-12.53,54.37,54.37,0,0,1,3.59,12.53c.36,2.09.63,4.18.85,6.27s.45,4.18.65,6.27c.39,4.17.69,8.35.85,12.53s.26,8.35.06,12.53Z" style="fill:#592d3d"/>',
+                        '<path d="M383.43,758.26l233.23-.1" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M310.72,891.94a24.84,24.84,0,0,0,3.68,2.76" style="fill:none;stroke:#592d3d;stroke-linecap:square;stroke-miterlimit:10;stroke-width:12px"/>',
+                        '<path d="M677.59,882.13a20.25,20.25,0,0,1-6.75,2.52,34.91,34.91,0,0,1-7.21.64,39.94,39.94,0,0,1-7.17-.78c-1.18-.22-2.34-.57-3.49-.87s-2.28-.78-3.38-1.24c1.21,0,2.39.17,3.56.27l3.52.29c1.17,0,2.33.2,3.5.21s2.33.11,3.49.12c2.32.05,4.64,0,7-.18A50.81,50.81,0,0,0,677.59,882.13Z" style="fill:#592d3d"/>',
+                        '<path d="M578.22,758.26c0,53.72-75.33,111.14-75.33,111.14s-80.8-60.58-80.8-111.14" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>'
+                    )
+                )
+            );
+        }
     }
 
     /// @dev Returns the SVG and name for a specific clothing item
@@ -458,35 +501,15 @@ library ClothingDetail {
         if (clothId == 0) {
             return "";
         } else if (clothId == 1) {
-            if (bodyId == WOMEN) {
-                clothingSVG = string(abi.encodePacked("<g>", dressSVG(bodyId, clothId), "</g>"));
-            } else {
-                clothingSVG = dressSVG(bodyId, clothId);
-            }
+            clothingSVG = dressSVG(bodyId, clothId);
         } else if (clothId == 2) {
-            if (bodyId == WOMEN) {
-                clothingSVG = string(abi.encodePacked("<g>", shirtSVG(bodyId, clothId), "</g>"));
-            } else {
-                clothingSVG = shirtSVG(bodyId, clothId);
-            }
+            clothingSVG = shirtSVG(bodyId, clothId);
         } else if (clothId == 3) {
-            if (bodyId == WOMEN) {
-                clothingSVG = string(abi.encodePacked("<g>", tShirtSVG(bodyId, color), "</g>"));
-            } else {
-                clothingSVG = tShirtSVG(bodyId, color);
-            }
+            clothingSVG = tShirtSVG(bodyId, color);
         } else if (clothId == 4) {
-            if (bodyId == WOMEN) {
-                clothingSVG = string(abi.encodePacked("<g>", tankTopSVG(bodyId, color), "</g>"));
-            } else {
-                clothingSVG = tankTopSVG(bodyId, color);
-            }
+            clothingSVG = tankTopSVG(bodyId, color);
         } else if (clothId == 5) {
-            if (bodyId == WOMEN) {
-                clothingSVG = string(abi.encodePacked("<g>", vNeckSVG(color), "</g>"));
-            } else {
-                clothingSVG = vNeckSVG(color);
-            }
+            clothingSVG = vNeckSVG(bodyId, color);
         } else {
             revert Errors.InvalidType(clothId);
         }
