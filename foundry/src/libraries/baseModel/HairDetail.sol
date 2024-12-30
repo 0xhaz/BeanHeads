@@ -162,7 +162,7 @@ library HairDetail {
         (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
 
         return SVGBody.fullSVG(
-            'id="bob-cut-back" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+            'id="bob-cut-back" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"  ',
             string(
                 abi.encodePacked(
                     '<path d="M501.71,209.52c-166.14,0-300.83,134.68-300.83,300.83V673.78c9.48,10.52,25.37,19.57,46,27.19L260.2,661.2l14.46,48.46c152.76,40.64,466.71,25.28,527.88-35.88V510.35C802.54,344.2,667.85,209.52,501.71,209.52Z" style="fill:',
@@ -293,7 +293,7 @@ library HairDetail {
             'id="pixie-cut" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
                 abi.encodePacked(
-                    '<rect x="290.23" y="414.02" width="439.24" height="64.15" style="fill:#f3ab98"/>',
+                    '<rect x="290.23" y="414.02" width="439.24" height="64.15" style="fill:none"/>',
                     '<path d="M710,667.66q-4.71,5.82-9.71,11.37C697.79,681.8,702.87,677.91,710,667.66Zm15-316.55C694.5,296.7,641.5,259.24,580.22,242l-6.35-1.71c-22.7-6.28-46.62-7-71.32-7-26.69,0-52.46,2.74-76.77,10l-4.26,1.27C335.16,273.62,263.78,346.74,245.06,429.8,213,556.34,262.89,634,307.17,681.6c4.37,4.7-57.93-101.85-17.42-216,7.73-.29,20.24-.51,36.19-.67l15.5-50.61,17.44,50.38c27.4-.13,59.88-.15,93.88-.12l12.32-52.36L479,464.6c74.37.14,151.44.52,195.28.77l13.2-52.17,15,52.33,8.21.05C760.78,572,728.5,641.13,710,667.66A265.62,265.62,0,0,0,769.3,500C769.3,413.58,725,351.11,725,351.11Z" style="fill:',
                     BytesConverter.bytesToHex(baseColor),
                     '"/>',
@@ -338,16 +338,18 @@ library HairDetail {
 
     /// @dev Returns the SVG and name for the given hair type
     function getHairById(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 1) {
-            return "";
+        if (id == 0) {
+            return ""; // return none (Bald AF)
+        } else if (id == 1) {
+            return ""; // return afroHairSVG(color);
         } else if (id == 2) {
             return baldHairSVG(color);
         } else if (id == 3) {
-            return "";
+            return ""; // return bobCutSVG(color);
         } else if (id == 4) {
             return bunHairSVG(color);
         } else if (id == 5) {
-            return "";
+            return ""; // return longHairSVG(color);
         } else if (id == 6) {
             return pixieCutSVG(color);
         } else if (id == 7) {

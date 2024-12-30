@@ -45,7 +45,7 @@ contract SVGTest is Test {
         // console.log(onlyBreastSVG);
         vm.writeFile("./output/only_breast.svg", onlyBreastSVG);
 
-        string memory breastWhite = BodyDetail.getBodyById(1, 0, 0);
+        string memory breastWhite = BodyDetail.getBodyById(1, 1, 0);
         vm.writeFile("./output/breast_white.svg", breastWhite);
 
         string memory breastBlue = BodyDetail.getBodyById(1, 1, 1);
@@ -87,7 +87,7 @@ contract SVGTest is Test {
                              CLOTHING TEST
         //////////////////////////////////////////////////////////////*/
 
-        string memory dressSVG = ClothingDetail.dressSVG(1, 1);
+        string memory dressSVG = ClothingDetail.dressSVG(1, 0);
         // console.log(dressSVG);
         vm.writeFile("./output/dress.svg", dressSVG);
 
@@ -99,11 +99,11 @@ contract SVGTest is Test {
         // console.log(dressBackSVG);
         vm.writeFile("./output/dress_back.svg", dressBackSVG);
 
-        string memory shirtSVG = ClothingDetail.shirtSVG(1, 1);
+        string memory shirtSVG = ClothingDetail.shirtSVG(1, 2);
         // console.log(shirtSVG);
         vm.writeFile("./output/shirt.svg", shirtSVG);
 
-        string memory tShirtSVG = ClothingDetail.tShirtSVG(1, 0);
+        string memory tShirtSVG = ClothingDetail.tShirtSVG(1, 3);
         vm.writeFile("./output/t_shirt.svg", tShirtSVG);
 
         string memory tankTopSVG = ClothingDetail.tankTopSVG(1, 0);
@@ -134,7 +134,7 @@ contract SVGTest is Test {
         string memory shirtBlue = ClothingDetail.getClothingById(2, 1, 1);
         vm.writeFile("./output/blue_shirt.svg", shirtBlue);
 
-        string memory shirtBlack = ClothingDetail.getClothingById(2, 1, 2);
+        string memory shirtBlack = ClothingDetail.getClothingById(2, 2, 2);
         vm.writeFile("./output/black_shirt.svg", shirtBlack);
 
         string memory shirtGreen = ClothingDetail.getClothingById(2, 1, 3);
@@ -242,7 +242,7 @@ contract SVGTest is Test {
         string memory heartEyeSVG = EyesDetail.heartEyeSVG();
         vm.writeFile("./output/heart_eye.svg", heartEyeSVG);
 
-        string memory leftTwitchEyeSVG = EyesDetail.leftTwitchEyeSVG();
+        string memory leftTwitchEyeSVG = EyesDetail.leftTwitchEyeSVG(1);
         vm.writeFile("./output/left_twitch_eye.svg", leftTwitchEyeSVG);
 
         string memory normalEye = EyesDetail.normalEyeSVG();

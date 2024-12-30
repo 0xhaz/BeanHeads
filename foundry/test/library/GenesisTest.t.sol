@@ -10,28 +10,28 @@ contract GenesisTest is Test {
         accessory: 0,
         bodyType: 1,
         clothes: 1,
-        hairStyle: 1,
+        hairStyle: 0,
         clothesGraphic: 0,
-        eyebrowShape: 5,
-        eyeShape: 6,
-        facialHairType: 0,
+        eyebrowShape: 4,
+        eyeShape: 5,
+        facialHairType: 2,
         hatStyle: 0,
         mouthStyle: 4,
         skinColor: 3,
         clothingColor: 0,
         hairColor: 0,
-        hatColor: 1,
-        shapeColor: 1,
+        hatColor: 3,
+        shapeColor: 2,
         lipColor: 1,
-        faceMaskColor: 1,
+        faceMaskColor: 0,
         faceMask: false,
         shapes: false,
-        lashes: false
+        lashes: true
     });
 
     function test_buildAvatar() public {
         string memory avatar = Genesis.buildAvatar(params);
         vm.writeFile("./output/genesis.svg", avatar);
-        console.log(avatar);
+        // console.log(avatar);
     }
 }

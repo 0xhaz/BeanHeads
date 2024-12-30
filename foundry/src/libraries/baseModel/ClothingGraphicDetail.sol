@@ -9,7 +9,7 @@ library ClothingGraphicDetail {
     /// @dev SVG content for the Gatsby logo
     function gatsbySVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
-            'id="gatsby" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+            'id="gatsby" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" y="30"',
             string(
                 abi.encodePacked(
                     '<path d="M500,860.85a59.07,59.07,0,1,0,59.07,59.07A59.24,59.24,0,0,0,500,860.85Zm-32.91,92a45.79,45.79,0,0,1-13.5-32.07l46,45.57C487.76,965.91,476,961.69,467.09,952.83Zm43,12.23L454.86,909.8a46.37,46.37,0,0,1,82.69-17.3L531.22,898A39,39,0,0,0,500,882a38.38,38.38,0,0,0-35.86,25.31l48.52,48.52a38.26,38.26,0,0,0,24.47-27.42H516.88v-8.44h29.53A46.54,46.54,0,0,1,510.13,965.06Z" style="fill:#663795"/>'
@@ -21,7 +21,7 @@ library ClothingGraphicDetail {
     /// @dev SVG content for the GraphQL logo
     function graphqlSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
-            'id="graphql" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+            'id="graphql" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"  y="30"',
             string(
                 abi.encodePacked(
                     '<path d="M551.55,939.73a11.33,11.33,0,0,0-3-1.2V907.92a11.25,11.25,0,0,0,3.06-1.22,11.49,11.49,0,1,0-14.08-17.84L511,873.57a11.48,11.48,0,1,0-22.48-3.28,11.68,11.68,0,0,0,.47,3.26l-26.5,15.3a11.65,11.65,0,0,0-2.59-2.05,11.49,11.49,0,1,0-11.48,19.9,11.25,11.25,0,0,0,3.06,1.22v30.6a11.71,11.71,0,0,0-3,1.21,11.49,11.49,0,1,0,11.48,19.9,11.65,11.65,0,0,0,2.57-2L489,972.9a11.25,11.25,0,0,0-.47,3.25,11.48,11.48,0,1,0,23,0,11.68,11.68,0,0,0-.58-3.62l26.33-15.2a11.24,11.24,0,0,0,2.84,2.3,11.49,11.49,0,0,0,11.48-19.9ZM465.35,947a11.36,11.36,0,0,0-1.21-3,11.59,11.59,0,0,0-2-2.56l34.68-60.06a11.67,11.67,0,0,0,3.2.45,11.37,11.37,0,0,0,3.21-.46l34.67,60.06a11.45,11.45,0,0,0-3.23,5.6Zm69.45-53.36a11.46,11.46,0,0,0,8.26,14.28v30.65l-.44.11-34.68-60.07.3-.3Zm-43.06-15.34.33.32-34.68,60.07-.45-.12V907.89a11.45,11.45,0,0,0,8.25-14.29Zm16.75,90.14a11.5,11.5,0,0,0-16.76-.23l-26.51-15.31.12-.44h69.32c.06.25.13.51.21.75Z" style="fill:#e535ab"/>'
@@ -33,7 +33,7 @@ library ClothingGraphicDetail {
     /// @dev SVG content for the React logo
     function reactSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
-            'id="react" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+            'id="react" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"  y="30"',
             string(
                 abi.encodePacked(
                     '<rect x="441.15" y="860.49" width="112" height="112" style="fill:none"/>',
@@ -47,7 +47,7 @@ library ClothingGraphicDetail {
     /// @dev SVG content for the Redwood logo
     function redwoodSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
-            'id="redwood" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+            'id="redwood" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" y="30"',
             string(
                 abi.encodePacked(
                     '<rect x="441.15" y="860.49" width="112" height="112" style="fill:none"/>',
@@ -62,7 +62,7 @@ library ClothingGraphicDetail {
     /// @dev SVG content for the Vue logo
     function vueSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
-            'id="vue" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
+            'id="vue" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" y="30"',
             string(
                 abi.encodePacked(
                     '<path d="M517.8,866.62l-14.4,24.94L489,866.62H441l62.36,108,62.36-108Z" style="fill:#44b783"/>',

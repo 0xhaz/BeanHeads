@@ -2,10 +2,9 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
+import {Errors} from "src/types/Constants.sol";
 
 library EyebrowDetail {
-    error EyebrowDetail__InvalidEyebrowType();
-
     /// @dev SVG content for the Angry Eyebrows
     function angryEyebrowSVG() internal pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -84,7 +83,7 @@ library EyebrowDetail {
         } else if (id == 5) {
             return seriousEyebrowSVG();
         } else {
-            revert EyebrowDetail__InvalidEyebrowType();
+            revert Errors.InvalidType(id);
         }
     }
 }
