@@ -20,62 +20,27 @@ library ClothingDetail {
         RED
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Retrieves the base and shadow color for the clothing
     /// @param color The id of the clothing color
     function getColorForClothes(uint8 color) internal pure returns (bytes3, bytes3) {
         return _getColors(color);
     }
 
-    /// @dev SVG content for front dress
-    function dressFrontSVG(uint8 color) internal pure returns (string memory) {
-        (bytes3 baseColor,) = getColorForClothes(color);
-
-        return string(
-            abi.encodePacked(
-                '<path d="M329.09,794.17c56.12,35.58,168.48,75.53,168.48,75.53l-.16,14S397,879.36,316.32,844.9C316.32,814.38,329.09,794.17,329.09,794.17Z" style="fill:',
-                BytesConverter.bytesToHex(baseColor),
-                ";",
-                'stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
-                '<path d="M671.55,794.43C619,831.8,503,869.7,503,869.7l.17,14s100.41-4.3,181.08-38.76C684.29,822.67,671.55,794.43,671.55,794.43Z" style="fill:',
-                BytesConverter.bytesToHex(baseColor),
-                ";",
-                'stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
-                '<path d="M320.63,822.65c.28.24.83.61,1.27.92s1,.64,1.45.95c1,.6,2,1.21,3.08,1.77,2.08,1.16,4.23,2.25,6.43,3.28s4.42,2,6.65,3c1.12.5,2.23,1,3.34,1.58s2.22,1.1,3.31,1.76a40.85,40.85,0,0,1-7.42-1.08q-3.63-.9-7.17-2.15a65,65,0,0,1-7-2.89c-1.13-.56-2.26-1.16-3.36-1.84-.55-.34-1.09-.69-1.64-1.06a15.93,15.93,0,0,1-1.67-1.31Z" style="fill:#592d3d"/>'
-            )
-        );
-    }
-
     /// @dev SVG content for back dress
     function dressBackSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
         (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
         bool includeBreastSVG = (bodyTypeId == WOMEN);
-        return renderDressSVG(baseColor, shadowColor, includeBreastSVG, color);
+        return renderDressBackSVG(baseColor, shadowColor, includeBreastSVG, color);
     }
 
-    /// @dev Render SVG for dress
-    function renderDressSVG(bytes3 baseColor, bytes3 shadowColor, bool isWoman, uint8 color)
-        private
-        pure
-        returns (string memory)
-    {
-        return string(
-            abi.encodePacked(
-                '<path d="M568.44,849.8c-21.18,6.89-42,17.48-62.85,19.67-26.75,2.82-54.1-13.37-82.3-21.08-2.15-2.58-18.35-14.44-33.47-13.94-11.88.4-15.09,4.3-18.4,8.19l-4.16,213.48a13.27,13.27,0,0,0,13.27,13.27H619.47a13.27,13.27,0,0,0,13.27-13.27l-2.38-215.36c-4.43,0-7.1-9.4-20.41-5.09C593.66,841,569.71,848.28,568.44,849.8Z" style="fill:',
-                BytesConverter.bytesToHex(baseColor),
-                '"/>',
-                '<polygon points="632.74 831.31 609.95 869.4 621.34 999.43 632.94 999.43 632.94 893.78 632.74 831.31" style="fill:',
-                BytesConverter.bytesToHex(shadowColor),
-                '"/>',
-                '<path d="M380.53,1069.39H497.15c-109.2,0-100.91-231.14-129.89-231.14v217.87A13.27,13.27,0,0,0,380.53,1069.39Z" style="fill:',
-                BytesConverter.bytesToHex(shadowColor),
-                '"/>',
-                '<path d="M361.26,860.4a63.71,63.71,0,0,1-.1-8.29q.19-4.15.71-8.31c.18-1.39.35-2.77.57-4.16s.44-2.77.78-4.16a27.84,27.84,0,0,1,3.44-8.35,27.54,27.54,0,0,1,3.73,8.22c.39,1.38.68,2.76.93,4.13s.5,2.76.72,4.14c.44,2.75.79,5.51,1,8.27a62,62,0,0,1,.21,8.29Z" style="fill:#592d3d"/>',
-                '<path d="M632.74,869.4v8c.26,34,.26,69,0,102.76,0,2.87,0,5.72,0,8.53v67.41a13.27,13.27,0,0,1-13.27,13.27H380.53a13.27,13.27,0,0,1-13.27-13.27V998q0-3.76,0-7.65c-.25-34.86-.25-69.86,0-105.3V860.29" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
-                '<path d="M626.76,869.38a65.79,65.79,0,0,1,.65-8.53q.57-4.25,1.46-8.47c.3-1.41.6-2.82.94-4.22s.69-2.81,1.15-4.21a29.21,29.21,0,0,1,4.18-8.28,28.9,28.9,0,0,1,3,8.78c.26,1.45.42,2.89.55,4.33s.25,2.88.35,4.31c.18,2.87.28,5.74.25,8.59a67.65,67.65,0,0,1-.54,8.54Z" style="fill:#592d3d"/>',
-                '<path d="M557.91,889.36c4.41-.78,8.76-1.39,13.1-2l13-1.93c4.31-.65,8.61-1.36,12.91-2.1s8.61-1.58,13.07-2.2a62.58,62.58,0,0,1-12.33,5.26,87,87,0,0,1-13,3,94.61,94.61,0,0,1-13.33,1.11A65.72,65.72,0,0,1,557.91,889.36Z" style="fill:#592d3d"/>',
-                isWoman ? string(abi.encodePacked("<g>", BodyDetail.onlyBreastSVG(color), "</g>")) : ""
-            )
-        );
+    /// @dev SVG content for front dress
+    function dressFrontSVG(uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor,) = getColorForClothes(color);
+        return renderDressFrontSVG(baseColor);
     }
 
     /// @dev SVG content for dress
@@ -100,6 +65,84 @@ library ClothingDetail {
         (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
         bool includeBreastSVG = (bodyTypeId == WOMEN);
         return renderShirtSVG(baseColor, shadowColor, includeBreastSVG, color);
+    }
+
+    /// @dev SVG content for t-shirt
+    function tShirtSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
+        bool includeBreastSVG = (bodyTypeId == WOMEN);
+        return renderTShirtSVG(baseColor, shadowColor, includeBreastSVG, color);
+    }
+
+    /// @dev SVG content for tank top
+    function tankTopSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
+        bool includeBreastSVG = (bodyTypeId == WOMEN);
+        return renderTankTopSVG(baseColor, shadowColor, includeBreastSVG, color);
+    }
+
+    /// @dev SVG content for v-neck
+    function vNeckSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
+        bool includeBreastSVG = (bodyTypeId == WOMEN);
+        return renderVNeckSVG(baseColor, shadowColor, includeBreastSVG, color);
+    }
+
+    /// @dev Returns the SVG and name for a specific clothing item
+    function getClothingById(uint8 bodyId, uint8 clothId, uint8 color) internal pure returns (string memory) {
+        if (clothId == 0) return "";
+        if (clothId == 1) return dressSVG(bodyId, color);
+        if (clothId == 2) return shirtSVG(bodyId, color);
+        if (clothId == 3) return tShirtSVG(bodyId, color);
+        if (clothId == 4) return tankTopSVG(bodyId, color);
+        if (clothId == 5) return vNeckSVG(bodyId, color);
+        revert Errors.InvalidType(clothId);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function renderDressFrontSVG(bytes3 baseColor) private pure returns (string memory) {
+        return string(
+            abi.encodePacked(
+                '<path d="M329.09,794.17c56.12,35.58,168.48,75.53,168.48,75.53l-.16,14S397,879.36,316.32,844.9C316.32,814.38,329.09,794.17,329.09,794.17Z" style="fill:',
+                BytesConverter.bytesToHex(baseColor),
+                ";",
+                'stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                '<path d="M671.55,794.43C619,831.8,503,869.7,503,869.7l.17,14s100.41-4.3,181.08-38.76C684.29,822.67,671.55,794.43,671.55,794.43Z" style="fill:',
+                BytesConverter.bytesToHex(baseColor),
+                ";",
+                'stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                '<path d="M320.63,822.65c.28.24.83.61,1.27.92s1,.64,1.45.95c1,.6,2,1.21,3.08,1.77,2.08,1.16,4.23,2.25,6.43,3.28s4.42,2,6.65,3c1.12.5,2.23,1,3.34,1.58s2.22,1.1,3.31,1.76a40.85,40.85,0,0,1-7.42-1.08q-3.63-.9-7.17-2.15a65,65,0,0,1-7-2.89c-1.13-.56-2.26-1.16-3.36-1.84-.55-.34-1.09-.69-1.64-1.06a15.93,15.93,0,0,1-1.67-1.31Z" style="fill:#592d3d"/>'
+            )
+        );
+    }
+
+    /// @dev Render SVG for dress
+    function renderDressBackSVG(bytes3 baseColor, bytes3 shadowColor, bool isWoman, uint8 color)
+        private
+        pure
+        returns (string memory)
+    {
+        return string(
+            abi.encodePacked(
+                '<path d="M568.44,849.8c-21.18,6.89-42,17.48-62.85,19.67-26.75,2.82-54.1-13.37-82.3-21.08-2.15-2.58-18.35-14.44-33.47-13.94-11.88.4-15.09,4.3-18.4,8.19l-4.16,213.48a13.27,13.27,0,0,0,13.27,13.27H619.47a13.27,13.27,0,0,0,13.27-13.27l-2.38-215.36c-4.43,0-7.1-9.4-20.41-5.09C593.66,841,569.71,848.28,568.44,849.8Z" style="fill:',
+                BytesConverter.bytesToHex(baseColor),
+                '"/>',
+                '<polygon points="632.74 831.31 609.95 869.4 621.34 999.43 632.94 999.43 632.94 893.78 632.74 831.31" style="fill:',
+                BytesConverter.bytesToHex(shadowColor),
+                '"/>',
+                '<path d="M380.53,1069.39H497.15c-109.2,0-100.91-231.14-129.89-231.14v217.87A13.27,13.27,0,0,0,380.53,1069.39Z" style="fill:',
+                BytesConverter.bytesToHex(shadowColor),
+                '"/>',
+                '<path d="M361.26,860.4a63.71,63.71,0,0,1-.1-8.29q.19-4.15.71-8.31c.18-1.39.35-2.77.57-4.16s.44-2.77.78-4.16a27.84,27.84,0,0,1,3.44-8.35,27.54,27.54,0,0,1,3.73,8.22c.39,1.38.68,2.76.93,4.13s.5,2.76.72,4.14c.44,2.75.79,5.51,1,8.27a62,62,0,0,1,.21,8.29Z" style="fill:#592d3d"/>',
+                '<path d="M632.74,869.4v8c.26,34,.26,69,0,102.76,0,2.87,0,5.72,0,8.53v67.41a13.27,13.27,0,0,1-13.27,13.27H380.53a13.27,13.27,0,0,1-13.27-13.27V998q0-3.76,0-7.65c-.25-34.86-.25-69.86,0-105.3V860.29" style="fill:none;stroke:#592d3d;stroke-miterlimit:10;stroke-width:12px"/>',
+                '<path d="M626.76,869.38a65.79,65.79,0,0,1,.65-8.53q.57-4.25,1.46-8.47c.3-1.41.6-2.82.94-4.22s.69-2.81,1.15-4.21a29.21,29.21,0,0,1,4.18-8.28,28.9,28.9,0,0,1,3,8.78c.26,1.45.42,2.89.55,4.33s.25,2.88.35,4.31c.18,2.87.28,5.74.25,8.59a67.65,67.65,0,0,1-.54,8.54Z" style="fill:#592d3d"/>',
+                '<path d="M557.91,889.36c4.41-.78,8.76-1.39,13.1-2l13-1.93c4.31-.65,8.61-1.36,12.91-2.1s8.61-1.58,13.07-2.2a62.58,62.58,0,0,1-12.33,5.26,87,87,0,0,1-13,3,94.61,94.61,0,0,1-13.33,1.11A65.72,65.72,0,0,1,557.91,889.36Z" style="fill:#592d3d"/>',
+                isWoman ? string(abi.encodePacked("<g>", BodyDetail.onlyBreastSVG(color), "</g>")) : ""
+            )
+        );
     }
 
     /// @dev Render Shirt SVG
@@ -185,13 +228,6 @@ library ClothingDetail {
         );
     }
 
-    /// @dev SVG content for t-shirt
-    function tShirtSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
-        bool includeBreastSVG = (bodyTypeId == WOMEN);
-        return renderTShirtSVG(baseColor, shadowColor, includeBreastSVG, color);
-    }
-
     /// @dev Render TShirt SVG
     function renderTShirtSVG(bytes3 baseColor, bytes3 shadowColor, bool isWoman, uint8 color)
         private
@@ -239,13 +275,6 @@ library ClothingDetail {
         );
     }
 
-    /// @dev SVG content for tank top
-    function tankTopSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
-        bool includeBreastSVG = (bodyTypeId == WOMEN);
-        return renderTankTopSVG(baseColor, shadowColor, includeBreastSVG, color);
-    }
-
     /// @dev Render TankTop SVG
     function renderTankTopSVG(bytes3 baseColor, bytes3 shadowColor, bool isWoman, uint8 color)
         private
@@ -274,13 +303,6 @@ library ClothingDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for v-neck
-    function vNeckSVG(uint8 bodyTypeId, uint8 color) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForClothes(color);
-        bool includeBreastSVG = (bodyTypeId == WOMEN);
-        return renderVNeckSVG(baseColor, shadowColor, includeBreastSVG, color);
     }
 
     /// @dev Render VNeck SVG
@@ -337,16 +359,5 @@ library ClothingDetail {
         if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
         if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
         revert Errors.InvalidColor(color);
-    }
-
-    /// @dev Returns the SVG and name for a specific clothing item
-    function getClothingById(uint8 bodyId, uint8 clothId, uint8 color) internal pure returns (string memory) {
-        if (clothId == 0) return "";
-        if (clothId == 1) return dressSVG(bodyId, color);
-        if (clothId == 2) return shirtSVG(bodyId, color);
-        if (clothId == 3) return tShirtSVG(bodyId, color);
-        if (clothId == 4) return tankTopSVG(bodyId, color);
-        if (clothId == 5) return vNeckSVG(bodyId, color);
-        revert Errors.InvalidType(clothId);
     }
 }

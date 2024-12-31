@@ -5,10 +5,48 @@ import {SVGBody} from "./SVGBody.sol";
 import {Errors} from "src/types/Constants.sol";
 
 library EyebrowDetail {
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev SVG content for the Angry Eyebrows
     function angryEyebrowSVG() internal pure returns (string memory) {
         return renderAngryEyebrowSVG();
     }
+
+    /// @dev SVG content for the Concerned Eyebrows
+    function concernedEyebrowSVG() internal pure returns (string memory) {
+        return renderConcernedEyebrowSVG();
+    }
+
+    /// @dev SVG content for the Left Lowered Eyebrow
+    function leftLoweredEyebrowSVG() internal pure returns (string memory) {
+        return renderLeftLoweredEyebrowSVG();
+    }
+
+    /// @dev SVG content for the Normal Eyebrows
+    function normalEyebrowSVG() internal pure returns (string memory) {
+        return renderNormalEyebrowSVG();
+    }
+
+    /// @dev SVG content for the Serious Eyebrows
+    function seriousEyebrowSVG() internal pure returns (string memory) {
+        return renderSeriousEyebrowSVG();
+    }
+
+    /// @dev Returns the SVG and name for a specific eyebrow type
+    function getEyebrowById(uint8 id) internal pure returns (string memory) {
+        if (id == 1) return angryEyebrowSVG();
+        if (id == 2) return concernedEyebrowSVG();
+        if (id == 3) return leftLoweredEyebrowSVG();
+        if (id == 4) return normalEyebrowSVG();
+        if (id == 5) return seriousEyebrowSVG();
+        revert Errors.InvalidType(id);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function renderAngryEyebrowSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -20,11 +58,6 @@ library EyebrowDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for the Concerned Eyebrows
-    function concernedEyebrowSVG() internal pure returns (string memory) {
-        return renderConcernedEyebrowSVG();
     }
 
     function renderConcernedEyebrowSVG() private pure returns (string memory) {
@@ -39,11 +72,6 @@ library EyebrowDetail {
         );
     }
 
-    /// @dev SVG content for the Left Lowered Eyebrow
-    function leftLoweredEyebrowSVG() internal pure returns (string memory) {
-        return renderLeftLoweredEyebrowSVG();
-    }
-
     function renderLeftLoweredEyebrowSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="left-lowered-eyebrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -54,11 +82,6 @@ library EyebrowDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for the Normal Eyebrows
-    function normalEyebrowSVG() internal pure returns (string memory) {
-        return renderNormalEyebrowSVG();
     }
 
     function renderNormalEyebrowSVG() private pure returns (string memory) {
@@ -73,11 +96,6 @@ library EyebrowDetail {
         );
     }
 
-    /// @dev SVG content for the Serious Eyebrows
-    function seriousEyebrowSVG() internal pure returns (string memory) {
-        return renderSeriousEyebrowSVG();
-    }
-
     function renderSeriousEyebrowSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="serious-eyebrows" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -88,15 +106,5 @@ library EyebrowDetail {
                 )
             )
         );
-    }
-
-    /// @dev Returns the SVG and name for a specific eyebrow type
-    function getEyebrowById(uint8 id) internal pure returns (string memory) {
-        if (id == 1) return angryEyebrowSVG();
-        if (id == 2) return concernedEyebrowSVG();
-        if (id == 3) return leftLoweredEyebrowSVG();
-        if (id == 4) return normalEyebrowSVG();
-        if (id == 5) return seriousEyebrowSVG();
-        revert Errors.InvalidType(id);
     }
 }

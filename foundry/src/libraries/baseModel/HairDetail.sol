@@ -18,32 +18,122 @@ library HairDetail {
         PINK
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Retrieves the base and shadow colors for a given hair color
     /// @param id The hair color ID
     function getColorsForHair(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        if (id == uint8(HairColor.BLONDE)) {
-            return (Colors.HAIR_BLONDE_BASE, Colors.HAIR_BLONDE_SHADOW);
-        } else if (id == uint8(HairColor.ORANGE)) {
-            return (Colors.HAIR_ORANGE_BASE, Colors.HAIR_ORANGE_SHADOW);
-        } else if (id == uint8(HairColor.BLACK)) {
-            return (Colors.HAIR_BLACK_BASE, Colors.HAIR_BLACK_SHADOW);
-        } else if (id == uint8(HairColor.WHITE)) {
-            return (Colors.HAIR_WHITE_BASE, Colors.HAIR_WHITE_SHADOW);
-        } else if (id == uint8(HairColor.BROWN)) {
-            return (Colors.HAIR_BROWN_BASE, Colors.HAIR_BROWN_SHADOW);
-        } else if (id == uint8(HairColor.BLUE)) {
-            return (Colors.HAIR_BLUE_BASE, Colors.HAIR_BLUE_SHADOW);
-        } else if (id == uint8(HairColor.PINK)) {
-            return (Colors.HAIR_PINK_BASE, Colors.HAIR_PINK_SHADOW);
-        } else {
-            revert Errors.InvalidColor(id);
-        }
+        return _getColors(id);
     }
 
     /// @dev SVG content for the "Afro Back" hair type
     function afroBackSVG(uint8 id) internal pure returns (string memory) {
         (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
+        return renderAfroBackSVG(baseColor, shadowColor);
+    }
 
+    /// @dev SVG content for the "Afro Front" hair type
+    function afroFrontSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
+        return renderAfroFrontSVG(baseColor, shadowColor);
+    }
+
+    /// @dev Combines the SVG content for the "Afro Back" and "Afro Front" hair types
+    function afroHairSVG(uint8 id) internal pure returns (string memory, string memory) {
+        return (afroBackSVG(id), afroFrontSVG(id));
+    }
+
+    /// @dev SVG content for the "Bald Hair" hair type
+    function baldHairSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor,) = getColorsForHair(id);
+        return renderBaldHairSVG(baseColor);
+    }
+
+    /// @dev SVG content for the "Bob Cut" hair type
+    function bobCutFrontSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor,) = getColorsForHair(id);
+        return renderBobCutFrontSVG(baseColor);
+    }
+
+    /// @dev SVG content for the "Bob Cut Back" hair type
+    function bobCutBackSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
+        return renderBobCutBackSVG(baseColor, shadowColor);
+    }
+
+    /// @dev Combines the SVG content for the "Bob Cut" hair type
+    function bobCutSVG(uint8 id) internal pure returns (string memory, string memory) {
+        return (bobCutBackSVG(id), bobCutFrontSVG(id));
+    }
+
+    /// @dev SVG content for the "Bun" hair type
+    function bunHairSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
+        return renderBunHairSVG(baseColor, shadowColor);
+    }
+
+    /// @dev SVG content for the "Long Hair Front" hair type
+    function longHairFrontSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
+        return renderLongHairFrontSVG(baseColor, shadowColor);
+    }
+
+    /// @dev SVG content for the "Long Hair Back" hair type
+    function longHairBackSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor,) = getColorsForHair(id);
+        return renderLongHairBackSVG(baseColor);
+    }
+
+    /// @dev Combines the SVG content for the "Long Hair" hair type
+    function longHairSVG(uint8 id) internal pure returns (string memory, string memory) {
+        return (longHairBackSVG(id), longHairFrontSVG(id));
+    }
+
+    /// @dev SVG content for the "Pixie Cut" hair type
+    function pixieCutSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
+        return renderPixieCutSVG(baseColor, shadowColor);
+    }
+
+    /// @dev SVG content for the "Short Hair" hair type
+    function shortHairSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
+        return renderShortHairSVG(baseColor, shadowColor);
+    }
+
+    /// @dev Returns the SVG and name for the given hair type
+    function getHairById(uint8 id, uint8 color) internal pure returns (string memory) {
+        if (id == 0) return ""; // return none (Bald AF)
+        if (id == 1) return ""; // return afroHairSVG(color);
+        if (id == 2) return baldHairSVG(color);
+        if (id == 3) return ""; // return bobCutSVG(color);
+        if (id == 4) return bunHairSVG(color);
+        if (id == 5) return ""; // return longHairSVG(color);
+        if (id == 6) return pixieCutSVG(color);
+        if (id == 7) return shortHairSVG(color);
+
+        revert Errors.InvalidType(id);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Helper functions to return colors
+    function _getColors(uint8 color) private pure returns (bytes3, bytes3) {
+        if (color == 0) return (Colors.HAIR_BLONDE_BASE, Colors.HAIR_BLONDE_SHADOW);
+        if (color == 1) return (Colors.HAIR_ORANGE_BASE, Colors.HAIR_ORANGE_SHADOW);
+        if (color == 2) return (Colors.HAIR_BLACK_BASE, Colors.HAIR_BLACK_SHADOW);
+        if (color == 3) return (Colors.HAIR_WHITE_BASE, Colors.HAIR_WHITE_SHADOW);
+        if (color == 4) return (Colors.HAIR_BROWN_BASE, Colors.HAIR_BROWN_SHADOW);
+        if (color == 5) return (Colors.HAIR_BLUE_BASE, Colors.HAIR_BLUE_SHADOW);
+        if (color == 6) return (Colors.HAIR_PINK_BASE, Colors.HAIR_PINK_SHADOW);
+        revert Errors.InvalidColor(color);
+    }
+
+    function renderAfroBackSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="afro-back" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -63,10 +153,7 @@ library HairDetail {
         );
     }
 
-    /// @dev SVG content for the "Afro Front" hair type
-    function afroFrontSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
-
+    function renderAfroFrontSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="afro-front" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -86,15 +173,7 @@ library HairDetail {
         );
     }
 
-    /// @dev Combines the SVG content for the "Afro Back" and "Afro Front" hair types
-    function afroHairSVG(uint8 id) internal pure returns (string memory, string memory) {
-        return (afroBackSVG(id), afroFrontSVG(id));
-    }
-
-    /// @dev SVG content for the "Bald Hair" hair type
-    function baldHairSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor,) = getColorsForHair(id);
-
+    function renderBaldHairSVG(bytes3 baseColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="bald-hair" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -122,10 +201,7 @@ library HairDetail {
         );
     }
 
-    /// @dev SVG content for the "Bob Cut" hair type
-    function bobCutFrontSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor,) = getColorsForHair(id);
-
+    function renderBobCutFrontSVG(bytes3 baseColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="bob-cut-front" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -157,10 +233,7 @@ library HairDetail {
         );
     }
 
-    /// @dev SVG content for the "Bob Cut Back" hair type
-    function bobCutBackSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
-
+    function renderBobCutBackSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="bob-cut-back" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"  ',
             string(
@@ -180,15 +253,7 @@ library HairDetail {
         );
     }
 
-    /// @dev Combines the SVG content for the "Bob Cut" hair type
-    function bobCutSVG(uint8 id) internal pure returns (string memory, string memory) {
-        return (bobCutBackSVG(id), bobCutFrontSVG(id));
-    }
-
-    /// @dev SVG content for the "Bun" hair type
-    function bunHairSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
-
+    function renderBunHairSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="bun-hair" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -235,9 +300,7 @@ library HairDetail {
         );
     }
 
-    /// @dev SVG content for the "Long Hair Front" hair type
-    function longHairFrontSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
+    function renderLongHairFrontSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="long-hair-front" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -262,10 +325,7 @@ library HairDetail {
         );
     }
 
-    /// @dev SVG content for the "Long Hair Back" hair type
-    function longHairBackSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor,) = getColorsForHair(id);
-
+    function renderLongHairBackSVG(bytes3 baseColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="long-hair-back" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -280,15 +340,7 @@ library HairDetail {
         );
     }
 
-    /// @dev Combines the SVG content for the "Long Hair" hair type
-    function longHairSVG(uint8 id) internal pure returns (string memory, string memory) {
-        return (longHairBackSVG(id), longHairFrontSVG(id));
-    }
-
-    /// @dev SVG content for the "Pixie Cut" hair type
-    function pixieCutSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
-
+    function renderPixieCutSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="pixie-cut" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -312,10 +364,7 @@ library HairDetail {
         );
     }
 
-    /// @dev SVG content for the "Short Hair" hair type
-    function shortHairSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorsForHair(id);
-
+    function renderShortHairSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="short-hair" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -334,28 +383,5 @@ library HairDetail {
                 )
             )
         );
-    }
-
-    /// @dev Returns the SVG and name for the given hair type
-    function getHairById(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 0) {
-            return ""; // return none (Bald AF)
-        } else if (id == 1) {
-            return ""; // return afroHairSVG(color);
-        } else if (id == 2) {
-            return baldHairSVG(color);
-        } else if (id == 3) {
-            return ""; // return bobCutSVG(color);
-        } else if (id == 4) {
-            return bunHairSVG(color);
-        } else if (id == 5) {
-            return ""; // return longHairSVG(color);
-        } else if (id == 6) {
-            return pixieCutSVG(color);
-        } else if (id == 7) {
-            return shortHairSVG(color);
-        } else {
-            revert Errors.InvalidType(id);
-        }
     }
 }

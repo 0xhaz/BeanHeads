@@ -5,11 +5,36 @@ import {SVGBody} from "./SVGBody.sol";
 import {Errors} from "src/types/Constants.sol";
 
 library AccessoryDetail {
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     /// @dev SVG content for "round glasses" accessories
     function roundGlassesSVG() internal pure returns (string memory) {
         return renderRoundGlassesSVG();
     }
 
+    /// @dev SVG content for "shades" accessory
+    function shadesSVG() internal pure returns (string memory) {
+        return renderShadeSVG();
+    }
+
+    /// @dev execute the SVG content for "tiny glasses" accessory
+    function tinyGlassesSVG() internal pure returns (string memory) {
+        return rendertinyGlassesSVG();
+    }
+
+    /// @dev Returns the SVG and name for a specific accessory ID
+    function getAccessoryById(uint8 id) internal pure returns (string memory) {
+        if (id == 0) return "";
+        if (id == 1) return roundGlassesSVG();
+        if (id == 2) return shadesSVG();
+        if (id == 3) return tinyGlassesSVG();
+        revert Errors.InvalidType(id);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     /// @dev SVG content for "round glasses" accessories
     function renderRoundGlassesSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -32,11 +57,6 @@ library AccessoryDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for "shades" accessory
-    function shadesSVG() internal pure returns (string memory) {
-        return renderShadeSVG();
     }
 
     /// @dev Render SVG content for "shades" accessory
@@ -63,11 +83,6 @@ library AccessoryDetail {
         );
     }
 
-    /// @dev execute the SVG content for "tiny glasses" accessory
-    function tinyGlassesSVG() internal pure returns (string memory) {
-        return rendertinyGlassesSVG();
-    }
-
     /// @dev Render SVG content for "tiny glasses" accessory
     function rendertinyGlassesSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -89,14 +104,5 @@ library AccessoryDetail {
                 )
             )
         );
-    }
-
-    /// @dev Returns the SVG and name for a specific accessory ID
-    function getAccessoryById(uint8 id) internal pure returns (string memory) {
-        if (id == 0) return "";
-        if (id == 1) return roundGlassesSVG();
-        if (id == 2) return shadesSVG();
-        if (id == 3) return tinyGlassesSVG();
-        revert Errors.InvalidType(id);
     }
 }

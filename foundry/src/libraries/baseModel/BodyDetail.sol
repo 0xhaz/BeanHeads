@@ -27,11 +27,60 @@ library BodyDetail {
         RED
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Retrieves the base and shadow colors for a given BreastColor
     /// @param id The BreastColor id
     function getColorsForBreast(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
         return _getBreastColors(id);
     }
+
+    /// @dev Retrieves the base and shadow colors for a given BreastColor
+    /// @param color The BodyColor id
+    function onlyBreastSVG(uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = BodyDetail.getColorsForBreast(color);
+        return renderOnlyBreastSVG(baseColor, shadowColor);
+    }
+
+    /// @dev SVG content for the breast
+    function breastSVGWithBody(uint8 skinColor, uint8 clothingColor) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = ClothingDetail.getColorForClothes(clothingColor);
+        (bytes3 skinBaseColor, bytes3 skinShadowColor) = getColorsForBody(skinColor);
+
+        return renderBreastSVGWithBody(baseColor, shadowColor, skinBaseColor, skinShadowColor);
+    }
+
+    /// @dev Retrieves the base and shadow colors for a given BodyColor
+    /// @param id The BodyColor id
+    function getColorsForBody(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
+        return _getColors(id);
+    }
+
+    /// @dev SVG content for the chest
+    function chestSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorsForBody(id);
+        return renderChestSVG(baseColor, shadowColor);
+    }
+
+    /// @dev Returns the SVG and name for a specific body ID
+    /// 2: Chest, 1: Breast
+    /// 2,0: Chest with light skin
+    /// 2,1: Chest with yellow skin
+    /// 2,2: Chest with brown skin
+    /// 2,3: Chest with dark skin
+    /// 2,4: Chest with red skin
+    /// 2,5: Chest with black skin
+    function getBodyById(uint8 id, uint8 color, uint8 clothingColor) internal pure returns (string memory) {
+        if (id == 1) return breastSVGWithBody(color, clothingColor);
+        if (id == 2) return chestSVG(color);
+        revert Errors.InvalidType(id);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Helper function to return the breast color
     function _getBreastColors(uint8 color) private pure returns (bytes3, bytes3) {
@@ -41,11 +90,6 @@ library BodyDetail {
         if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
         if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
         revert Errors.InvalidColor(color);
-    }
-
-    function onlyBreastSVG(uint8 color) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = BodyDetail.getColorsForBreast(color);
-        return renderOnlyBreastSVG(baseColor, shadowColor);
     }
 
     function renderOnlyBreastSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
@@ -71,14 +115,6 @@ library BodyDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for the breast
-    function breastSVGWithBody(uint8 skinColor, uint8 clothingColor) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = ClothingDetail.getColorForClothes(clothingColor);
-        (bytes3 skinBaseColor, bytes3 skinShadowColor) = getColorsForBody(skinColor);
-
-        return renderBreastSVGWithBody(baseColor, shadowColor, skinBaseColor, skinShadowColor);
     }
 
     /// @dev Retrieves the base and shadow colors for a given BodyColor
@@ -167,12 +203,6 @@ library BodyDetail {
         );
     }
 
-    /// @dev Retrieves the base and shadow colors for a given BodyColor
-    /// @param id The BodyColor id
-    function getColorsForBody(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        return _getColors(id);
-    }
-
     /// @dev Helper functions to return colors
     function _getColors(uint8 color) private pure returns (bytes3, bytes3) {
         if (color == 0) return (Colors.LIGHT_SKIN_BASE, Colors.LIGHT_SKIN_SHADOW);
@@ -182,12 +212,6 @@ library BodyDetail {
         if (color == 4) return (Colors.RED_SKIN_BASE, Colors.RED_SKIN_SHADOW);
         if (color == 5) return (Colors.BLACK_SKIN_BASE, Colors.BLACK_SKIN_SHADOW);
         revert Errors.InvalidColor(color);
-    }
-
-    /// @dev SVG content for the chest
-    function chestSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorsForBody(id);
-        return renderChestSVG(baseColor, shadowColor);
     }
 
     function renderChestSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
@@ -259,19 +283,5 @@ library BodyDetail {
                 )
             )
         );
-    }
-
-    /// @dev Returns the SVG and name for a specific body ID
-    /// 2: Chest, 1: Breast
-    /// 2,0: Chest with light skin
-    /// 2,1: Chest with yellow skin
-    /// 2,2: Chest with brown skin
-    /// 2,3: Chest with dark skin
-    /// 2,4: Chest with red skin
-    /// 2,5: Chest with black skin
-    function getBodyById(uint8 id, uint8 color, uint8 clothingColor) internal pure returns (string memory) {
-        if (id == 1) return breastSVGWithBody(color, clothingColor);
-        if (id == 2) return chestSVG(color);
-        revert Errors.InvalidType(id);
     }
 }

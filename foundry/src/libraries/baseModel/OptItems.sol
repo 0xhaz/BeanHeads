@@ -16,46 +16,87 @@ library OptItems {
         RED
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Retrieves the base and shadow color for a hat
     /// @param id The hat color id
     function getColorForFaceMask(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        if (id == uint8(MaskColor.WHITE)) {
-            return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
-        } else if (id == uint8(MaskColor.BLUE)) {
-            return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
-        } else if (id == uint8(MaskColor.BLACK)) {
-            return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
-        } else if (id == uint8(MaskColor.GREEN)) {
-            return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
-        } else if (id == uint8(MaskColor.RED)) {
-            return (Colors.RED_BASE, Colors.RED_SHADOW);
-        } else {
-            revert Errors.InvalidColor(id);
-        }
+        return _getColorsForFaceMask(id);
     }
 
     /// @dev Retrieves the base and shadow color for a shape
     /// @param id The shape color id
     function getColorForShape(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        if (id == 1) {
-            return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
-        } else if (id == 2) {
-            return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
-        } else if (id == 3) {
-            return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
-        } else if (id == 4) {
-            return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
-        } else if (id == 5) {
-            return (Colors.RED_BASE, Colors.RED_SHADOW);
-        } else {
-            revert Errors.InvalidColor(id);
-        }
+        return _getColorsForShape(id);
     }
 
     /// @dev SVG for face mask
     function faceMaskSVG(uint8 id) internal pure returns (string memory) {
         (bytes3 baseColor, bytes3 shadowColor) = getColorForFaceMask(id);
+        return renderFaceMaskSVG(baseColor, shadowColor);
+    }
 
+    /// @dev SVG for mask
+    function maskSVG() internal pure returns (string memory) {
+        return renderMaskSVG();
+    }
+
+    /// @dev SVG for left lashes
+    function leftLashes() internal pure returns (string memory) {
+        return renderLeftLashes();
+    }
+
+    /// @dev SVG for right lashes
+    function rightLashes() internal pure returns (string memory) {
+        return renderRightLashes();
+    }
+
+    /// @dev SVG for lashes
+    function lashesSVG() internal pure returns (string memory) {
+        return renderLashesSVG();
+    }
+
+    /// @dev SVG for shapes
+    function shapeSVG(uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor,) = getColorForShape(color);
+        return renderShapeSVG(baseColor);
+    }
+
+    /// @dev Returns the SVG for the given item
+    function getOptItems(uint8 id, uint8 color) internal pure returns (string memory) {
+        if (id == 1) return faceMaskSVG(color);
+        if (id == 2) return maskSVG();
+        if (id == 3) return lashesSVG();
+        if (id == 4) return shapeSVG(color);
+
+        revert Errors.InvalidType(id);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function _getColorsForFaceMask(uint8 color) private pure returns (bytes3, bytes3) {
+        if (color == 0) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
+        if (color == 1) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
+        if (color == 2) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
+        if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
+        if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
+        revert Errors.InvalidColor(color);
+    }
+
+    function _getColorsForShape(uint8 color) private pure returns (bytes3, bytes3) {
+        if (color == 0) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
+        if (color == 1) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
+        if (color == 2) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
+        if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
+        if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
+        revert Errors.InvalidColor(color);
+    }
+
+    function renderFaceMaskSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="face-mask" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -94,8 +135,7 @@ library OptItems {
         );
     }
 
-    /// @dev SVG for mask
-    function maskSVG() internal pure returns (string memory) {
+    function renderMaskSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="mask" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -106,8 +146,7 @@ library OptItems {
         );
     }
 
-    /// @dev SVG for left lashes
-    function leftLashes() internal pure returns (string memory) {
+    function renderLeftLashes() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="left-lashes" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -118,8 +157,7 @@ library OptItems {
         );
     }
 
-    /// @dev SVG for right lashes
-    function rightLashes() internal pure returns (string memory) {
+    function renderRightLashes() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="right-lashes" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -130,17 +168,14 @@ library OptItems {
         );
     }
 
-    /// @dev SVG for lashes
-    function lashesSVG() internal pure returns (string memory) {
+    function renderLashesSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="lashes" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(abi.encodePacked(leftLashes(), rightLashes()))
         );
     }
 
-    /// @dev SVG for shapes
-    function shapeSVG(uint8 color) internal pure returns (string memory) {
-        (bytes3 baseColor,) = getColorForShape(color);
+    function renderShapeSVG(bytes3 baseColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="shapes" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" y="90"',
             string(
@@ -149,20 +184,5 @@ library OptItems {
                 )
             )
         );
-    }
-
-    /// @dev Returns the SVG for the given item
-    function getOptItems(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 1) {
-            return faceMaskSVG(color);
-        } else if (id == 2) {
-            return maskSVG();
-        } else if (id == 3) {
-            return lashesSVG();
-        } else if (id == 4) {
-            return shapeSVG(color);
-        } else {
-            revert Errors.InvalidType(id);
-        }
     }
 }

@@ -16,26 +16,79 @@ library MouthDetail {
         LIPS_GREEN
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Retrieves the base and shadow color for the lips
     /// @param id The id of the lips color
     function getColorsForLips(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        if (id == uint8(LipsColor.LIPS_RED)) {
-            return (Colors.LIPS_RED_BASE, Colors.LIPS_RED_SHADOW);
-        } else if (id == uint8(LipsColor.LIPS_PURPLE)) {
-            return (Colors.LIPS_PURPLE_BASE, Colors.LIPS_PURPLE_SHADOW);
-        } else if (id == uint8(LipsColor.LIPS_PINK)) {
-            return (Colors.LIPS_PINK_BASE, Colors.LIPS_PINK_SHADOW);
-        } else if (id == uint8(LipsColor.LIPS_TURQUOISE)) {
-            return (Colors.LIPS_TURQUOISE_BASE, Colors.LIPS_TURQUOISE_SHADOW);
-        } else if (id == uint8(LipsColor.LIPS_GREEN)) {
-            return (Colors.LIPS_GREEN_BASE, Colors.LIPS_GREEN_SHADOW);
-        } else {
-            revert Errors.InvalidColor(id);
-        }
+        return _getColors(id);
+    }
+
+    function _getColors(uint8 color) private pure returns (bytes3, bytes3) {
+        if (color == 0) return (Colors.LIPS_RED_BASE, Colors.LIPS_RED_SHADOW);
+        if (color == 1) return (Colors.LIPS_PURPLE_BASE, Colors.LIPS_PURPLE_SHADOW);
+        if (color == 2) return (Colors.LIPS_PINK_BASE, Colors.LIPS_PINK_SHADOW);
+        if (color == 3) return (Colors.LIPS_TURQUOISE_BASE, Colors.LIPS_TURQUOISE_SHADOW);
+        if (color == 4) return (Colors.LIPS_GREEN_BASE, Colors.LIPS_GREEN_SHADOW);
+        revert Errors.InvalidColor(color);
     }
 
     /// @dev Returns the SVG for a grin mouth
     function grinMouthSVG() internal pure returns (string memory) {
+        return renderGrinMouthSVG();
+    }
+
+    /// @dev Returns the SVG for a lips mouth
+    function lipsMouthSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorsForLips(id);
+        return renderLipsMouthSVG(baseColor, shadowColor);
+    }
+
+    /// @dev Returns the SVG for an open mouth
+    function openMouthSVG() internal pure returns (string memory) {
+        return renderOpenMouthSVG();
+    }
+
+    /// @dev Returns the SVG for an open smile mouth
+    function openSmileMouthSVG() internal pure returns (string memory) {
+        return renderOpenSmileMouthSVG();
+    }
+
+    /// @dev Returns the SVG for a sad mouth
+    function sadMouthSVG() internal pure returns (string memory) {
+        return renderSadMouthSVG();
+    }
+
+    /// @dev Returns the SVG for a serious mouth
+    function seriousMouthSVG() internal pure returns (string memory) {
+        return renderSeriousMouthSVG();
+    }
+
+    /// @dev Returns the SVG for a tongue mouth
+    function toungeMouthSVG() internal pure returns (string memory) {
+        return renderToungeMouthSVG();
+    }
+
+    /// @dev Returns the SVG for a mouth based on the given mouth type
+    function getMouthById(uint8 id, uint8 color) internal pure returns (string memory) {
+        if (id == 1) return grinMouthSVG();
+        if (id == 2) return lipsMouthSVG(color);
+        if (id == 3) return openMouthSVG();
+        if (id == 4) return openSmileMouthSVG();
+        if (id == 5) return sadMouthSVG();
+        if (id == 6) return seriousMouthSVG();
+        if (id == 7) return toungeMouthSVG();
+
+        revert Errors.InvalidType(id);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function renderGrinMouthSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="grin-mouth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -48,10 +101,7 @@ library MouthDetail {
         );
     }
 
-    /// @dev Returns the SVG for a lips mouth
-    function lipsMouthSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorsForLips(id);
-
+    function renderLipsMouthSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="lips-mouth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -75,8 +125,7 @@ library MouthDetail {
         );
     }
 
-    /// @dev Returns the SVG for an open mouth
-    function openMouthSVG() internal pure returns (string memory) {
+    function renderOpenMouthSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="open-mouth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -90,8 +139,7 @@ library MouthDetail {
         );
     }
 
-    /// @dev Returns the SVG for an open smile mouth
-    function openSmileMouthSVG() internal pure returns (string memory) {
+    function renderOpenSmileMouthSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="open-smile-mouth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -105,8 +153,7 @@ library MouthDetail {
         );
     }
 
-    /// @dev Returns the SVG for a sad mouth
-    function sadMouthSVG() internal pure returns (string memory) {
+    function renderSadMouthSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="sad-mouth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -117,8 +164,7 @@ library MouthDetail {
         );
     }
 
-    /// @dev Returns the SVG for a serious mouth
-    function seriousMouthSVG() internal pure returns (string memory) {
+    function renderSeriousMouthSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="serious-mouth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -129,8 +175,7 @@ library MouthDetail {
         );
     }
 
-    /// @dev Returns the SVG for a tongue mouth
-    function toungeMouthSVG() internal pure returns (string memory) {
+    function renderToungeMouthSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="tounge-mouth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -143,26 +188,5 @@ library MouthDetail {
                 )
             )
         );
-    }
-
-    /// @dev Returns the SVG for a mouth based on the given mouth type
-    function getMouthById(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 1) {
-            return grinMouthSVG();
-        } else if (id == 2) {
-            return lipsMouthSVG(color);
-        } else if (id == 3) {
-            return openMouthSVG();
-        } else if (id == 4) {
-            return openSmileMouthSVG();
-        } else if (id == 5) {
-            return sadMouthSVG();
-        } else if (id == 6) {
-            return seriousMouthSVG();
-        } else if (id == 7) {
-            return toungeMouthSVG();
-        } else {
-            revert Errors.InvalidType(id);
-        }
     }
 }

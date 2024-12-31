@@ -17,33 +17,51 @@ library HatsDetail {
         RED
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Retrieves the base and shadow color for a hat
     /// @param id The hat color id
     function getColorForHat(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        if (id == uint8(HatColor.WHITE)) {
-            baseColor = Colors.WHITE_BASE;
-            shadowColor = Colors.WHITE_SHADOW;
-        } else if (id == uint8(HatColor.BLUE)) {
-            baseColor = Colors.BLUE_BASE;
-            shadowColor = Colors.BLUE_SHADOW;
-        } else if (id == uint8(HatColor.BLACK)) {
-            baseColor = Colors.BLACK_BASE;
-            shadowColor = Colors.BLACK_SHADOW;
-        } else if (id == uint8(HatColor.GREEN)) {
-            baseColor = Colors.GREEN_BASE;
-            shadowColor = Colors.GREEN_SHADOW;
-        } else if (id == uint8(HatColor.RED)) {
-            baseColor = Colors.RED_BASE;
-            shadowColor = Colors.RED_SHADOW;
-        } else {
-            revert Errors.InvalidColor(id);
-        }
+        return _getColors(id);
+    }
+
+    function _getColors(uint8 color) private pure returns (bytes3, bytes3) {
+        if (color == 0) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
+        if (color == 1) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
+        if (color == 2) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
+        if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
+        if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
+        revert Errors.InvalidColor(color);
     }
 
     /// @dev SVG content for a beanie hat
     function beanieHatSVG(uint8 id) internal pure returns (string memory) {
         (bytes3 baseColor, bytes3 shadowColor) = getColorForHat(id);
+        return renderBeanieHatSVG(baseColor, shadowColor);
+    }
 
+    /// @dev SVG content for a turban hat
+    function turbanHatSVG(uint8 id) internal pure returns (string memory) {
+        (bytes3 baseColor, bytes3 shadowColor) = getColorForHat(id);
+        return renderTurbanHatSVG(baseColor, shadowColor);
+    }
+
+    /// @dev Returns the SVG content for a hat
+    function getHatsById(uint8 id, uint8 color) internal pure returns (string memory) {
+        if (id == 0) return "";
+        if (id == 1) return beanieHatSVG(color);
+        if (id == 2) return turbanHatSVG(color);
+
+        revert Errors.InvalidType(id);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function renderBeanieHatSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="beanie" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -90,10 +108,7 @@ library HatsDetail {
         );
     }
 
-    /// @dev SVG content for a turban hat
-    function turbanHatSVG(uint8 id) internal pure returns (string memory) {
-        (bytes3 baseColor, bytes3 shadowColor) = getColorForHat(id);
-
+    function renderTurbanHatSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="turban" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -123,18 +138,5 @@ library HatsDetail {
                 )
             )
         );
-    }
-
-    /// @dev Returns the SVG content for a hat
-    function getHatsById(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 0) {
-            return "";
-        } else if (id == 1) {
-            return beanieHatSVG(color);
-        } else if (id == 2) {
-            return turbanHatSVG(color);
-        } else {
-            revert Errors.InvalidType(id);
-        }
     }
 }

@@ -4,14 +4,78 @@ pragma solidity ^0.8.26;
 import {SVGBody} from "./SVGBody.sol";
 import {BodyDetail} from "./BodyDetail.sol";
 import {BytesConverter} from "../BytesConverter.sol";
+import {Errors} from "src/types/Constants.sol";
 
 library EyesDetail {
-    error EyesDetail__InvalidEyeShape();
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev SVG content for the Content Eyes
     function contentEyeSVG() internal pure returns (string memory) {
         return renderContentEyeSVG();
     }
+
+    /// @dev SVG content for the Dizzy Eyes
+    function dizzyEyeSVG() internal pure returns (string memory) {
+        return renderDizzyEyeSVG();
+    }
+
+    /// @dev SVG content for the Happy Eyes
+    function happyEyeSVG() internal pure returns (string memory) {
+        return renderHappyEyeSVG();
+    }
+
+    /// @dev SVG content for the Heart Eyes
+    function heartEyeSVG() internal pure returns (string memory) {
+        return renderHeartEyeSVG();
+    }
+
+    /// @dev SVG content for the Left Twitch Eye
+    function leftTwitchEyeSVG(uint8 color) internal pure returns (string memory) {
+        (bytes3 baseColor,) = BodyDetail.getColorsForBody(color);
+        return renderLeftTwitchEyeSVG(baseColor);
+    }
+
+    /// @dev SVG content for the Normal Eyes
+    function normalEyeSVG() internal pure returns (string memory) {
+        return renderNormalEyeSVG();
+    }
+
+    /// @dev SVG content for the Simple Eyes
+    function simpleEyeSVG() internal pure returns (string memory) {
+        return renderSimpleEyeSVG();
+    }
+
+    /// @dev SVG content for the Squint Eyes
+    function squintEyeSVG() internal pure returns (string memory) {
+        return renderSquintEyeSVG();
+    }
+
+    /// @dev SVG content for the Left Twitch Eye
+    function winkEyeSVG() internal pure returns (string memory) {
+        return renderWinkEyeSVG();
+    }
+
+    /// @dev Returns the SVG and name for the given eye type
+    function getEyeById(uint8 id, uint8 color) internal pure returns (string memory) {
+        if (id == 0) return "";
+        if (id == 1) return contentEyeSVG();
+        if (id == 2) return dizzyEyeSVG();
+        if (id == 3) return happyEyeSVG();
+        if (id == 4) return heartEyeSVG();
+        if (id == 5) return leftTwitchEyeSVG(color);
+        if (id == 6) return normalEyeSVG();
+        if (id == 7) return simpleEyeSVG();
+        if (id == 8) return squintEyeSVG();
+        if (id == 9) return winkEyeSVG();
+
+        revert Errors.InvalidType(id);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function renderContentEyeSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -23,11 +87,6 @@ library EyesDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for the Dizzy Eyes
-    function dizzyEyeSVG() internal pure returns (string memory) {
-        return renderDizzyEyeSVG();
     }
 
     function renderDizzyEyeSVG() private pure returns (string memory) {
@@ -44,11 +103,6 @@ library EyesDetail {
         );
     }
 
-    /// @dev SVG content for the Happy Eyes
-    function happyEyeSVG() internal pure returns (string memory) {
-        return renderHappyEyeSVG();
-    }
-
     function renderHappyEyeSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="happy-eyes" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -59,11 +113,6 @@ library EyesDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for the Heart Eyes
-    function heartEyeSVG() internal pure returns (string memory) {
-        return renderHeartEyeSVG();
     }
 
     function renderHeartEyeSVG() private pure returns (string memory) {
@@ -80,12 +129,6 @@ library EyesDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for the Left Twitch Eye
-    function leftTwitchEyeSVG(uint8 color) internal pure returns (string memory) {
-        (bytes3 baseColor,) = BodyDetail.getColorsForBody(color);
-        return renderLeftTwitchEyeSVG(baseColor);
     }
 
     function renderLeftTwitchEyeSVG(bytes3 baseColor) private pure returns (string memory) {
@@ -110,11 +153,6 @@ library EyesDetail {
         );
     }
 
-    /// @dev SVG content for the Normal Eyes
-    function normalEyeSVG() internal pure returns (string memory) {
-        return renderNormalEyeSVG();
-    }
-
     function renderNormalEyeSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="normal-eyes" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -131,11 +169,6 @@ library EyesDetail {
         );
     }
 
-    /// @dev SVG content for the Simple Eyes
-    function simpleEyeSVG() internal pure returns (string memory) {
-        return renderSimpleEyeSVG();
-    }
-
     function renderSimpleEyeSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="simple-eyes" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -148,11 +181,6 @@ library EyesDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for the Squint Eyes
-    function squintEyeSVG() internal pure returns (string memory) {
-        return renderSquintEyeSVG();
     }
 
     function renderSquintEyeSVG() private pure returns (string memory) {
@@ -177,11 +205,6 @@ library EyesDetail {
         );
     }
 
-    /// @dev SVG content for the Left Twitch Eye
-    function winkEyeSVG() internal pure returns (string memory) {
-        return renderWinkEyeSVG();
-    }
-
     function renderWinkEyeSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="wink-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
@@ -195,21 +218,5 @@ library EyesDetail {
                 )
             )
         );
-    }
-
-    /// @dev Returns the SVG and name for the given eye type
-    function getEyeById(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 0) return "";
-        if (id == 1) return contentEyeSVG();
-        if (id == 2) return dizzyEyeSVG();
-        if (id == 3) return happyEyeSVG();
-        if (id == 4) return heartEyeSVG();
-        if (id == 5) return leftTwitchEyeSVG(color);
-        if (id == 6) return normalEyeSVG();
-        if (id == 7) return simpleEyeSVG();
-        if (id == 8) return squintEyeSVG();
-        if (id == 9) return winkEyeSVG();
-
-        revert EyesDetail__InvalidEyeShape();
     }
 }

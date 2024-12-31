@@ -2,14 +2,35 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
+import {Errors} from "src/types/Constants.sol";
 
 library FacialHairDetail {
-    error FacialHairDetail__InvalidFacialHairType();
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev SVG content for a medium beard
     function mediumBeardSVG() internal pure returns (string memory) {
         return renderMediumBeardSVG();
     }
+
+    /// @dev SVG content for stubble
+    function stubbleSVG() internal pure returns (string memory) {
+        return renderStubbleSVG();
+    }
+
+    /// @dev Returns the SVG content for a facial hair detail
+    function getFacialHairById(uint8 id) internal pure returns (string memory) {
+        if (id == 0) return "";
+        if (id == 1) return mediumBeardSVG();
+        if (id == 2) return stubbleSVG();
+
+        revert Errors.InvalidType(id);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function renderMediumBeardSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
@@ -31,11 +52,6 @@ library FacialHairDetail {
                 )
             )
         );
-    }
-
-    /// @dev SVG content for stubble
-    function stubbleSVG() internal pure returns (string memory) {
-        return renderStubbleSVG();
     }
 
     function renderStubbleSVG() private pure returns (string memory) {
@@ -60,14 +76,5 @@ library FacialHairDetail {
                 )
             )
         );
-    }
-
-    /// @dev Returns the SVG content for a facial hair detail
-    function getFacialHairById(uint8 id) internal pure returns (string memory) {
-        if (id == 0) return "";
-        if (id == 1) return mediumBeardSVG();
-        if (id == 2) return stubbleSVG();
-
-        revert FacialHairDetail__InvalidFacialHairType();
     }
 }
