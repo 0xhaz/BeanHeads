@@ -2,12 +2,16 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
+import {Errors} from "src/types/Constants.sol";
 
 library AccessoryDetail {
-    error AccessoryDetail__InvalidAccessory();
-
     /// @dev SVG content for "round glasses" accessories
     function roundGlassesSVG() internal pure returns (string memory) {
+        return renderRoundGlassesSVG();
+    }
+
+    /// @dev SVG content for "round glasses" accessories
+    function renderRoundGlassesSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="round-glasses" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -32,6 +36,11 @@ library AccessoryDetail {
 
     /// @dev SVG content for "shades" accessory
     function shadesSVG() internal pure returns (string memory) {
+        return renderShadeSVG();
+    }
+
+    /// @dev Render SVG content for "shades" accessory
+    function renderShadeSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="shades" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -54,8 +63,13 @@ library AccessoryDetail {
         );
     }
 
-    /// @dev SVG content for "tiny glasses" accessory
+    /// @dev execute the SVG content for "tiny glasses" accessory
     function tinyGlassesSVG() internal pure returns (string memory) {
+        return rendertinyGlassesSVG();
+    }
+
+    /// @dev Render SVG content for "tiny glasses" accessory
+    function rendertinyGlassesSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="tiny-glasses" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 990"',
             string(
@@ -78,17 +92,11 @@ library AccessoryDetail {
     }
 
     /// @dev Returns the SVG and name for a specific accessory ID
-    function getAccessoryById(uint8 id) public pure returns (string memory) {
-        if (id == 0) {
-            return "";
-        } else if (id == 1) {
-            return roundGlassesSVG();
-        } else if (id == 2) {
-            return shadesSVG();
-        } else if (id == 3) {
-            return tinyGlassesSVG();
-        } else {
-            revert AccessoryDetail__InvalidAccessory();
-        }
+    function getAccessoryById(uint8 id) internal pure returns (string memory) {
+        if (id == 0) return "";
+        if (id == 1) return roundGlassesSVG();
+        if (id == 2) return shadesSVG();
+        if (id == 3) return tinyGlassesSVG();
+        revert Errors.InvalidType(id);
     }
 }

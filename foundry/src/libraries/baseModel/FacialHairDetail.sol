@@ -8,6 +8,10 @@ library FacialHairDetail {
 
     /// @dev SVG content for a medium beard
     function mediumBeardSVG() internal pure returns (string memory) {
+        return renderMediumBeardSVG();
+    }
+
+    function renderMediumBeardSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="medium-beard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -31,6 +35,10 @@ library FacialHairDetail {
 
     /// @dev SVG content for stubble
     function stubbleSVG() internal pure returns (string memory) {
+        return renderStubbleSVG();
+    }
+
+    function renderStubbleSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="stubble" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -56,14 +64,10 @@ library FacialHairDetail {
 
     /// @dev Returns the SVG content for a facial hair detail
     function getFacialHairById(uint8 id) internal pure returns (string memory) {
-        if (id == 0) {
-            return "";
-        } else if (id == 1) {
-            return mediumBeardSVG();
-        } else if (id == 2) {
-            return stubbleSVG();
-        } else {
-            revert FacialHairDetail__InvalidFacialHairType();
-        }
+        if (id == 0) return "";
+        if (id == 1) return mediumBeardSVG();
+        if (id == 2) return stubbleSVG();
+
+        revert FacialHairDetail__InvalidFacialHairType();
     }
 }

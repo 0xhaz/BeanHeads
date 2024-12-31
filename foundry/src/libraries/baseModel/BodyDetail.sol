@@ -30,24 +30,25 @@ library BodyDetail {
     /// @dev Retrieves the base and shadow colors for a given BreastColor
     /// @param id The BreastColor id
     function getColorsForBreast(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        if (id == uint8(BreastColor.WHITE)) {
-            return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
-        } else if (id == uint8(BreastColor.BLUE)) {
-            return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
-        } else if (id == uint8(BreastColor.BLACK)) {
-            return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
-        } else if (id == uint8(BreastColor.GREEN)) {
-            return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
-        } else if (id == uint8(BreastColor.RED)) {
-            return (Colors.RED_BASE, Colors.RED_SHADOW);
-        } else {
-            revert Errors.InvalidColor(id);
-        }
+        return _getBreastColors(id);
+    }
+
+    /// @dev Helper function to return the breast color
+    function _getBreastColors(uint8 color) private pure returns (bytes3, bytes3) {
+        if (color == 0) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
+        if (color == 1) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
+        if (color == 2) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
+        if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
+        if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
+        revert Errors.InvalidColor(color);
     }
 
     function onlyBreastSVG(uint8 color) internal pure returns (string memory) {
         (bytes3 baseColor, bytes3 shadowColor) = BodyDetail.getColorsForBreast(color);
+        return renderOnlyBreastSVG(baseColor, shadowColor);
+    }
 
+    function renderOnlyBreastSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="breast" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -77,6 +78,15 @@ library BodyDetail {
         (bytes3 baseColor, bytes3 shadowColor) = ClothingDetail.getColorForClothes(clothingColor);
         (bytes3 skinBaseColor, bytes3 skinShadowColor) = getColorsForBody(skinColor);
 
+        return renderBreastSVGWithBody(baseColor, shadowColor, skinBaseColor, skinShadowColor);
+    }
+
+    /// @dev Retrieves the base and shadow colors for a given BodyColor
+    function renderBreastSVGWithBody(bytes3 baseColor, bytes3 shadowColor, bytes3 skinBaseColor, bytes3 skinShadowColor)
+        private
+        pure
+        returns (string memory)
+    {
         return SVGBody.fullSVG(
             'id="breast" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -160,27 +170,27 @@ library BodyDetail {
     /// @dev Retrieves the base and shadow colors for a given BodyColor
     /// @param id The BodyColor id
     function getColorsForBody(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        if (id == uint8(BodyColor.LIGHT_SKIN)) {
-            return (Colors.LIGHT_SKIN_BASE, Colors.LIGHT_SKIN_SHADOW);
-        } else if (id == uint8(BodyColor.YELLOW_SKIN)) {
-            return (Colors.YELLOW_SKIN_BASE, Colors.YELLOW_SKIN_SHADOW);
-        } else if (id == uint8(BodyColor.BROWN_SKIN)) {
-            return (Colors.BROWN_SKIN_BASE, Colors.BROWN_SKIN_SHADOW);
-        } else if (id == uint8(BodyColor.DARK_SKIN)) {
-            return (Colors.DARK_SKIN_BASE, Colors.DARK_SKIN_SHADOW);
-        } else if (id == uint8(BodyColor.RED_SKIN)) {
-            return (Colors.RED_SKIN_BASE, Colors.RED_SKIN_SHADOW);
-        } else if (id == uint8(BodyColor.BLACK_SKIN)) {
-            return (Colors.BLACK_SKIN_BASE, Colors.BLACK_SKIN_SHADOW);
-        } else {
-            revert Errors.InvalidColor(id);
-        }
+        return _getColors(id);
+    }
+
+    /// @dev Helper functions to return colors
+    function _getColors(uint8 color) private pure returns (bytes3, bytes3) {
+        if (color == 0) return (Colors.LIGHT_SKIN_BASE, Colors.LIGHT_SKIN_SHADOW);
+        if (color == 1) return (Colors.YELLOW_SKIN_BASE, Colors.YELLOW_SKIN_SHADOW);
+        if (color == 2) return (Colors.BROWN_SKIN_BASE, Colors.BROWN_SKIN_SHADOW);
+        if (color == 3) return (Colors.DARK_SKIN_BASE, Colors.DARK_SKIN_SHADOW);
+        if (color == 4) return (Colors.RED_SKIN_BASE, Colors.RED_SKIN_SHADOW);
+        if (color == 5) return (Colors.BLACK_SKIN_BASE, Colors.BLACK_SKIN_SHADOW);
+        revert Errors.InvalidColor(color);
     }
 
     /// @dev SVG content for the chest
     function chestSVG(uint8 id) internal pure returns (string memory) {
         (bytes3 baseColor, bytes3 shadowColor) = getColorsForBody(id);
+        return renderChestSVG(baseColor, shadowColor);
+    }
 
+    function renderChestSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="chest" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -260,12 +270,8 @@ library BodyDetail {
     /// 2,4: Chest with red skin
     /// 2,5: Chest with black skin
     function getBodyById(uint8 id, uint8 color, uint8 clothingColor) internal pure returns (string memory) {
-        if (id == 1) {
-            return breastSVGWithBody(color, clothingColor);
-        } else if (id == 2) {
-            return chestSVG(color);
-        } else {
-            revert Errors.InvalidType(id);
-        }
+        if (id == 1) return breastSVGWithBody(color, clothingColor);
+        if (id == 2) return chestSVG(color);
+        revert Errors.InvalidType(id);
     }
 }

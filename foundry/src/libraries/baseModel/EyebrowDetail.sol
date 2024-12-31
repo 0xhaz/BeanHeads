@@ -7,6 +7,10 @@ import {Errors} from "src/types/Constants.sol";
 library EyebrowDetail {
     /// @dev SVG content for the Angry Eyebrows
     function angryEyebrowSVG() internal pure returns (string memory) {
+        return renderAngryEyebrowSVG();
+    }
+
+    function renderAngryEyebrowSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="angry-eyebrows" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -20,6 +24,10 @@ library EyebrowDetail {
 
     /// @dev SVG content for the Concerned Eyebrows
     function concernedEyebrowSVG() internal pure returns (string memory) {
+        return renderConcernedEyebrowSVG();
+    }
+
+    function renderConcernedEyebrowSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="concerned-eyebrows" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -33,6 +41,10 @@ library EyebrowDetail {
 
     /// @dev SVG content for the Left Lowered Eyebrow
     function leftLoweredEyebrowSVG() internal pure returns (string memory) {
+        return renderLeftLoweredEyebrowSVG();
+    }
+
+    function renderLeftLoweredEyebrowSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="left-lowered-eyebrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -46,6 +58,10 @@ library EyebrowDetail {
 
     /// @dev SVG content for the Normal Eyebrows
     function normalEyebrowSVG() internal pure returns (string memory) {
+        return renderNormalEyebrowSVG();
+    }
+
+    function renderNormalEyebrowSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="normal-eyebrows" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -59,6 +75,10 @@ library EyebrowDetail {
 
     /// @dev SVG content for the Serious Eyebrows
     function seriousEyebrowSVG() internal pure returns (string memory) {
+        return renderSeriousEyebrowSVG();
+    }
+
+    function renderSeriousEyebrowSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="serious-eyebrows" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(
@@ -72,18 +92,11 @@ library EyebrowDetail {
 
     /// @dev Returns the SVG and name for a specific eyebrow type
     function getEyebrowById(uint8 id) internal pure returns (string memory) {
-        if (id == 1) {
-            return angryEyebrowSVG();
-        } else if (id == 2) {
-            return concernedEyebrowSVG();
-        } else if (id == 3) {
-            return leftLoweredEyebrowSVG();
-        } else if (id == 4) {
-            return normalEyebrowSVG();
-        } else if (id == 5) {
-            return seriousEyebrowSVG();
-        } else {
-            revert Errors.InvalidType(id);
-        }
+        if (id == 1) return angryEyebrowSVG();
+        if (id == 2) return concernedEyebrowSVG();
+        if (id == 3) return leftLoweredEyebrowSVG();
+        if (id == 4) return normalEyebrowSVG();
+        if (id == 5) return seriousEyebrowSVG();
+        revert Errors.InvalidType(id);
     }
 }

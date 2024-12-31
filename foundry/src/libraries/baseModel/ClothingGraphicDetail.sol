@@ -8,6 +8,10 @@ library ClothingGraphicDetail {
 
     /// @dev SVG content for the Gatsby logo
     function gatsbySVG() internal pure returns (string memory) {
+        return renderGatsbySVG();
+    }
+
+    function renderGatsbySVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="gatsby" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" y="30"',
             string(
@@ -20,6 +24,10 @@ library ClothingGraphicDetail {
 
     /// @dev SVG content for the GraphQL logo
     function graphqlSVG() internal pure returns (string memory) {
+        return renderGraphqlSVG();
+    }
+
+    function renderGraphqlSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="graphql" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"  y="30"',
             string(
@@ -32,6 +40,10 @@ library ClothingGraphicDetail {
 
     /// @dev SVG content for the React logo
     function reactSVG() internal pure returns (string memory) {
+        return renderReactSVG();
+    }
+
+    function renderReactSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="react" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"  y="30"',
             string(
@@ -46,6 +58,10 @@ library ClothingGraphicDetail {
 
     /// @dev SVG content for the Redwood logo
     function redwoodSVG() internal pure returns (string memory) {
+        return renderRedwoodSVG();
+    }
+
+    function renderRedwoodSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="redwood" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" y="30"',
             string(
@@ -61,6 +77,10 @@ library ClothingGraphicDetail {
 
     /// @dev SVG content for the Vue logo
     function vueSVG() internal pure returns (string memory) {
+        return renderVueSVG();
+    }
+
+    function renderVueSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="vue" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" y="30"',
             string(
@@ -74,20 +94,12 @@ library ClothingGraphicDetail {
 
     /// @dev Returns the SVG and name for a specific clothing graphic ID
     function getClothingGraphicById(uint8 id) internal pure returns (string memory) {
-        if (id == 0) {
-            return "";
-        } else if (id == 1) {
-            return gatsbySVG();
-        } else if (id == 2) {
-            return graphqlSVG();
-        } else if (id == 3) {
-            return reactSVG();
-        } else if (id == 4) {
-            return redwoodSVG();
-        } else if (id == 5) {
-            return vueSVG();
-        } else {
-            revert ClothingGraphicDetail__InvalidClothingGraphicType();
-        }
+        if (id == 0) return "";
+        if (id == 1) return gatsbySVG();
+        if (id == 2) return graphqlSVG();
+        if (id == 3) return reactSVG();
+        if (id == 4) return redwoodSVG();
+        if (id == 5) return vueSVG();
+        revert ClothingGraphicDetail__InvalidClothingGraphicType();
     }
 }
