@@ -62,7 +62,7 @@ library Genesis {
                 HairDetail.getHairById(params.hairStyle, params.hairColor),
                 "</g>",
                 "<g>",
-                ClothingGraphicDetail.getClothingGraphicById(params.clothesGraphic),
+                ClothingGraphicDetail.getClothingGraphicById(params.clothes, params.clothesGraphic),
                 "</g>",
                 "<g>",
                 EyesDetail.getEyeById(params.eyeShape, params.skinColor),
@@ -86,7 +86,7 @@ library Genesis {
                 isFaceMaskOn(params.faceMask, params.faceMaskColor),
                 "</g>",
                 "<g>",
-                isLashesOn(params.lashes),
+                isLashesOn(params.eyeShape, params.lashes),
                 "</g>",
                 "</svg>"
             )
@@ -109,10 +109,11 @@ library Genesis {
         return "";
     }
 
-    function isLashesOn(bool lashes) private pure returns (string memory) {
+    function isLashesOn(uint8 eyeShape, bool lashes) private pure returns (string memory) {
         if (lashes) {
-            return OptItems.lashesSVG();
+            return OptItems.lashesSVG(eyeShape);
         }
+
         return "";
     }
 

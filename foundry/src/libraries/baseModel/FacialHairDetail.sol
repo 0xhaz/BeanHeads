@@ -5,6 +5,11 @@ import {SVGBody} from "./SVGBody.sol";
 import {Errors} from "src/types/Constants.sol";
 
 library FacialHairDetail {
+    enum FacialHairType {
+        NONE,
+        MEDIUM_BEARD,
+        STUBBLE
+    }
     /*//////////////////////////////////////////////////////////////
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -21,11 +26,9 @@ library FacialHairDetail {
 
     /// @dev Returns the SVG content for a facial hair detail
     function getFacialHairById(uint8 id) internal pure returns (string memory) {
-        if (id == 0) return "";
-        if (id == 1) return mediumBeardSVG();
-        if (id == 2) return stubbleSVG();
-
-        revert Errors.InvalidType(id);
+        string[3] memory facialHairs = ["", mediumBeardSVG(), stubbleSVG()];
+        if (id >= facialHairs.length) revert Errors.InvalidType(id);
+        return facialHairs[id];
     }
 
     /*//////////////////////////////////////////////////////////////

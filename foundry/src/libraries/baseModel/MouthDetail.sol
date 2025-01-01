@@ -23,16 +23,16 @@ library MouthDetail {
     /// @dev Retrieves the base and shadow color for the lips
     /// @param id The id of the lips color
     function getColorsForLips(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        return _getColors(id);
+        return _getColors(LipsColor(id));
     }
 
-    function _getColors(uint8 color) private pure returns (bytes3, bytes3) {
-        if (color == 0) return (Colors.LIPS_RED_BASE, Colors.LIPS_RED_SHADOW);
-        if (color == 1) return (Colors.LIPS_PURPLE_BASE, Colors.LIPS_PURPLE_SHADOW);
-        if (color == 2) return (Colors.LIPS_PINK_BASE, Colors.LIPS_PINK_SHADOW);
-        if (color == 3) return (Colors.LIPS_TURQUOISE_BASE, Colors.LIPS_TURQUOISE_SHADOW);
-        if (color == 4) return (Colors.LIPS_GREEN_BASE, Colors.LIPS_GREEN_SHADOW);
-        revert Errors.InvalidColor(color);
+    function _getColors(LipsColor color) private pure returns (bytes3, bytes3) {
+        if (color == LipsColor.LIPS_RED) return (Colors.LIPS_RED_BASE, Colors.LIPS_RED_SHADOW);
+        if (color == LipsColor.LIPS_PURPLE) return (Colors.LIPS_PURPLE_BASE, Colors.LIPS_PURPLE_SHADOW);
+        if (color == LipsColor.LIPS_PINK) return (Colors.LIPS_PINK_BASE, Colors.LIPS_PINK_SHADOW);
+        if (color == LipsColor.LIPS_TURQUOISE) return (Colors.LIPS_TURQUOISE_BASE, Colors.LIPS_TURQUOISE_SHADOW);
+        if (color == LipsColor.LIPS_GREEN) return (Colors.LIPS_GREEN_BASE, Colors.LIPS_GREEN_SHADOW);
+        revert Errors.InvalidColor(uint8(color));
     }
 
     /// @dev Returns the SVG for a grin mouth
@@ -67,21 +67,23 @@ library MouthDetail {
     }
 
     /// @dev Returns the SVG for a tongue mouth
-    function toungeMouthSVG() internal pure returns (string memory) {
-        return renderToungeMouthSVG();
+    function tongueMouthSVG() internal pure returns (string memory) {
+        return renderTongueMouthSVG();
     }
 
     /// @dev Returns the SVG for a mouth based on the given mouth type
     function getMouthById(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 1) return grinMouthSVG();
-        if (id == 2) return lipsMouthSVG(color);
-        if (id == 3) return openMouthSVG();
-        if (id == 4) return openSmileMouthSVG();
-        if (id == 5) return sadMouthSVG();
-        if (id == 6) return seriousMouthSVG();
-        if (id == 7) return toungeMouthSVG();
-
-        revert Errors.InvalidType(id);
+        string[7] memory mouths = [
+            grinMouthSVG(),
+            lipsMouthSVG(color),
+            openMouthSVG(),
+            openSmileMouthSVG(),
+            sadMouthSVG(),
+            seriousMouthSVG(),
+            tongueMouthSVG()
+        ];
+        if (id >= mouths.length) revert Errors.InvalidType(id);
+        return mouths[id];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -107,7 +109,7 @@ library MouthDetail {
             string(
                 abi.encodePacked(
                     '<path d="M468.41,635.27a255.08,255.08,0,0,0,55.61,0q-.42-.27-.84-.6c-.71-.54-1.46-1.18-2.38-2l-2.42-2.26c-3.8-3.52-6.34-5.22-9.26-5.73-3.75-.65-7.69,1-12.18,5.81a1,1,0,0,1-1.45,0c-4.49-4.77-8.43-6.46-12.18-5.81-2.92.51-5.46,2.21-9.27,5.73l-2.42,2.26c-.91.84-1.66,1.48-2.37,2Q468.81,635,468.41,635.27Z" style="fill:#010101"/>',
-                    '<path d="M560.41,648.36l-.56-2.28C487.07,662.7,440,647.21,440,647.21l-1.83-.32a1.84,1.84,0,0,0,.49,1.78c18.05,18.05,34,30.45,61.79,30.45C529.93,679.12,542.43,666.22,560.41,648.36Z" style="fill:#f3ab98"/>',
+                    '<path d="M560.41,648.36l-.56-2.28C487.07,662.7,440,647.21,440,647.21l-1.83-.32a1.84,1.84,0,0,0,.49,1.78c18.05,18.05,34,30.45,61.79,30.45C529.93,679.12,542.43,666.22,560.41,648.36Z" style="fill:none"/>',
                     '<path d="M558.55,642.44c-3.63,0-5.35-1.31-15.58-10.79-7.49-6.93-12.63-10.36-18.91-11.46-7.83-1.37-15.83-.88-24.36,7.68-8.53-8.56-16.52-9-24.36-7.68-6.28,1.1-11.42,4.53-18.91,11.46-10.23,9.48-11.95,10.79-15.58,10.79a1.84,1.84,0,0,0-1.3,3.14q26.25,26.25,60.15,26.28t60.15-26.28A1.84,1.84,0,0,0,558.55,642.44Z" style="fill:',
                     BytesConverter.bytesToHex(baseColor),
                     '"',
@@ -175,7 +177,7 @@ library MouthDetail {
         );
     }
 
-    function renderToungeMouthSVG() private pure returns (string memory) {
+    function renderTongueMouthSVG() private pure returns (string memory) {
         return SVGBody.fullSVG(
             'id="tounge-mouth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"',
             string(

@@ -18,6 +18,17 @@ library HairDetail {
         PINK
     }
 
+    enum HairType {
+        NONE,
+        AFRO,
+        BALD,
+        BOB_CUT,
+        BUN,
+        LONG_HAIR,
+        PIXIE_CUT,
+        SHORT_HAIR
+    }
+
     /*//////////////////////////////////////////////////////////////
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -25,7 +36,7 @@ library HairDetail {
     /// @dev Retrieves the base and shadow colors for a given hair color
     /// @param id The hair color ID
     function getColorsForHair(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        return _getColors(id);
+        return _getColors(HairColor(id));
     }
 
     /// @dev SVG content for the "Afro Back" hair type
@@ -105,16 +116,11 @@ library HairDetail {
 
     /// @dev Returns the SVG and name for the given hair type
     function getHairById(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 0) return ""; // return none (Bald AF)
-        if (id == 1) return ""; // return afroHairSVG(color);
-        if (id == 2) return baldHairSVG(color);
-        if (id == 3) return ""; // return bobCutSVG(color);
-        if (id == 4) return bunHairSVG(color);
-        if (id == 5) return ""; // return longHairSVG(color);
-        if (id == 6) return pixieCutSVG(color);
-        if (id == 7) return shortHairSVG(color);
+        string[8] memory hairs =
+            ["", "", baldHairSVG(color), "", bunHairSVG(color), "", pixieCutSVG(color), shortHairSVG(color)];
 
-        revert Errors.InvalidType(id);
+        if (id >= hairs.length) revert Errors.InvalidType(id);
+        return hairs[id];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -122,15 +128,15 @@ library HairDetail {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Helper functions to return colors
-    function _getColors(uint8 color) private pure returns (bytes3, bytes3) {
-        if (color == 0) return (Colors.HAIR_BLONDE_BASE, Colors.HAIR_BLONDE_SHADOW);
-        if (color == 1) return (Colors.HAIR_ORANGE_BASE, Colors.HAIR_ORANGE_SHADOW);
-        if (color == 2) return (Colors.HAIR_BLACK_BASE, Colors.HAIR_BLACK_SHADOW);
-        if (color == 3) return (Colors.HAIR_WHITE_BASE, Colors.HAIR_WHITE_SHADOW);
-        if (color == 4) return (Colors.HAIR_BROWN_BASE, Colors.HAIR_BROWN_SHADOW);
-        if (color == 5) return (Colors.HAIR_BLUE_BASE, Colors.HAIR_BLUE_SHADOW);
-        if (color == 6) return (Colors.HAIR_PINK_BASE, Colors.HAIR_PINK_SHADOW);
-        revert Errors.InvalidColor(color);
+    function _getColors(HairColor color) private pure returns (bytes3, bytes3) {
+        if (color == HairColor.BLONDE) return (Colors.HAIR_BLONDE_BASE, Colors.HAIR_BLONDE_SHADOW);
+        if (color == HairColor.ORANGE) return (Colors.HAIR_ORANGE_BASE, Colors.HAIR_ORANGE_SHADOW);
+        if (color == HairColor.BLACK) return (Colors.HAIR_BLACK_BASE, Colors.HAIR_BLACK_SHADOW);
+        if (color == HairColor.WHITE) return (Colors.HAIR_WHITE_BASE, Colors.HAIR_WHITE_SHADOW);
+        if (color == HairColor.BROWN) return (Colors.HAIR_BROWN_BASE, Colors.HAIR_BROWN_SHADOW);
+        if (color == HairColor.BLUE) return (Colors.HAIR_BLUE_BASE, Colors.HAIR_BLUE_SHADOW);
+        if (color == HairColor.PINK) return (Colors.HAIR_PINK_BASE, Colors.HAIR_PINK_SHADOW);
+        revert Errors.InvalidColor(uint8(color));
     }
 
     function renderAfroBackSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {

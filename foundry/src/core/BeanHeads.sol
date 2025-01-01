@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.26;
 
-import {ERC721Enumerable, ERC721} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {ERC721A} from "ERC721A/ERC721A.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
@@ -13,7 +13,7 @@ import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
  * @dev Uses breeding concept to create new avatars similar to Cryptokitties
  * @dev Uses Chainlink VRF for attributes randomness
  */
-contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
+contract BeanHeads is ERC721A, Ownable, IBeanHeads {
     using Base64 for bytes;
     using Strings for uint256;
 
@@ -23,7 +23,7 @@ contract BeanHeads is ERC721Enumerable, Ownable, IBeanHeads {
 
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
 
-    constructor() ERC721("BeanHeads", "BEAN") Ownable(msg.sender) {}
+    constructor() ERC721A("BeanHeads", "BEAN") Ownable(msg.sender) {}
 
     function mintNFT() public returns (uint256) {}
 

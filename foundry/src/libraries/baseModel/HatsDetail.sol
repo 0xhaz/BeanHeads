@@ -24,16 +24,16 @@ library HatsDetail {
     /// @dev Retrieves the base and shadow color for a hat
     /// @param id The hat color id
     function getColorForHat(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        return _getColors(id);
+        return _getColors(HatColor(id));
     }
 
-    function _getColors(uint8 color) private pure returns (bytes3, bytes3) {
-        if (color == 0) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
-        if (color == 1) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
-        if (color == 2) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
-        if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
-        if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
-        revert Errors.InvalidColor(color);
+    function _getColors(HatColor color) private pure returns (bytes3, bytes3) {
+        if (color == HatColor.WHITE) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
+        if (color == HatColor.BLUE) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
+        if (color == HatColor.BLACK) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
+        if (color == HatColor.GREEN) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
+        if (color == HatColor.RED) return (Colors.RED_BASE, Colors.RED_SHADOW);
+        revert Errors.InvalidColor(uint8(color));
     }
 
     /// @dev SVG content for a beanie hat
@@ -50,11 +50,9 @@ library HatsDetail {
 
     /// @dev Returns the SVG content for a hat
     function getHatsById(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 0) return "";
-        if (id == 1) return beanieHatSVG(color);
-        if (id == 2) return turbanHatSVG(color);
-
-        revert Errors.InvalidType(id);
+        string[3] memory hats = ["", beanieHatSVG(color), turbanHatSVG(color)];
+        if (id >= hats.length) revert Errors.InvalidType(id);
+        return hats[id];
     }
 
     /*//////////////////////////////////////////////////////////////

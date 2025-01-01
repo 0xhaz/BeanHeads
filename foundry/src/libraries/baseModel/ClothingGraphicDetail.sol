@@ -3,8 +3,17 @@ pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
 import {Errors} from "src/types/Constants.sol";
+import {ClothingDetail} from "src/libraries/baseModel/ClothingDetail.sol";
 
 library ClothingGraphicDetail {
+    enum ClothingGraphicType {
+        NONE,
+        GATSBY,
+        GRAPHQL,
+        REACT,
+        REDWOOD,
+        VUE
+    }
     /*//////////////////////////////////////////////////////////////
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -35,14 +44,15 @@ library ClothingGraphicDetail {
     }
 
     /// @dev Returns the SVG and name for a specific clothing graphic ID
-    function getClothingGraphicById(uint8 id) internal pure returns (string memory) {
-        if (id == 0) return "";
-        if (id == 1) return gatsbySVG();
-        if (id == 2) return graphqlSVG();
-        if (id == 3) return reactSVG();
-        if (id == 4) return redwoodSVG();
-        if (id == 5) return vueSVG();
-        revert Errors.InvalidType(id);
+    function getClothingGraphicById(uint8 clothes, uint8 id) internal pure returns (string memory) {
+        // ClothingGraphicType graphicType = ClothingGraphicType(id);
+
+        if (!isAllowedGraphic(clothes)) return "";
+
+        // if (graphicType == ClothingGraphicType.NONE) return "";
+        string[6] memory graphics = ["", gatsbySVG(), graphqlSVG(), reactSVG(), redwoodSVG(), vueSVG()];
+        if (id >= graphics.length) revert Errors.InvalidType(id);
+        return graphics[id];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -108,5 +118,12 @@ library ClothingGraphicDetail {
                 )
             )
         );
+    }
+
+    /// @dev Check if the graphic is allowed only to all type except Dress & Shirt
+    function isAllowedGraphic(uint8 clothes) private pure returns (bool) {
+        // Restrict graphics for `dressSVG` and `shirtSVG`
+        if (clothes == 0 || clothes == 1 || clothes == 2) return false;
+        return true;
     }
 }

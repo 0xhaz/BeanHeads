@@ -8,7 +8,7 @@ import {BytesConverter} from "src/libraries/BytesConverter.sol";
 library OptItems {
     using Colors for bytes3;
 
-    enum MaskColor {
+    enum Color {
         WHITE,
         BLUE,
         BLACK,
@@ -23,13 +23,13 @@ library OptItems {
     /// @dev Retrieves the base and shadow color for a hat
     /// @param id The hat color id
     function getColorForFaceMask(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        return _getColorsForFaceMask(id);
+        return _getColorsForFaceMask(Color(id));
     }
 
     /// @dev Retrieves the base and shadow color for a shape
     /// @param id The shape color id
     function getColorForShape(uint8 id) internal pure returns (bytes3 baseColor, bytes3 shadowColor) {
-        return _getColorsForShape(id);
+        return _getColorsForShape(Color(id));
     }
 
     /// @dev SVG for face mask
@@ -54,7 +54,9 @@ library OptItems {
     }
 
     /// @dev SVG for lashes
-    function lashesSVG() internal pure returns (string memory) {
+    function lashesSVG(uint8 id) internal pure returns (string memory) {
+        if (!isAllowedLashes(id)) return "";
+        if (id == 8) return leftLashes();
         return renderLashesSVG();
     }
 
@@ -64,36 +66,26 @@ library OptItems {
         return renderShapeSVG(baseColor);
     }
 
-    /// @dev Returns the SVG for the given item
-    function getOptItems(uint8 id, uint8 color) internal pure returns (string memory) {
-        if (id == 1) return faceMaskSVG(color);
-        if (id == 2) return maskSVG();
-        if (id == 3) return lashesSVG();
-        if (id == 4) return shapeSVG(color);
-
-        revert Errors.InvalidType(id);
-    }
-
     /*//////////////////////////////////////////////////////////////
                            PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function _getColorsForFaceMask(uint8 color) private pure returns (bytes3, bytes3) {
-        if (color == 0) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
-        if (color == 1) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
-        if (color == 2) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
-        if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
-        if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
-        revert Errors.InvalidColor(color);
+    function _getColorsForFaceMask(Color color) private pure returns (bytes3, bytes3) {
+        if (color == Color.WHITE) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
+        if (color == Color.BLUE) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
+        if (color == Color.BLACK) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
+        if (color == Color.GREEN) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
+        if (color == Color.RED) return (Colors.RED_BASE, Colors.RED_SHADOW);
+        revert Errors.InvalidColor(uint8(color));
     }
 
-    function _getColorsForShape(uint8 color) private pure returns (bytes3, bytes3) {
-        if (color == 0) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
-        if (color == 1) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
-        if (color == 2) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
-        if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
-        if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
-        revert Errors.InvalidColor(color);
+    function _getColorsForShape(Color color) private pure returns (bytes3, bytes3) {
+        if (color == Color.WHITE) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
+        if (color == Color.BLUE) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
+        if (color == Color.BLACK) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
+        if (color == Color.GREEN) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
+        if (color == Color.RED) return (Colors.RED_BASE, Colors.RED_SHADOW);
+        revert Errors.InvalidColor(uint8(color));
     }
 
     function renderFaceMaskSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
@@ -184,5 +176,12 @@ library OptItems {
                 )
             )
         );
+    }
+
+    /// @dev Check if the lashes is allowed only normal eye
+    function isAllowedLashes(uint8 id) private pure returns (bool) {
+        if (id == 0 || id == 1 || id == 2 || id == 6) return false;
+
+        return true;
     }
 }

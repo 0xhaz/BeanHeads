@@ -20,6 +20,15 @@ library ClothingDetail {
         RED
     }
 
+    enum ClothingType {
+        NONE,
+        DRESS,
+        SHIRT,
+        T_SHIRT,
+        TANK_TOP,
+        V_NECK
+    }
+
     /*//////////////////////////////////////////////////////////////
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -27,7 +36,7 @@ library ClothingDetail {
     /// @dev Retrieves the base and shadow color for the clothing
     /// @param color The id of the clothing color
     function getColorForClothes(uint8 color) internal pure returns (bytes3, bytes3) {
-        return _getColors(color);
+        return _getColors(ClothColor(color));
     }
 
     /// @dev SVG content for back dress
@@ -89,14 +98,20 @@ library ClothingDetail {
     }
 
     /// @dev Returns the SVG and name for a specific clothing item
-    function getClothingById(uint8 bodyId, uint8 clothId, uint8 color) internal pure returns (string memory) {
-        if (clothId == 0) return "";
-        if (clothId == 1) return dressSVG(bodyId, color);
-        if (clothId == 2) return shirtSVG(bodyId, color);
-        if (clothId == 3) return tShirtSVG(bodyId, color);
-        if (clothId == 4) return tankTopSVG(bodyId, color);
-        if (clothId == 5) return vNeckSVG(bodyId, color);
-        revert Errors.InvalidType(clothId);
+    function getClothingById(uint8 bodyId, uint8 cloth, uint8 color) internal pure returns (string memory) {
+        ClothingType clothId = ClothingType(cloth);
+
+        // if (clothId == ClothingType.NONE) return "";
+        string[6] memory clothes = [
+            "",
+            dressSVG(bodyId, color),
+            shirtSVG(bodyId, color),
+            tShirtSVG(bodyId, color),
+            tankTopSVG(bodyId, color),
+            vNeckSVG(bodyId, color)
+        ];
+        if (uint8(clothId) >= clothes.length) revert Errors.InvalidType(uint8(clothId));
+        return clothes[uint8(clothId)];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -352,12 +367,12 @@ library ClothingDetail {
     }
 
     /// @dev Helper functoins to return colors
-    function _getColors(uint8 color) private pure returns (bytes3, bytes3) {
-        if (color == 0) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
-        if (color == 1) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
-        if (color == 2) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
-        if (color == 3) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
-        if (color == 4) return (Colors.RED_BASE, Colors.RED_SHADOW);
-        revert Errors.InvalidColor(color);
+    function _getColors(ClothColor color) private pure returns (bytes3, bytes3) {
+        if (color == ClothColor.WHITE) return (Colors.WHITE_BASE, Colors.WHITE_SHADOW);
+        if (color == ClothColor.BLUE) return (Colors.BLUE_BASE, Colors.BLUE_SHADOW);
+        if (color == ClothColor.BLACK) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
+        if (color == ClothColor.GREEN) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
+        if (color == ClothColor.RED) return (Colors.RED_BASE, Colors.RED_SHADOW);
+        revert Errors.InvalidColor(uint8(color));
     }
 }

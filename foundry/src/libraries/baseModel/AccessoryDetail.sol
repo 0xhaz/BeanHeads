@@ -5,10 +5,18 @@ import {SVGBody} from "./SVGBody.sol";
 import {Errors} from "src/types/Constants.sol";
 
 library AccessoryDetail {
+    enum AccessoryType {
+        NONE,
+        ROUNDGLASSES,
+        SHADES,
+        TINYGLASSES
+    }
+
     /*//////////////////////////////////////////////////////////////
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     /// @dev SVG content for "round glasses" accessories
+
     function roundGlassesSVG() internal pure returns (string memory) {
         return renderRoundGlassesSVG();
     }
@@ -25,11 +33,10 @@ library AccessoryDetail {
 
     /// @dev Returns the SVG and name for a specific accessory ID
     function getAccessoryById(uint8 id) internal pure returns (string memory) {
-        if (id == 0) return "";
-        if (id == 1) return roundGlassesSVG();
-        if (id == 2) return shadesSVG();
-        if (id == 3) return tinyGlassesSVG();
-        revert Errors.InvalidType(id);
+        if (id == uint8(AccessoryType.NONE)) return "";
+        string[4] memory accessories = ["", roundGlassesSVG(), shadesSVG(), tinyGlassesSVG()];
+        if (id >= accessories.length) revert Errors.InvalidType(id);
+        return accessories[id];
     }
 
     /*//////////////////////////////////////////////////////////////

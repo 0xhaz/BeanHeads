@@ -5,6 +5,13 @@ import {SVGBody} from "./SVGBody.sol";
 import {Errors} from "src/types/Constants.sol";
 
 library EyebrowDetail {
+    enum EyebrowType {
+        ANGRY,
+        CONCERNED,
+        LEFTLOWERED,
+        NORMAL,
+        SERIOUS
+    }
     /*//////////////////////////////////////////////////////////////
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -36,12 +43,11 @@ library EyebrowDetail {
 
     /// @dev Returns the SVG and name for a specific eyebrow type
     function getEyebrowById(uint8 id) internal pure returns (string memory) {
-        if (id == 1) return angryEyebrowSVG();
-        if (id == 2) return concernedEyebrowSVG();
-        if (id == 3) return leftLoweredEyebrowSVG();
-        if (id == 4) return normalEyebrowSVG();
-        if (id == 5) return seriousEyebrowSVG();
-        revert Errors.InvalidType(id);
+        string[5] memory eyebrows =
+            [angryEyebrowSVG(), concernedEyebrowSVG(), leftLoweredEyebrowSVG(), normalEyebrowSVG(), seriousEyebrowSVG()];
+
+        if (id >= eyebrows.length) revert Errors.InvalidType(id);
+        return eyebrows[id];
     }
 
     /*//////////////////////////////////////////////////////////////

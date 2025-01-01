@@ -252,7 +252,7 @@ contract SVGTest is Test {
         string memory simpleEyeSVG = EyesDetail.simpleEyeSVG();
         vm.writeFile("./output/simple_eye.svg", simpleEyeSVG);
 
-        string memory squintEyeSVG = EyesDetail.squintEyeSVG();
+        string memory squintEyeSVG = EyesDetail.squintEyeSVG(1);
         vm.writeFile("./output/squint_eye.svg", squintEyeSVG);
 
         string memory winkEyeSVG = EyesDetail.winkEyeSVG();
@@ -513,7 +513,7 @@ contract SVGTest is Test {
         string memory seriousMouthSVG = MouthDetail.seriousMouthSVG();
         vm.writeFile("./output/serious_mouth.svg", seriousMouthSVG);
 
-        string memory toungeMouthSVG = MouthDetail.toungeMouthSVG();
+        string memory toungeMouthSVG = MouthDetail.tongueMouthSVG();
         vm.writeFile("./output/tounge_mouth.svg", toungeMouthSVG);
 
         /// test by using function
@@ -541,7 +541,7 @@ contract SVGTest is Test {
         string memory maskSVG = OptItems.maskSVG();
         vm.writeFile("./output/mask.svg", maskSVG);
 
-        string memory lashesSVG = OptItems.lashesSVG();
+        string memory lashesSVG = OptItems.lashesSVG(1);
         vm.writeFile("./output/lashes.svg", lashesSVG);
 
         string memory shapeSVG = OptItems.shapeSVG(1);
