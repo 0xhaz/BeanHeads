@@ -1,65 +1,58 @@
-// // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-// pragma solidity ^0.8.26;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity ^0.8.26;
 
-// import {Test, console} from "forge-std/Test.sol";
-// import {Avatar} from "src/types/Avatar.sol";
-// import {Images, ImagesLib, ImagesInBytes} from "src/types/Constants.sol";
-// import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Test, console} from "forge-std/Test.sol";
+import {Genesis} from "src/types/Genesis.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-// contract Helpers is Test {
-//     using Images for *;
-//     using ImagesLib for *;
-//     using ImagesInBytes for *;
+contract Helpers is Test {
+    Genesis.SVGParams params = Genesis.SVGParams({
+        accessory: 0,
+        bodyType: 1,
+        clothes: 2,
+        hairStyle: 1,
+        clothesGraphic: 2,
+        eyebrowShape: 3,
+        eyeShape: 5,
+        facialHairType: 2,
+        hatStyle: 0,
+        mouthStyle: 6,
+        skinColor: 3,
+        clothingColor: 0,
+        hairColor: 0,
+        hatColor: 3,
+        shapeColor: 0,
+        lipColor: 1,
+        faceMaskColor: 0,
+        faceMask: false,
+        shapes: false,
+        lashes: true
+    });
 
-//     Avatar.Core public core = Avatar.Core({accessory: 0, bodyType: 1, skinColor: 0x112233});
-
-//     Avatar.Appearance public appearance = Avatar.Appearance({
-//         eyebrowShape: 2,
-//         eyeShape: 1,
-//         mouthStyle: 4,
-//         facialHairType: 1,
-//         hairStyle: 0,
-//         hairColor: 0xaabbcc
-//     });
-
-//     Avatar.Clothing public clothing = Avatar.Clothing({
-//         clothes: 3, // TANK_TOP
-//         clothesGraphic: 0, // GATSBY
-//         clothingColor: 0x654321, // Clothing color
-//         hatStyle: 0, // BEANIE
-//         hatColor: 0x112233 // Hat color
-//     });
-
-//     Avatar.Extras public extras = Avatar.Extras({
-//         circleColor: 0x445566,
-//         lipColor: 0x998877,
-//         faceMaskColor: 0x123456,
-//         faceMask: true,
-//         lashes: false,
-//         mask: true
-//     });
-
-//     function getDefaultCore() public view returns (Avatar.Core memory) {
-//         return core;
-//     }
-
-//     function getCustomCore(uint8 accessory, uint8 bodyType, bytes3 skinColor)
-//         public
-//         pure
-//         returns (Avatar.Core memory)
-//     {
-//         return Avatar.Core({accessory: accessory, bodyType: bodyType, skinColor: skinColor});
-//     }
-
-//     function getDefaultAppearance() public view returns (Avatar.Appearance memory) {
-//         return appearance;
-//     }
-
-//     function getDefaultClothing() public view returns (Avatar.Clothing memory) {
-//         return clothing;
-//     }
-
-//     function getDefaultExtras() public view returns (Avatar.Extras memory) {
-//         return extras;
-//     }
-// }
+    function getParams() public view returns (string memory) {
+        return string(
+            abi.encodePacked(
+                Strings.toString(params.accessory),
+                Strings.toString(params.bodyType),
+                Strings.toString(params.clothes),
+                Strings.toString(params.hairStyle),
+                Strings.toString(params.clothesGraphic),
+                Strings.toString(params.eyebrowShape),
+                Strings.toString(params.eyeShape),
+                Strings.toString(params.facialHairType),
+                Strings.toString(params.hatStyle),
+                Strings.toString(params.mouthStyle),
+                Strings.toString(params.skinColor),
+                Strings.toString(params.clothingColor),
+                Strings.toString(params.hairColor),
+                Strings.toString(params.hatColor),
+                Strings.toString(params.shapeColor),
+                Strings.toString(params.lipColor),
+                Strings.toString(params.faceMaskColor),
+                params.faceMask ? "true" : "false",
+                params.shapes ? "true" : "false",
+                params.lashes ? "true" : "false"
+            )
+        );
+    }
+}

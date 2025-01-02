@@ -6,6 +6,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
+import {Genesis} from "src/types/Genesis.sol";
+import {Errors, Events} from "src/types/Constants.sol";
 
 /**
  * @title BeanHeads
@@ -17,15 +19,20 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads {
     using Base64 for bytes;
     using Strings for uint256;
 
-    error BeanHeads__TokenDoesNotExist();
-
     uint256 private tokenIdCounter;
 
-    event MintedGenesis(address indexed owner, uint256 indexed tokenId);
+    Genesis.SVGParams private genesisParams;
 
     constructor() ERC721A("BeanHeads", "BEAN") Ownable(msg.sender) {}
 
-    function mintNFT() public returns (uint256) {}
+    function mintGenesis(Genesis.SVGParams memory params) public returns (uint256) {
+        tokenIdCounter++;
+        genesisParams = params;
+        _mintSpot(msg.sender, tokenIdCounter);
+
+        emit Events.MintedGenesis(msg.sender, tokenIdCounter);
+        return tokenIdCounter;
+    }
 
     function getOwnerAttributes(address owner) external view returns (string[20][] memory) {}
 
@@ -52,4 +59,6 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads {
     function randomNum(uint256 mod, uint256 seed, uint256 salt) external view override returns (uint256) {}
 
     function withdraw() external override {}
+
+    function mintGenesis() external override returns (uint256) {}
 }

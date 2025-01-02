@@ -57,4 +57,9 @@ library Colors {
 library Errors {
     error InvalidType(uint8 id);
     error InvalidColor(uint8 id);
+    error BeanHeads__TokenDoesNotExist();
+}
+
+library Events {
+    event MintedGenesis(address indexed owner, uint256 indexed tokenId);
 }
