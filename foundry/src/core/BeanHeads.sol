@@ -21,14 +21,14 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads {
 
     uint256 private tokenIdCounter;
 
-    Genesis.SVGParams private genesisParams;
+    mapping(uint256 => Genesis.SVGParams) private tokenIdToParams;
 
     constructor() ERC721A("BeanHeads", "BEAN") Ownable(msg.sender) {}
 
     function mintGenesis(Genesis.SVGParams memory params) public returns (uint256) {
         tokenIdCounter++;
-        genesisParams = params;
-        _mintSpot(msg.sender, tokenIdCounter);
+        tokenIdToParams[tokenIdCounter] = params;
+        _mint(msg.sender, 1);
 
         emit Events.MintedGenesis(msg.sender, tokenIdCounter);
         return tokenIdCounter;
@@ -50,15 +50,22 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads {
 
     function getAttributesByIndex(uint256 index) external view returns (string[20] memory) {}
 
-    function getAttributesByTokenId(uint256 tokenId) external view returns (string[20] memory) {}
+    function getAttributesByTokenId(uint256 tokenId) external view returns (Genesis.SVGParams memory params) {
+        params = tokenIdToParams[tokenId];
+    }
 
-    function getAttributesByOwner(address owner) external view returns (string[20][] memory) {}
+    function getAttributesByOwner(address owner, uint256 tokenId)
+        external
+        view
+        returns (Genesis.SVGParams memory params)
+    {
+        if (owner != _msgSender()) revert Errors.NotOwner();
+        params = tokenIdToParams[tokenId];
+    }
 
     function getAttributes(uint256 tokenId) external view override returns (string memory) {}
 
     function randomNum(uint256 mod, uint256 seed, uint256 salt) external view override returns (uint256) {}
 
     function withdraw() external override {}
-
-    function mintGenesis() external override returns (uint256) {}
 }

@@ -29,7 +29,7 @@ contract Helpers is Test {
         lashes: true
     });
 
-    function getParams() public view returns (string memory) {
+    function getParams(Genesis.SVGParams memory) public view returns (string memory) {
         return string(
             abi.encodePacked(
                 Strings.toString(params.accessory),

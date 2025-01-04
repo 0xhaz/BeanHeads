@@ -58,6 +58,7 @@ library Errors {
     error InvalidType(uint8 id);
     error InvalidColor(uint8 id);
     error BeanHeads__TokenDoesNotExist();
+    error NotOwner();
 }
 
 library Events {
