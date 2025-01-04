@@ -26,7 +26,7 @@ interface IBeanHeads {
 
     function getAttributesByTokenId(uint256 tokenId) external view returns (Genesis.SVGParams memory);
 
-    function getAttributesByOwner(address owner) external view returns (Genesis.SVGParams memory);
+    function getAttributesByOwner(address owner, uint256 tokenId) external view returns (Genesis.SVGParams memory);
 
     function randomNum(uint256 mod, uint256 seed, uint256 salt) external view returns (uint256);
 
