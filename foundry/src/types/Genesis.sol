@@ -12,8 +12,12 @@ import {HairDetail} from "src/libraries/baseModel/HairDetail.sol";
 import {HatsDetail} from "src/libraries/baseModel/HatsDetail.sol";
 import {OptItems} from "src/libraries/baseModel/OptItems.sol";
 import {MouthDetail} from "src/libraries/baseModel/MouthDetail.sol";
+import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 library Genesis {
+    using Strings for uint8;
+
     struct SVGParams {
         uint8 accessory;
         uint8 bodyType;
@@ -131,5 +135,81 @@ library Genesis {
         } else {
             return ("", "");
         }
+    }
+
+    function buildAttributes(Genesis.SVGParams memory params) internal pure returns (string memory) {
+        string[20] memory attributesArray;
+
+        // Store attributes as strings in a memory array
+        attributesArray[0] =
+            string(abi.encodePacked('{"trait_type": "Accessory", "value": "', params.accessory.toString(), '"}'));
+        attributesArray[1] =
+            string(abi.encodePacked('{"trait_type": "Body Type", "value": "', params.bodyType.toString(), '"}'));
+        attributesArray[2] =
+            string(abi.encodePacked('{"trait_type": "Clothes", "value": "', params.clothes.toString(), '"}'));
+        attributesArray[3] =
+            string(abi.encodePacked('{"trait_type": "Hair Style", "value": "', params.hairStyle.toString(), '"}'));
+        attributesArray[4] = string(
+            abi.encodePacked('{"trait_type": "Clothes Graphic", "value": "', params.clothesGraphic.toString(), '"}')
+        );
+        attributesArray[5] =
+            string(abi.encodePacked('{"trait_type": "Eyebrow Shape", "value": "', params.eyebrowShape.toString(), '"}'));
+        attributesArray[6] =
+            string(abi.encodePacked('{"trait_type": "Eye Shape", "value": "', params.eyeShape.toString(), '"}'));
+        attributesArray[7] = string(
+            abi.encodePacked('{"trait_type": "Facial Hair Type", "value": "', params.facialHairType.toString(), '"}')
+        );
+        attributesArray[8] =
+            string(abi.encodePacked('{"trait_type": "Hat Style", "value": "', params.hatStyle.toString(), '"}'));
+        attributesArray[9] =
+            string(abi.encodePacked('{"trait_type": "Mouth Style", "value": "', params.mouthStyle.toString(), '"}'));
+        attributesArray[10] =
+            string(abi.encodePacked('{"trait_type": "Skin Color", "value": "', params.skinColor.toString(), '"}'));
+        attributesArray[11] = string(
+            abi.encodePacked('{"trait_type": "Clothing Color", "value": "', params.clothingColor.toString(), '"}')
+        );
+        attributesArray[12] =
+            string(abi.encodePacked('{"trait_type": "Hair Color", "value": "', params.hairColor.toString(), '"}'));
+        attributesArray[13] =
+            string(abi.encodePacked('{"trait_type": "Hat Color", "value": "', params.hatColor.toString(), '"}'));
+        attributesArray[14] =
+            string(abi.encodePacked('{"trait_type": "Shape Color", "value": "', params.shapeColor.toString(), '"}'));
+        attributesArray[15] =
+            string(abi.encodePacked('{"trait_type": "Lip Color", "value": "', params.lipColor.toString(), '"}'));
+        attributesArray[16] = string(
+            abi.encodePacked('{"trait_type": "Face Mask Color", "value": "', params.faceMaskColor.toString(), '"}')
+        );
+        attributesArray[17] =
+            string(abi.encodePacked('{"trait_type": "Face Mask", "value": "', params.faceMask ? "true" : "false", '"}'));
+        attributesArray[18] =
+            string(abi.encodePacked('{"trait_type": "Shapes", "value": "', params.shapes ? "true" : "false", '"}'));
+        attributesArray[19] =
+            string(abi.encodePacked('{"trait_type": "Lashes", "value": "', params.lashes ? "true" : "false", '"}'));
+
+        // Concatenate all attributes
+        string memory attributes = "[";
+        for (uint256 i = 0; i < attributesArray.length; i++) {
+            attributes =
+                string(abi.encodePacked(attributes, attributesArray[i], i < attributesArray.length - 1 ? "," : ""));
+        }
+        attributes = string(abi.encodePacked(attributes, "]"));
+
+        return attributes;
+    }
+
+    function generateBase64SVG(Genesis.SVGParams memory params) internal pure returns (string memory) {
+        string memory svg = string(
+            abi.encodePacked(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">',
+                '<rect width="500" height="500" fill="',
+                params.skinColor,
+                '"/>',
+                '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="24">',
+                "BeanHeads Avatar</text>",
+                "</svg>"
+            )
+        );
+
+        return string(abi.encodePacked("data:image/svg+xml;base64,", Base64.encode(bytes(svg))));
     }
 }
