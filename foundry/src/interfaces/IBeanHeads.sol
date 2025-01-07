@@ -31,4 +31,11 @@ interface IBeanHeads {
     function randomNum(uint256 mod, uint256 seed, uint256 salt) external view returns (uint256);
 
     function withdraw() external;
+
+    /// @notice Produces the URI describing the metadata of the token ID
+    /// @dev Note this URI may be a data: URI with JSON contents directly inlined
+    /// @param params memory params The SVGParams of the token
+    /// @param tokenID The ID of the token for which to produce the metadata
+    /// @return the URI of the ERC721 compliant metadata
+    function tokenURI(Genesis.SVGParams memory params, uint256 tokenID) external view returns (string memory);
 }

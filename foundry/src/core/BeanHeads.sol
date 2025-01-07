@@ -21,6 +21,24 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads {
 
     uint256 private tokenIdCounter;
 
+    string[20] private accessories;
+    string[20] private bodyTypes;
+    string[20] private clothes;
+    string[20] private hairStyles;
+    string[20] private clothesGraphics;
+    string[20] private eyebrowShapes;
+    string[20] private eyeShapes;
+    string[20] private facialHairTypes;
+    string[20] private hatStyles;
+    string[20] private mouthStyles;
+    string[20] private skinColors;
+    string[20] private clothingColors;
+    string[20] private hairColors;
+    string[20] private hatColors;
+    string[20] private shapeColors;
+    string[20] private lipColors;
+    string[20] private faceMaskColors;
+
     mapping(uint256 => Genesis.SVGParams) private tokenIdToParams;
 
     constructor() ERC721A("BeanHeads", "BEAN") Ownable(msg.sender) {}
@@ -68,4 +86,47 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads {
     function randomNum(uint256 mod, uint256 seed, uint256 salt) external view override returns (uint256) {}
 
     function withdraw() external override {}
+
+    function tokenURI(Genesis.SVGParams memory params, uint256 tokenID)
+        external
+        view
+        override
+        returns (string memory)
+    {
+        string memory json = Base64.encode(
+            bytes(
+                abi.encodePacked(
+                    '{"name": "BeanHeads #',
+                    tokenID.toString(),
+                    '", "description": "BeanHeads is a customizable avatar on chain NFT collection", "image": "',
+                    '", "attributes": [',
+                    accessories[params.accessory],
+                    bodyTypes[params.bodyType],
+                    clothes[params.clothes],
+                    hairStyles[params.hairStyle],
+                    clothesGraphics[params.clothesGraphic],
+                    eyebrowShapes[params.eyebrowShape],
+                    eyeShapes[params.eyeShape],
+                    facialHairTypes[params.facialHairType],
+                    hatStyles[params.hatStyle],
+                    mouthStyles[params.mouthStyle],
+                    skinColors[params.skinColor],
+                    clothingColors[params.clothingColor],
+                    hairColors[params.hairColor],
+                    hatColors[params.hatColor],
+                    shapeColors[params.shapeColor],
+                    lipColors[params.lipColor],
+                    faceMaskColors[params.faceMaskColor],
+                    params.faceMask ? "true" : "false",
+                    params.shapes ? "true" : "false",
+                    params.lashes ? "true" : "false",
+                    '"]',
+                    ', "image": "',
+                    "data:image/svg+xml;base64,",
+                    '"}'
+                )
+            )
+        );
+        return string(abi.encodePacked("data:application/json;base64,", json));
+    }
 }
