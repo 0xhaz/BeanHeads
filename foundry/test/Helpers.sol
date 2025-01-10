@@ -17,7 +17,7 @@ contract Helpers is Test {
         facialHairType: 2,
         hatStyle: 0,
         mouthStyle: 6,
-        skinColor: 3,
+        skinColor: 2,
         clothingColor: 0,
         hairColor: 0,
         hatColor: 3,
