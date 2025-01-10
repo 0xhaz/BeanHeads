@@ -36,7 +36,13 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads {
 
     function getOwnerAttributes(address owner) external view returns (string[20][] memory) {}
 
-    function getOwnerTokens(address owner) external view returns (uint256[] memory) {}
+    function getOwnerTokens(address owner) external view returns (uint256[] memory) {
+        uint256[] memory tokens = new uint256[](balanceOf(owner));
+        for (uint256 i = 0; i < balanceOf(owner); i++) {
+            tokens[i] = balanceOf(owner);
+        }
+        return tokens;
+    }
 
     function getOwnerTokensCount(address owner) external view returns (uint256) {}
 
