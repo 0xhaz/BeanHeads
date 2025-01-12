@@ -42,12 +42,21 @@ library EyebrowDetail {
     }
 
     /// @dev Returns the SVG and name for a specific eyebrow type
-    function getEyebrowById(uint8 id) internal pure returns (string memory) {
+    function getEyebrowById(uint8 id) internal pure returns (string memory svg, string memory name) {
         string[5] memory eyebrows =
             [angryEyebrowSVG(), concernedEyebrowSVG(), leftLoweredEyebrowSVG(), normalEyebrowSVG(), seriousEyebrowSVG()];
 
         if (id >= eyebrows.length) revert Errors.InvalidType(id);
-        return eyebrows[id];
+
+        svg = eyebrows[id];
+        name = getEyebrowName(id);
+        return (svg, name);
+    }
+
+    function getEyebrowName(uint8 id) internal pure returns (string memory) {
+        string[5] memory eyebrowNames = ["Angry", "Concerned", "Left Lowered", "Normal", "Serious"];
+        if (id >= eyebrowNames.length) revert Errors.InvalidType(id);
+        return eyebrowNames[id];
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -32,11 +32,21 @@ library AccessoryDetail {
     }
 
     /// @dev Returns the SVG and name for a specific accessory ID
-    function getAccessoryById(uint8 id) internal pure returns (string memory) {
-        if (id == uint8(AccessoryType.NONE)) return "";
+    function getAccessoryById(uint8 id) internal pure returns (string memory svg, string memory name) {
+        if (id == uint8(AccessoryType.NONE)) return ("", "");
         string[4] memory accessories = ["", roundGlassesSVG(), shadesSVG(), tinyGlassesSVG()];
         if (id >= accessories.length) revert Errors.InvalidType(id);
-        return accessories[id];
+
+        svg = accessories[id];
+        name = getAccessoryName(id);
+        return (svg, name);
+    }
+
+    function getAccessoryName(uint8 id) internal pure returns (string memory) {
+        string[4] memory accessoryNames = ["None", "Round Glasses", "Shades", "Tiny Glasses"];
+
+        if (id >= accessoryNames.length) revert Errors.InvalidType(id);
+        return accessoryNames[id];
     }
 
     /*//////////////////////////////////////////////////////////////

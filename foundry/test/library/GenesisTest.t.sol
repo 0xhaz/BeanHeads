@@ -3,31 +3,26 @@ pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Genesis} from "src/types/Genesis.sol";
+import {Helpers} from "test/Helpers.sol";
 
 contract GenesisTest is Test {
     /// Helper function to create a Genesis struct
-    Genesis.SVGParams params = Genesis.SVGParams({
-        accessory: 0,
-        bodyType: 1,
-        clothes: 2,
-        hairStyle: 1,
-        clothesGraphic: 2,
-        eyebrowShape: 3,
-        eyeShape: 5,
-        facialHairType: 2,
-        hatStyle: 0,
-        mouthStyle: 6,
-        skinColor: 3,
-        clothingColor: 0,
-        hairColor: 0,
-        hatColor: 3,
-        shapeColor: 0,
-        lipColor: 1,
-        faceMaskColor: 0,
-        faceMask: false,
-        shapes: false,
-        lashes: true
-    });
+    Helpers helpers;
+
+    Genesis.SVGParams params;
+
+    function setUp() public {
+        helpers = new Helpers();
+        (
+            Genesis.HairParams memory hair,
+            Genesis.BodyParams memory body,
+            Genesis.ClothingParams memory clothing,
+            Genesis.FacialFeaturesParams memory facialFeatures,
+            Genesis.AccessoryParams memory accessory,
+            Genesis.OtherParams memory other
+        ) = helpers.params();
+        params = Genesis.SVGParams(hair, body, clothing, facialFeatures, accessory, other);
+    }
 
     function test_buildAvatar() public {
         string memory avatar = Genesis.buildAvatar(params);

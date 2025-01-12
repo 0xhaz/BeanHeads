@@ -72,7 +72,7 @@ library MouthDetail {
     }
 
     /// @dev Returns the SVG for a mouth based on the given mouth type
-    function getMouthById(uint8 id, uint8 color) internal pure returns (string memory) {
+    function getMouthById(uint8 id, uint8 color) internal pure returns (string memory svg, string memory name) {
         string[7] memory mouths = [
             grinMouthSVG(),
             lipsMouthSVG(color),
@@ -83,7 +83,25 @@ library MouthDetail {
             tongueMouthSVG()
         ];
         if (id >= mouths.length) revert Errors.InvalidType(id);
-        return mouths[id];
+
+        svg = mouths[id];
+        string memory mouthName = getMouthName(id);
+        string memory mouthColor = getMouthColor(color);
+
+        name = string(abi.encodePacked(mouthName, " ", mouthColor));
+        return (svg, name);
+    }
+
+    function getMouthName(uint8 id) internal pure returns (string memory) {
+        string[7] memory mouthNames = ["Grin", "Lips", "Open", "Open Smile", "Sad", "Serious", "Tongue"];
+        if (id >= mouthNames.length) revert Errors.InvalidType(id);
+        return mouthNames[id];
+    }
+
+    function getMouthColor(uint8 id) internal pure returns (string memory) {
+        string[5] memory mouthColors = ["Red", "Purple", "Pink", "Turquoise", "Green"];
+        if (id >= mouthColors.length) revert Errors.InvalidType(id);
+        return mouthColors[id];
     }
 
     /*//////////////////////////////////////////////////////////////

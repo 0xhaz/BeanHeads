@@ -70,7 +70,7 @@ library EyesDetail {
     }
 
     /// @dev Returns the SVG and name for the given eye type
-    function getEyeById(uint8 id, uint8 color) internal pure returns (string memory) {
+    function getEyeById(uint8 id, uint8 color) internal pure returns (string memory svg, string memory name) {
         string[9] memory eyes = [
             contentEyeSVG(),
             dizzyEyeSVG(),
@@ -83,7 +83,17 @@ library EyesDetail {
             winkEyeSVG()
         ];
         if (id >= eyes.length) revert Errors.InvalidType(id);
-        return eyes[id];
+
+        svg = eyes[id];
+        name = getEyeName(id);
+        return (svg, name);
+    }
+
+    function getEyeName(uint8 id) internal pure returns (string memory) {
+        string[9] memory eyeNames =
+            ["Content", "Dizzy", "Happy", "Heart", "Left Twitch", "Normal", "Simple", "Squint", "Wink"];
+        if (id >= eyeNames.length) revert Errors.InvalidType(id);
+        return eyeNames[id];
     }
 
     /*//////////////////////////////////////////////////////////////

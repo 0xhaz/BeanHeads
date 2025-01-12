@@ -18,79 +18,134 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 library Genesis {
     using Strings for uint8;
 
-    struct SVGParams {
-        uint8 accessory;
-        uint8 bodyType;
-        uint8 clothes;
+    struct HairParams {
         uint8 hairStyle;
+        uint8 hairColor;
+    }
+
+    struct BodyParams {
+        uint8 bodyType;
+        uint8 skinColor;
+    }
+
+    struct ClothingParams {
+        uint8 clothes;
+        uint8 clothingColor;
         uint8 clothesGraphic;
+    }
+
+    struct FacialFeaturesParams {
         uint8 eyebrowShape;
         uint8 eyeShape;
         uint8 facialHairType;
-        uint8 hatStyle;
         uint8 mouthStyle;
-        uint8 skinColor;
-        uint8 clothingColor;
-        uint8 hairColor;
-        uint8 hatColor;
-        uint8 shapeColor;
         uint8 lipColor;
-        uint8 faceMaskColor;
+    }
+
+    struct AccessoryParams {
+        uint8 accessoryId;
+        uint8 hatStyle;
+        uint8 hatColor;
+    }
+
+    struct OtherParams {
         bool faceMask;
+        uint8 faceMaskColor;
         bool shapes;
+        uint8 shapeColor;
         bool lashes;
     }
 
+    struct SVGParams {
+        HairParams hairParams;
+        BodyParams bodyParams;
+        ClothingParams clothingParams;
+        FacialFeaturesParams facialFeaturesParams;
+        AccessoryParams accessoryParams;
+        OtherParams otherParams;
+    }
+
     function buildAvatar(SVGParams memory params) internal pure returns (string memory) {
-        (string memory hairBack, string memory hairFront) = getHairComponentsById(params.hairStyle, params.hairColor);
+        (string memory hairBack, string memory hairFront) =
+            getHairComponentsById(params.hairParams.hairStyle, params.hairParams.hairColor);
+
+        (string memory hairSVG,) = HairDetail.getHairById(params.hairParams.hairStyle, params.hairParams.hairColor);
+
+        (string memory accessorySVG,) = AccessoryDetail.getAccessoryById(params.accessoryParams.accessoryId);
+
+        (string memory bodySVG,) = BodyDetail.getBodyById(
+            params.bodyParams.bodyType, params.bodyParams.skinColor, params.clothingParams.clothingColor
+        );
+
+        (string memory clothesSVG,) = ClothingDetail.getClothingById(
+            params.bodyParams.bodyType, params.clothingParams.clothes, params.clothingParams.clothingColor
+        );
+
+        (string memory clothingGraphicSVG,) = ClothingGraphicDetail.getClothingGraphicById(
+            params.clothingParams.clothes, params.clothingParams.clothesGraphic
+        );
+
+        (string memory eyebrowShapeSVG,) = EyebrowDetail.getEyebrowById(params.facialFeaturesParams.eyebrowShape);
+
+        (string memory eyeSVG,) =
+            EyesDetail.getEyeById(params.facialFeaturesParams.eyeShape, params.bodyParams.skinColor);
+
+        (string memory facialHairSVG,) = FacialHairDetail.getFacialHairById(params.facialFeaturesParams.facialHairType);
+
+        (string memory hatSVG,) = HatsDetail.getHatsById(
+            params.accessoryParams.hatStyle, params.accessoryParams.hatColor, params.hairParams.hairStyle
+        );
+
+        (string memory mouthNameSVG,) =
+            MouthDetail.getMouthById(params.facialFeaturesParams.mouthStyle, params.facialFeaturesParams.lipColor);
 
         string memory svg = string(
             abi.encodePacked(
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">',
                 "<g>",
-                isShapesOn(params.shapes, params.shapeColor),
+                isShapesOn(params.otherParams.shapes, params.otherParams.shapeColor),
                 "</g>",
                 "<g>",
                 hairBack,
                 "</g>",
                 "<g>",
-                BodyDetail.getBodyById(params.bodyType, params.skinColor, params.clothingColor),
+                bodySVG,
                 "</g>",
                 "<g>",
                 hairFront,
                 "</g>",
                 "<g>",
-                ClothingDetail.getClothingById(params.bodyType, params.clothes, params.clothingColor),
+                clothesSVG,
                 "</g>",
                 "<g>",
-                HairDetail.getHairById(params.hairStyle, params.hairColor),
+                hairSVG,
                 "</g>",
                 "<g>",
-                ClothingGraphicDetail.getClothingGraphicById(params.clothes, params.clothesGraphic),
+                clothingGraphicSVG,
                 "</g>",
                 "<g>",
-                EyesDetail.getEyeById(params.eyeShape, params.skinColor),
+                eyeSVG,
                 "</g>",
                 "<g>",
-                FacialHairDetail.getFacialHairById(params.facialHairType),
+                facialHairSVG,
                 "</g>",
                 "<g>",
-                HatsDetail.getHatsById(params.hatStyle, params.hatColor),
+                hatSVG,
                 "</g>",
                 "<g>",
-                MouthDetail.getMouthById(params.mouthStyle, params.lipColor),
+                mouthNameSVG,
                 "</g>",
                 "<g>",
-                EyebrowDetail.getEyebrowById(params.eyebrowShape),
+                eyebrowShapeSVG,
                 "</g>",
                 "<g>",
-                AccessoryDetail.getAccessoryById(params.accessory),
+                accessorySVG,
                 "</g>",
                 "<g>",
-                isFaceMaskOn(params.faceMask, params.faceMaskColor),
+                isFaceMaskOn(params.otherParams.faceMask, params.otherParams.faceMaskColor),
                 "</g>",
                 "<g>",
-                isLashesOn(params.eyeShape, params.lashes),
+                isLashesOn(params.facialFeaturesParams.eyeShape, params.otherParams.lashes),
                 "</g>",
                 "</svg>"
             )
@@ -138,63 +193,158 @@ library Genesis {
     }
 
     function buildAttributes(Genesis.SVGParams memory params) internal pure returns (string memory) {
-        string[20] memory attributesArray;
+        // Initialize JSON string
+        string memory attributes = "[";
 
-        // Store attributes as strings in a memory array
-        attributesArray[0] =
-            string(abi.encodePacked('{"trait_type": "Accessory", "value": "', params.accessory.toString(), '"}'));
-        attributesArray[1] =
-            string(abi.encodePacked('{"trait_type": "Body Type", "value": "', params.bodyType.toString(), '"}'));
-        attributesArray[2] =
-            string(abi.encodePacked('{"trait_type": "Clothes", "value": "', params.clothes.toString(), '"}'));
-        attributesArray[3] =
-            string(abi.encodePacked('{"trait_type": "Hair Style", "value": "', params.hairStyle.toString(), '"}'));
-        attributesArray[4] = string(
-            abi.encodePacked('{"trait_type": "Clothes Graphic", "value": "', params.clothesGraphic.toString(), '"}')
-        );
-        attributesArray[5] =
-            string(abi.encodePacked('{"trait_type": "Eyebrow Shape", "value": "', params.eyebrowShape.toString(), '"}'));
-        attributesArray[6] =
-            string(abi.encodePacked('{"trait_type": "Eye Shape", "value": "', params.eyeShape.toString(), '"}'));
-        attributesArray[7] = string(
-            abi.encodePacked('{"trait_type": "Facial Hair Type", "value": "', params.facialHairType.toString(), '"}')
-        );
-        attributesArray[8] =
-            string(abi.encodePacked('{"trait_type": "Hat Style", "value": "', params.hatStyle.toString(), '"}'));
-        attributesArray[9] =
-            string(abi.encodePacked('{"trait_type": "Mouth Style", "value": "', params.mouthStyle.toString(), '"}'));
-        attributesArray[10] =
-            string(abi.encodePacked('{"trait_type": "Skin Color", "value": "', params.skinColor.toString(), '"}'));
-        attributesArray[11] = string(
-            abi.encodePacked('{"trait_type": "Clothing Color", "value": "', params.clothingColor.toString(), '"}')
-        );
-        attributesArray[12] =
-            string(abi.encodePacked('{"trait_type": "Hair Color", "value": "', params.hairColor.toString(), '"}'));
-        attributesArray[13] =
-            string(abi.encodePacked('{"trait_type": "Hat Color", "value": "', params.hatColor.toString(), '"}'));
-        attributesArray[14] =
-            string(abi.encodePacked('{"trait_type": "Shape Color", "value": "', params.shapeColor.toString(), '"}'));
-        attributesArray[15] =
-            string(abi.encodePacked('{"trait_type": "Lip Color", "value": "', params.lipColor.toString(), '"}'));
-        attributesArray[16] = string(
+        unchecked {
+            string[2] memory hairAttributes = buildHairAttributes(params.hairParams);
+            for (uint256 i = 0; i < hairAttributes.length; i++) {
+                attributes = string(abi.encodePacked(attributes, hairAttributes[i], ","));
+            }
+
+            string[3] memory accessoryAttributes = buildAccessoryAttributes(params.accessoryParams);
+            for (uint256 i = 0; i < accessoryAttributes.length; i++) {
+                attributes = string(abi.encodePacked(attributes, accessoryAttributes[i], ","));
+            }
+
+            string[2] memory bodyAttributes = buildBodyAttributes(params.bodyParams);
+            for (uint256 i = 0; i < bodyAttributes.length; i++) {
+                attributes = string(abi.encodePacked(attributes, bodyAttributes[i], ","));
+            }
+
+            string[3] memory clothingAttributes = buildClothingAttributes(params.clothingParams);
+            for (uint256 i = 0; i < clothingAttributes.length; i++) {
+                attributes = string(abi.encodePacked(attributes, clothingAttributes[i], ","));
+            }
+
+            string[5] memory facialFeaturesAttributes = buildFacialFeaturesAttributes(params.facialFeaturesParams);
+            for (uint256 i = 0; i < facialFeaturesAttributes.length; i++) {
+                attributes = string(abi.encodePacked(attributes, facialFeaturesAttributes[i], ","));
+            }
+
+            string[5] memory otherAttributes = buildOtherAttributes(params.otherParams);
+            for (uint256 i = 0; i < otherAttributes.length; i++) {
+                attributes = string(abi.encodePacked(attributes, otherAttributes[i], ","));
+            }
+        }
+
+        // Remove trailing comma and close JSON array
+        bytes memory tempBytes = bytes(attributes);
+        if (tempBytes.length > 1) {
+            tempBytes[tempBytes.length - 1] = "]"; // Replace last comma with closing bracket
+        } else {
+            attributes = "[]"; // If no attributes, return empty array
+        }
+
+        return string(tempBytes);
+    }
+
+    function buildHairAttributes(HairParams memory params) private pure returns (string[2] memory hairAttributes) {
+        string memory hairStyleName = HairDetail.getHairTypeName(params.hairStyle);
+        string memory hairColorName = HairDetail.getHairColorName(params.hairColor);
+
+        hairAttributes[0] = string(abi.encodePacked('{"trait_type": "Hair Style", "value": "', hairStyleName, '"}'));
+
+        hairAttributes[1] = string(abi.encodePacked('{"trait_type": "Hair Color", "value": "', hairColorName, '"}'));
+
+        return hairAttributes;
+    }
+
+    function buildAccessoryAttributes(AccessoryParams memory params)
+        private
+        pure
+        returns (string[3] memory accessoryAttributes)
+    {
+        string memory accessoryName = AccessoryDetail.getAccessoryName(params.accessoryId);
+        string memory hatName = HatsDetail.getHatsName(params.hatStyle);
+        string memory hatColorName = HatsDetail.getHatsColorName(params.hatColor);
+
+        accessoryAttributes[0] = string(abi.encodePacked('{"trait_type": "Accessory", "value": "', accessoryName, '"}'));
+
+        accessoryAttributes[1] = string(abi.encodePacked('{"trait_type": "Hat Style", "value": "', hatName, '"}'));
+
+        accessoryAttributes[2] = string(abi.encodePacked('{"trait_type": "Hat Color", "value": "', hatColorName, '"}'));
+
+        return accessoryAttributes;
+    }
+
+    function buildBodyAttributes(BodyParams memory params) private pure returns (string[2] memory bodyAttributes) {
+        string memory bodyTypeName = BodyDetail.getBodyTypeName(params.bodyType);
+        string memory skinColorName = BodyDetail.getBodyColorName(params.skinColor);
+
+        bodyAttributes[0] = string(abi.encodePacked('{"trait_type": "Body Type", "value": "', bodyTypeName, '"}'));
+
+        bodyAttributes[1] = string(abi.encodePacked('{"trait_type": "Skin Color", "value": "', skinColorName, '"}'));
+
+        return bodyAttributes;
+    }
+
+    function buildClothingAttributes(ClothingParams memory params)
+        private
+        pure
+        returns (string[3] memory clothingAttributes)
+    {
+        string memory clothesName = ClothingDetail.getClothingName(params.clothes);
+        string memory clothesColorName = ClothingDetail.getClothingColor(params.clothingColor);
+        string memory clothingGraphicName = ClothingGraphicDetail.getClothingGraphicName(params.clothesGraphic);
+
+        clothingAttributes[0] = string(abi.encodePacked('{"trait_type": "Clothes", "value": "', clothesName, '"}'));
+
+        clothingAttributes[1] =
+            string(abi.encodePacked('{"trait_type": "Clothes Color", "value": "', clothesColorName, '"}'));
+
+        clothingAttributes[2] =
+            string(abi.encodePacked('{"trait_type": "Clothes Graphic", "value": "', clothingGraphicName, '"}'));
+
+        return clothingAttributes;
+    }
+
+    function buildFacialFeaturesAttributes(FacialFeaturesParams memory params)
+        private
+        pure
+        returns (string[5] memory facialFeaturesAttributes)
+    {
+        string memory eyebrowShapeName = EyebrowDetail.getEyebrowName(params.eyebrowShape);
+        string memory eyeName = EyesDetail.getEyeName(params.eyeShape);
+        string memory facialHairName = FacialHairDetail.getFacialHairName(params.facialHairType);
+        string memory mouthStyleName = MouthDetail.getMouthName(params.mouthStyle);
+        string memory lipColorName = MouthDetail.getMouthColor(params.lipColor);
+
+        facialFeaturesAttributes[0] =
+            string(abi.encodePacked('{"trait_type": "Eyebrow Shape", "value": "', eyebrowShapeName, '"}'));
+
+        facialFeaturesAttributes[1] = string(abi.encodePacked('{"trait_type": "Eye Shape", "value": "', eyeName, '"}'));
+
+        facialFeaturesAttributes[2] =
+            string(abi.encodePacked('{"trait_type": "Facial Hair Type", "value": "', facialHairName, '"}'));
+
+        facialFeaturesAttributes[3] =
+            string(abi.encodePacked('{"trait_type": "Mouth Style", "value": "', mouthStyleName, '"}'));
+
+        facialFeaturesAttributes[4] =
+            string(abi.encodePacked('{"trait_type": "Lip Color", "value": "', lipColorName, '"}'));
+
+        return facialFeaturesAttributes;
+    }
+
+    function buildOtherAttributes(OtherParams memory params) private pure returns (string[5] memory otherAttributes) {
+        otherAttributes[0] =
+            string(abi.encodePacked('{"trait_type": "Face Mask", "value": "', params.faceMask ? "true" : "false", '"}'));
+
+        otherAttributes[1] = string(
             abi.encodePacked('{"trait_type": "Face Mask Color", "value": "', params.faceMaskColor.toString(), '"}')
         );
-        attributesArray[17] =
-            string(abi.encodePacked('{"trait_type": "Face Mask", "value": "', params.faceMask ? "true" : "false", '"}'));
-        attributesArray[18] =
+
+        otherAttributes[2] =
             string(abi.encodePacked('{"trait_type": "Shapes", "value": "', params.shapes ? "true" : "false", '"}'));
-        attributesArray[19] =
+
+        otherAttributes[3] =
+            string(abi.encodePacked('{"trait_type": "Shape Color", "value": "', params.shapeColor.toString(), '"}'));
+
+        otherAttributes[4] =
             string(abi.encodePacked('{"trait_type": "Lashes", "value": "', params.lashes ? "true" : "false", '"}'));
 
-        // Concatenate all attributes
-        string memory attributes = "[";
-        for (uint256 i = 0; i < attributesArray.length; i++) {
-            attributes =
-                string(abi.encodePacked(attributes, attributesArray[i], i < attributesArray.length - 1 ? "," : ""));
-        }
-        attributes = string(abi.encodePacked(attributes, "]"));
-
-        return attributes;
+        return otherAttributes;
     }
 
     function generateBase64SVG(Genesis.SVGParams memory params) internal pure returns (string memory) {
@@ -202,7 +352,7 @@ library Genesis {
             abi.encodePacked(
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">',
                 '<rect width="500" height="500" fill="',
-                params.skinColor,
+                params.bodyParams.skinColor,
                 '"/>',
                 '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="24">',
                 "BeanHeads Avatar</text>",

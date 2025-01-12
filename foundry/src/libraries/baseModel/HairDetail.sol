@@ -115,12 +115,29 @@ library HairDetail {
     }
 
     /// @dev Returns the SVG and name for the given hair type
-    function getHairById(uint8 id, uint8 color) internal pure returns (string memory) {
+    function getHairById(uint8 id, uint8 color) internal pure returns (string memory svg, string memory name) {
         string[8] memory hairs =
             ["", "", baldHairSVG(color), "", bunHairSVG(color), "", pixieCutSVG(color), shortHairSVG(color)];
 
         if (id >= hairs.length) revert Errors.InvalidType(id);
-        return hairs[id];
+
+        svg = hairs[id];
+        name = getHairTypeName(id);
+        return (svg, name);
+    }
+
+    function getHairColorName(uint8 id) internal pure returns (string memory) {
+        string[7] memory hairColors = ["Blonde", "Orange", "Black", "White", "Brown", "Blue", "Pink"];
+
+        if (id >= hairColors.length) revert Errors.InvalidColor(id);
+        return hairColors[id];
+    }
+
+    function getHairTypeName(uint8 id) internal pure returns (string memory) {
+        string[8] memory hairTypes = ["None", "Afro", "Bald", "Bob Cut", "Bun", "Long Hair", "Pixie Cut", "Short Hair"];
+
+        if (id >= hairTypes.length) revert Errors.InvalidType(id);
+        return hairTypes[id];
     }
 
     /*//////////////////////////////////////////////////////////////

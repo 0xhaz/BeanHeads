@@ -49,10 +49,36 @@ library HatsDetail {
     }
 
     /// @dev Returns the SVG content for a hat
-    function getHatsById(uint8 id, uint8 color) internal pure returns (string memory) {
+    function getHatsById(uint8 id, uint8 color, uint8 hairStyle)
+        internal
+        pure
+        returns (string memory svg, string memory name)
+    {
+        if (!isAllowedHats(id, hairStyle)) return ("", "");
+
         string[3] memory hats = ["", beanieHatSVG(color), turbanHatSVG(color)];
         if (id >= hats.length) revert Errors.InvalidType(id);
-        return hats[id];
+
+        svg = hats[id];
+        string memory hatName = getHatsName(id);
+        string memory hatColorName = getHatsColorName(color);
+
+        name = string(abi.encodePacked(hatColorName, " ", hatName));
+        return (svg, name);
+    }
+
+    function getHatsName(uint8 id) internal pure returns (string memory) {
+        string[3] memory hatNames = ["None", "Beanie", "Turban"];
+        if (id >= hatNames.length) revert Errors.InvalidType(id);
+        return hatNames[id];
+    }
+
+    function getHatsColorName(uint8 id) internal pure returns (string memory) {
+        HatColor color = HatColor(id);
+        string[5] memory hatColorNames = ["White", "Blue", "Black", "Green", "Red"];
+
+        if (id >= hatColorNames.length) revert Errors.InvalidType(uint8(color));
+        return hatColorNames[uint8(color)];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -136,5 +162,20 @@ library HatsDetail {
                 )
             )
         );
+    }
+
+    /// @dev Check if the hats is allowed only to a specific type of hair
+    function isAllowedHats(uint8 hatStyle, uint8 hairs) private pure returns (bool) {
+        if (hatStyle == 1) {
+            if (hairs == 1 || hairs == 4) return false;
+            return true;
+        }
+
+        if (hatStyle == 2) {
+            if (hairs == 1 || hairs == 3 || hairs == 4 || hairs == 5) return false;
+            return true;
+        }
+
+        return false;
     }
 }

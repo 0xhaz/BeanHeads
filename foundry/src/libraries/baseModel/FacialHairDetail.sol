@@ -25,10 +25,19 @@ library FacialHairDetail {
     }
 
     /// @dev Returns the SVG content for a facial hair detail
-    function getFacialHairById(uint8 id) internal pure returns (string memory) {
+    function getFacialHairById(uint8 id) internal pure returns (string memory svg, string memory name) {
         string[3] memory facialHairs = ["", mediumBeardSVG(), stubbleSVG()];
         if (id >= facialHairs.length) revert Errors.InvalidType(id);
-        return facialHairs[id];
+
+        svg = facialHairs[id];
+        name = getFacialHairName(id);
+        return (svg, name);
+    }
+
+    function getFacialHairName(uint8 id) internal pure returns (string memory) {
+        string[3] memory facialHairNames = ["None", "Medium Beard", "Stubble"];
+        if (id >= facialHairNames.length) revert Errors.InvalidType(id);
+        return facialHairNames[id];
     }
 
     /*//////////////////////////////////////////////////////////////

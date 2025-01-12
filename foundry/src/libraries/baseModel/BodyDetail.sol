@@ -72,10 +72,36 @@ library BodyDetail {
     /// 2,3: Chest with dark skin
     /// 2,4: Chest with red skin
     /// 2,5: Chest with black skin
-    function getBodyById(uint8 id, uint8 color, uint8 clothingColor) internal pure returns (string memory) {
-        if (id == 1) return breastSVGWithBody(color, clothingColor);
-        if (id == 2) return chestSVG(color);
+    function getBodyById(uint8 id, uint8 color, uint8 clothingColor)
+        internal
+        pure
+        returns (string memory svg, string memory name)
+    {
+        if (id == 1) {
+            svg = breastSVGWithBody(color, clothingColor);
+            name = getBodyTypeName(id);
+        } else if (id == 2) {
+            svg = chestSVG(color);
+            name = getBodyTypeName(id);
+        } else {
+            revert Errors.InvalidType(id);
+        }
+    }
+
+    function getBodyTypeName(uint8 id) internal pure returns (string memory) {
+        if (id == 1) return "Breast";
+        if (id == 2) return "Chest";
         revert Errors.InvalidType(id);
+    }
+
+    function getBodyColorName(uint8 id) internal pure returns (string memory) {
+        if (id == 0) return "Light Skin";
+        if (id == 1) return "Yellow Skin";
+        if (id == 2) return "Brown Skin";
+        if (id == 3) return "Dark Skin";
+        if (id == 4) return "Red Skin";
+        if (id == 5) return "Black Skin";
+        revert Errors.InvalidColor(id);
     }
 
     /*//////////////////////////////////////////////////////////////

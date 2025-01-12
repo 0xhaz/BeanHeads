@@ -44,15 +44,31 @@ library ClothingGraphicDetail {
     }
 
     /// @dev Returns the SVG and name for a specific clothing graphic ID
-    function getClothingGraphicById(uint8 clothes, uint8 id) internal pure returns (string memory) {
+    function getClothingGraphicById(uint8 clothes, uint8 id)
+        internal
+        pure
+        returns (string memory svg, string memory name)
+    {
         // ClothingGraphicType graphicType = ClothingGraphicType(id);
 
-        if (!isAllowedGraphic(clothes)) return "";
+        if (!isAllowedGraphic(clothes)) return ("", "");
 
         // if (graphicType == ClothingGraphicType.NONE) return "";
         string[6] memory graphics = ["", gatsbySVG(), graphqlSVG(), reactSVG(), redwoodSVG(), vueSVG()];
         if (id >= graphics.length) revert Errors.InvalidType(id);
-        return graphics[id];
+
+        svg = graphics[id];
+        name = getClothingGraphicName(id);
+        return (svg, name);
+    }
+
+    function getClothingGraphicName(uint8 id) internal pure returns (string memory) {
+        ClothingGraphicType graphicType = ClothingGraphicType(id);
+        if (graphicType == ClothingGraphicType.NONE) return "";
+        string[6] memory graphicNames = ["None", "Gatsby", "Graphql", "React", "Redwood", "Vue"];
+
+        if (id >= graphicNames.length) revert Errors.InvalidType(id);
+        return graphicNames[id];
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -98,7 +98,11 @@ library ClothingDetail {
     }
 
     /// @dev Returns the SVG and name for a specific clothing item
-    function getClothingById(uint8 bodyId, uint8 cloth, uint8 color) internal pure returns (string memory) {
+    function getClothingById(uint8 bodyId, uint8 cloth, uint8 color)
+        internal
+        pure
+        returns (string memory svg, string memory name)
+    {
         ClothingType clothId = ClothingType(cloth);
 
         // if (clothId == ClothingType.NONE) return "";
@@ -111,7 +115,30 @@ library ClothingDetail {
             vNeckSVG(bodyId, color)
         ];
         if (uint8(clothId) >= clothes.length) revert Errors.InvalidType(uint8(clothId));
+        svg = clothes[uint8(clothId)];
+
+        string memory clothName = getClothingName(cloth);
+        string memory clothColor = getClothingColor(color);
+
+        name = string(abi.encodePacked(clothColor, " ", clothName));
+
+        return (svg, name);
+    }
+
+    function getClothingName(uint8 id) internal pure returns (string memory) {
+        ClothingType clothId = ClothingType(id);
+        string[6] memory clothes = ["Naked", "Dress", "Shirt", "T-Shirt", "Tank Top", "V-Neck"];
+
+        if (id >= clothes.length) revert Errors.InvalidType(uint8(clothId));
         return clothes[uint8(clothId)];
+    }
+
+    function getClothingColor(uint8 id) internal pure returns (string memory) {
+        ClothColor colorId = ClothColor(id);
+        string[5] memory colors = ["White", "Blue", "Black", "Green", "Red"];
+
+        if (id >= colors.length) revert Errors.InvalidType(uint8(colorId));
+        return colors[uint8(colorId)];
     }
 
     /*//////////////////////////////////////////////////////////////
