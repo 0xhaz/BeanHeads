@@ -538,7 +538,7 @@ contract SVGTest is Test {
         /*//////////////////////////////////////////////////////////////
                              OPTIONAL ITEMS TEST
         //////////////////////////////////////////////////////////////*/
-        string memory faceMaskSVG = OptItems.faceMaskSVG(0);
+        (string memory faceMaskSVG,) = OptItems.faceMaskSVG(0);
         vm.writeFile("./output/face_mask.svg", faceMaskSVG);
 
         string memory maskSVG = OptItems.maskSVG();
@@ -547,25 +547,25 @@ contract SVGTest is Test {
         string memory lashesSVG = OptItems.lashesSVG(1);
         vm.writeFile("./output/lashes.svg", lashesSVG);
 
-        string memory shapeSVG = OptItems.shapeSVG(1);
+        (string memory shapeSVG,) = OptItems.shapeSVG(1);
         vm.writeFile("./output/shape.svg", shapeSVG);
 
         /*//////////////////////////////////////////////////////////////
                              COLOR TEST
         //////////////////////////////////////////////////////////////*/
-        string memory faceMaskWhite = OptItems.faceMaskSVG(0);
+        (string memory faceMaskWhite,) = OptItems.faceMaskSVG(0);
         vm.writeFile("./output/face_mask_white.svg", faceMaskWhite);
 
-        string memory faceMaskBlue = OptItems.faceMaskSVG(1);
+        (string memory faceMaskBlue,) = OptItems.faceMaskSVG(1);
         vm.writeFile("./output/face_mask_blue.svg", faceMaskBlue);
 
-        string memory faceMaskBlack = OptItems.faceMaskSVG(2);
+        (string memory faceMaskBlack,) = OptItems.faceMaskSVG(2);
         vm.writeFile("./output/face_mask_black.svg", faceMaskBlack);
 
-        string memory faceMaskGreen = OptItems.faceMaskSVG(3);
+        (string memory faceMaskGreen,) = OptItems.faceMaskSVG(3);
         vm.writeFile("./output/face_mask_green.svg", faceMaskGreen);
 
-        string memory faceMaskRed = OptItems.faceMaskSVG(4);
+        (string memory faceMaskRed,) = OptItems.faceMaskSVG(4);
         vm.writeFile("./output/face_mask_red.svg", faceMaskRed);
     }
 }

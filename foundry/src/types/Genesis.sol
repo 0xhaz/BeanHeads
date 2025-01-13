@@ -65,107 +65,122 @@ library Genesis {
         OtherParams otherParams;
     }
 
-    function buildAvatar(SVGParams memory params) internal pure returns (string memory) {
-        (string memory hairBack, string memory hairFront) =
-            getHairComponentsById(params.hairParams.hairStyle, params.hairParams.hairColor);
+    function getSVG(SVGParams memory params)
+        private
+        pure
+        returns (
+            string memory hairBack,
+            string memory hairFront,
+            string memory hairSVG,
+            string memory accessorySVG,
+            string memory bodySVG,
+            string memory clothesSVG,
+            string memory clothingGraphicSVG,
+            string memory eyebrowShapeSVG,
+            string memory eyeSVG,
+            string memory facialHairSVG,
+            string memory hatSVG,
+            string memory mouthNameSVG,
+            string memory shapeSVG,
+            string memory faceMaskSVG
+        )
+    {
+        (hairBack, hairFront) = getHairComponentsById(params.hairParams.hairStyle, params.hairParams.hairColor);
 
-        (string memory hairSVG,) = HairDetail.getHairById(params.hairParams.hairStyle, params.hairParams.hairColor);
+        (hairSVG,) = HairDetail.getHairById(params.hairParams.hairStyle, params.hairParams.hairColor);
 
-        (string memory accessorySVG,) = AccessoryDetail.getAccessoryById(params.accessoryParams.accessoryId);
+        (accessorySVG,) = AccessoryDetail.getAccessoryById(params.accessoryParams.accessoryId);
 
-        (string memory bodySVG,) = BodyDetail.getBodyById(
+        (bodySVG,) = BodyDetail.getBodyById(
             params.bodyParams.bodyType, params.bodyParams.skinColor, params.clothingParams.clothingColor
         );
 
-        (string memory clothesSVG,) = ClothingDetail.getClothingById(
+        (clothesSVG,) = ClothingDetail.getClothingById(
             params.bodyParams.bodyType, params.clothingParams.clothes, params.clothingParams.clothingColor
         );
 
-        (string memory clothingGraphicSVG,) = ClothingGraphicDetail.getClothingGraphicById(
+        (clothingGraphicSVG,) = ClothingGraphicDetail.getClothingGraphicById(
             params.clothingParams.clothes, params.clothingParams.clothesGraphic
         );
 
-        (string memory eyebrowShapeSVG,) = EyebrowDetail.getEyebrowById(params.facialFeaturesParams.eyebrowShape);
+        (eyebrowShapeSVG,) = EyebrowDetail.getEyebrowById(params.facialFeaturesParams.eyebrowShape);
 
-        (string memory eyeSVG,) =
-            EyesDetail.getEyeById(params.facialFeaturesParams.eyeShape, params.bodyParams.skinColor);
+        (eyeSVG,) = EyesDetail.getEyeById(params.facialFeaturesParams.eyeShape, params.bodyParams.skinColor);
 
-        (string memory facialHairSVG,) = FacialHairDetail.getFacialHairById(params.facialFeaturesParams.facialHairType);
+        (facialHairSVG,) = FacialHairDetail.getFacialHairById(params.facialFeaturesParams.facialHairType);
 
-        (string memory hatSVG,) = HatsDetail.getHatsById(
+        (hatSVG,) = HatsDetail.getHatsById(
             params.accessoryParams.hatStyle, params.accessoryParams.hatColor, params.hairParams.hairStyle
         );
 
-        (string memory mouthNameSVG,) =
+        (mouthNameSVG,) =
             MouthDetail.getMouthById(params.facialFeaturesParams.mouthStyle, params.facialFeaturesParams.lipColor);
+
+        (shapeSVG,) = isShapesOn(params.otherParams.shapes, params.otherParams.shapeColor);
+
+        (faceMaskSVG,) = isFaceMaskOn(params.otherParams.faceMask, params.otherParams.faceMaskColor);
+    }
+
+    function buildAvatar(SVGParams memory params) internal pure returns (string memory) {
+        (
+            string memory hairBack,
+            string memory hairFront,
+            string memory hairSVG,
+            string memory accessorySVG,
+            string memory bodySVG,
+            string memory clothesSVG,
+            string memory clothingGraphicSVG,
+            string memory eyebrowShapeSVG,
+            string memory eyeSVG,
+            string memory facialHairSVG,
+            string memory hatSVG,
+            string memory mouthNameSVG,
+            string memory shapeSVG,
+            string memory faceMaskSVG
+        ) = getSVG(params);
 
         string memory svg = string(
             abi.encodePacked(
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">',
-                "<g>",
-                isShapesOn(params.otherParams.shapes, params.otherParams.shapeColor),
-                "</g>",
-                "<g>",
+                shapeSVG,
                 hairBack,
-                "</g>",
-                "<g>",
                 bodySVG,
-                "</g>",
-                "<g>",
                 hairFront,
-                "</g>",
-                "<g>",
                 clothesSVG,
-                "</g>",
-                "<g>",
                 hairSVG,
-                "</g>",
-                "<g>",
                 clothingGraphicSVG,
-                "</g>",
-                "<g>",
                 eyeSVG,
-                "</g>",
-                "<g>",
                 facialHairSVG,
-                "</g>",
-                "<g>",
                 hatSVG,
-                "</g>",
-                "<g>",
                 mouthNameSVG,
-                "</g>",
-                "<g>",
                 eyebrowShapeSVG,
-                "</g>",
-                "<g>",
                 accessorySVG,
-                "</g>",
-                "<g>",
-                isFaceMaskOn(params.otherParams.faceMask, params.otherParams.faceMaskColor),
-                "</g>",
-                "<g>",
-                isLashesOn(params.facialFeaturesParams.eyeShape, params.otherParams.lashes),
-                "</g>",
-                "</svg>"
+                faceMaskSVG,
+                isLashesOn(params.facialFeaturesParams.eyeShape, params.otherParams.lashes)
             )
         );
 
         return svg;
     }
 
-    function isFaceMaskOn(bool faceMask, uint8 color) private pure returns (string memory) {
+    function isFaceMaskOn(bool faceMask, uint8 color)
+        private
+        pure
+        returns (string memory maskSVG, string memory name)
+    {
         if (faceMask) {
-            return OptItems.faceMaskSVG(color);
+            (maskSVG, name) = OptItems.faceMaskSVG(color);
+            return (maskSVG, name);
         }
-        return "";
+        return ("", "");
     }
 
-    function isShapesOn(bool shapes, uint8 color) private pure returns (string memory) {
+    function isShapesOn(bool shapes, uint8 color) private pure returns (string memory shape, string memory name) {
         if (shapes) {
-            return OptItems.shapeSVG(color);
+            (shape, name) = OptItems.shapeSVG(color);
+            return (shape, name);
         }
-        return "";
+        return ("", "");
     }
 
     function isLashesOn(uint8 eyeShape, bool lashes) private pure returns (string memory) {
@@ -196,47 +211,60 @@ library Genesis {
         // Initialize JSON string
         string memory attributes = "[";
 
+        // Track if it's the first attribute to avoid leading commas
+        bool isFirst = true;
+
         unchecked {
             string[2] memory hairAttributes = buildHairAttributes(params.hairParams);
-            for (uint256 i = 0; i < hairAttributes.length; i++) {
-                attributes = string(abi.encodePacked(attributes, hairAttributes[i], ","));
-            }
+            attributes = concatenateAttributes(attributes, hairAttributes, isFirst);
+            isFirst = false;
 
             string[3] memory accessoryAttributes = buildAccessoryAttributes(params.accessoryParams);
-            for (uint256 i = 0; i < accessoryAttributes.length; i++) {
-                attributes = string(abi.encodePacked(attributes, accessoryAttributes[i], ","));
-            }
+            attributes = concatenateAttributes(attributes, accessoryAttributes, isFirst);
 
             string[2] memory bodyAttributes = buildBodyAttributes(params.bodyParams);
-            for (uint256 i = 0; i < bodyAttributes.length; i++) {
-                attributes = string(abi.encodePacked(attributes, bodyAttributes[i], ","));
-            }
+            attributes = concatenateAttributes(attributes, bodyAttributes, isFirst);
 
             string[3] memory clothingAttributes = buildClothingAttributes(params.clothingParams);
-            for (uint256 i = 0; i < clothingAttributes.length; i++) {
-                attributes = string(abi.encodePacked(attributes, clothingAttributes[i], ","));
-            }
+            attributes = concatenateAttributes(attributes, clothingAttributes, isFirst);
 
             string[5] memory facialFeaturesAttributes = buildFacialFeaturesAttributes(params.facialFeaturesParams);
-            for (uint256 i = 0; i < facialFeaturesAttributes.length; i++) {
-                attributes = string(abi.encodePacked(attributes, facialFeaturesAttributes[i], ","));
+            attributes = concatenateAttributes(attributes, facialFeaturesAttributes, isFirst);
+
+            // Add boolean and conditional traits
+            if (params.otherParams.faceMask) {
+                string memory faceMaskAttribute = string(
+                    abi.encodePacked(
+                        '{"trait_type": "Face Mask", "value": "true"},',
+                        '{"trait_type": "Face Mask Color", "value": "',
+                        OptItems.getFaceMaskColor(params.otherParams.faceMaskColor),
+                        '"}'
+                    )
+                );
+                attributes = concatenateAttributes(attributes, faceMaskAttribute, isFirst);
             }
 
-            string[5] memory otherAttributes = buildOtherAttributes(params.otherParams);
-            for (uint256 i = 0; i < otherAttributes.length; i++) {
-                attributes = string(abi.encodePacked(attributes, otherAttributes[i], ","));
+            if (params.otherParams.shapes) {
+                string memory shapesAttribute = string(
+                    abi.encodePacked(
+                        '{"trait_type": "Shapes", "value": "true"},',
+                        '{"trait_type": "Shape Color", "value": "',
+                        OptItems.getShapeColor(params.otherParams.shapeColor),
+                        '"}'
+                    )
+                );
+                attributes = concatenateAttributes(attributes, shapesAttribute, isFirst);
+            }
+
+            if (params.otherParams.lashes) {
+                string memory lashesAttribute = '{"trait_type": "Lashes", "value": "true"}';
+                attributes = concatenateAttributes(attributes, lashesAttribute, isFirst);
             }
         }
 
-        // Remove trailing comma and close JSON array
-        bytes memory tempBytes = bytes(attributes);
-        if (tempBytes.length > 1) {
-            tempBytes[tempBytes.length - 1] = "]"; // Replace last comma with closing bracket
-        } else {
-            attributes = "[]"; // If no attributes, return empty array
-        }
-
-        return string(tempBytes);
+        // Close JSON array
+        attributes = string(abi.encodePacked(attributes, "]"));
+        return attributes;
     }
 
     function buildHairAttributes(HairParams memory params) private pure returns (string[2] memory hairAttributes) {
@@ -322,24 +350,25 @@ library Genesis {
             string(abi.encodePacked('{"trait_type": "Mouth Style", "value": "', mouthStyleName, '"}'));
 
         facialFeaturesAttributes[4] =
-            string(abi.encodePacked('{"trait_type": "Lip Color", "value": "', lipColorName, '"}'));
+            string(abi.encodePacked('{"trait_type":"Lip Color", "value": "', lipColorName, '"}'));
 
         return facialFeaturesAttributes;
     }
 
     function buildOtherAttributes(OtherParams memory params) private pure returns (string[5] memory otherAttributes) {
-        otherAttributes[0] =
-            string(abi.encodePacked('{"trait_type": "Face Mask", "value": "', params.faceMask ? "true" : "false", '"}'));
+        string memory shapeColor = OptItems.getShapeColor(params.shapeColor);
+        string memory faceMaskColor = OptItems.getFaceMaskColor(params.faceMaskColor);
 
-        otherAttributes[1] = string(
-            abi.encodePacked('{"trait_type": "Face Mask Color", "value": "', params.faceMaskColor.toString(), '"}')
-        );
+        otherAttributes[0] =
+            string(abi.encodePacked('{"trait_type":"Face Mask", "value": "', params.faceMask ? "true" : "false", '"}'));
+
+        otherAttributes[1] =
+            string(abi.encodePacked('{"trait_type": "Face Mask Color", "value": "', faceMaskColor, '"}'));
 
         otherAttributes[2] =
             string(abi.encodePacked('{"trait_type": "Shapes", "value": "', params.shapes ? "true" : "false", '"}'));
 
-        otherAttributes[3] =
-            string(abi.encodePacked('{"trait_type": "Shape Color", "value": "', params.shapeColor.toString(), '"}'));
+        otherAttributes[3] = string(abi.encodePacked('{"trait_type": "Shape Color", "value": "', shapeColor, '"}'));
 
         otherAttributes[4] =
             string(abi.encodePacked('{"trait_type": "Lashes", "value": "', params.lashes ? "true" : "false", '"}'));
@@ -361,5 +390,70 @@ library Genesis {
         );
 
         return string(abi.encodePacked("data:image/svg+xml;base64,", Base64.encode(bytes(svg))));
+    }
+
+    function concatenateAttributes(string memory attributes, string[2] memory componentAttributes, bool isFirst)
+        private
+        pure
+        returns (string memory)
+    {
+        for (uint256 i; i < componentAttributes.length; ++i) {
+            if (bytes(componentAttributes[i]).length > 0) {
+                if (!isFirst) {
+                    attributes = string(abi.encodePacked(attributes, ","));
+                }
+                attributes = string(abi.encodePacked(attributes, componentAttributes[i]));
+                isFirst = false;
+            }
+        }
+        return attributes;
+    }
+
+    function concatenateAttributes(string memory attributes, string[3] memory componentAttributes, bool isFirst)
+        private
+        pure
+        returns (string memory)
+    {
+        for (uint256 i; i < componentAttributes.length; ++i) {
+            if (bytes(componentAttributes[i]).length > 0) {
+                if (!isFirst) {
+                    attributes = string(abi.encodePacked(attributes, ","));
+                }
+                attributes = string(abi.encodePacked(attributes, componentAttributes[i]));
+                isFirst = false;
+            }
+        }
+        return attributes;
+    }
+
+    function concatenateAttributes(string memory attributes, string[5] memory componentAttributes, bool isFirst)
+        private
+        pure
+        returns (string memory)
+    {
+        for (uint256 i; i < componentAttributes.length; ++i) {
+            if (bytes(componentAttributes[i]).length > 0) {
+                if (!isFirst) {
+                    attributes = string(abi.encodePacked(attributes, ","));
+                }
+                attributes = string(abi.encodePacked(attributes, componentAttributes[i]));
+                isFirst = false;
+            }
+        }
+        return attributes;
+    }
+
+    function concatenateAttributes(string memory attributes, string memory componentAttributes, bool isFirst)
+        private
+        pure
+        returns (string memory)
+    {
+        if (bytes(componentAttributes).length > 0) {
+            if (!isFirst) {
+                attributes = string(abi.encodePacked(attributes, ","));
+            }
+            attributes = string(abi.encodePacked(attributes, componentAttributes));
+        }
+        return attributes;
     }
 }

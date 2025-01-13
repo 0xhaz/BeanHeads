@@ -33,9 +33,20 @@ library OptItems {
     }
 
     /// @dev SVG for face mask
-    function faceMaskSVG(uint8 id) internal pure returns (string memory) {
+    function faceMaskSVG(uint8 id) internal pure returns (string memory svg, string memory colorName) {
         (bytes3 baseColor, bytes3 shadowColor) = getColorForFaceMask(id);
-        return renderFaceMaskSVG(baseColor, shadowColor);
+
+        svg = renderFaceMaskSVG(baseColor, shadowColor);
+        colorName = getFaceMaskColor(id);
+        return (svg, colorName);
+    }
+
+    function getFaceMaskColor(uint8 id) internal pure returns (string memory) {
+        Color colorId = Color(id);
+        string[5] memory colors = ["White", "Blue", "Black", "Green", "Red"];
+
+        if (id >= colors.length) revert Errors.InvalidColor(uint8(colorId));
+        return colors[uint8(id)];
     }
 
     /// @dev SVG for mask
@@ -61,9 +72,20 @@ library OptItems {
     }
 
     /// @dev SVG for shapes
-    function shapeSVG(uint8 color) internal pure returns (string memory) {
+    function shapeSVG(uint8 color) internal pure returns (string memory svg, string memory colorName) {
         (bytes3 baseColor,) = getColorForShape(color);
-        return renderShapeSVG(baseColor);
+
+        svg = renderShapeSVG(baseColor);
+        colorName = getShapeColor(color);
+        return (svg, colorName);
+    }
+
+    function getShapeColor(uint8 id) internal pure returns (string memory) {
+        Color colorId = Color(id);
+        string[5] memory colors = ["White", "Blue", "Black", "Green", "Red"];
+
+        if (id >= colors.length) revert Errors.InvalidColor(uint8(colorId));
+        return colors[uint8(id)];
     }
 
     /*//////////////////////////////////////////////////////////////
