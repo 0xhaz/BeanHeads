@@ -294,6 +294,16 @@ library Genesis {
             string[5] memory facialFeaturesAttributes = buildFacialFeaturesAttributes(params.facialFeaturesParams);
             attributes = concatenateAttributes(attributes, facialFeaturesAttributes, isFirst);
 
+            for (uint256 i; i < facialFeaturesAttributes.length; ++i) {
+                if (bytes(facialFeaturesAttributes[i]).length > 0) {
+                    if (!isFirst) {
+                        attributes = string(abi.encodePacked(attributes, ","));
+                    }
+                    attributes = string(abi.encodePacked(attributes, facialFeaturesAttributes[i]));
+                    isFirst = false;
+                }
+            }
+
             // Add boolean and conditional traits
             if (params.otherParams.faceMask) {
                 string memory faceMaskAttribute = string(
@@ -424,7 +434,12 @@ library Genesis {
         string memory eyeName = EyesDetail.getEyeName(params.eyeShape);
         string memory facialHairName = FacialHairDetail.getFacialHairName(params.facialHairType);
         string memory mouthStyleName = MouthDetail.getMouthName(params.mouthStyle);
-        string memory lipColorName = MouthDetail.getMouthColor(params.lipColor);
+        string memory lipColorName;
+
+        // Only retrieve the lip color name if the mouth style is lipsMouthSVG
+        if (params.mouthStyle == 1) {
+            lipColorName = MouthDetail.getMouthColor(params.lipColor);
+        }
 
         facialFeaturesAttributes[0] =
             string(abi.encodePacked('{"trait_type": "Eyebrow Shape", "value": "', eyebrowShapeName, '"}'));
@@ -437,8 +452,13 @@ library Genesis {
         facialFeaturesAttributes[3] =
             string(abi.encodePacked('{"trait_type": "Mouth Style", "value": "', mouthStyleName, '"}'));
 
-        facialFeaturesAttributes[4] =
-            string(abi.encodePacked('{"trait_type":"Lip Color", "value": "', lipColorName, '"}'));
+        // Add "Lip Color" trait only if lipColorName is set (i.e., mouthStyle is lipsMouthSVG)
+        if (bytes(lipColorName).length > 0) {
+            facialFeaturesAttributes[4] =
+                string(abi.encodePacked('{"trait_type": "Lip Color", "value": "', lipColorName, '"}'));
+        } else {
+            facialFeaturesAttributes[4] = "";
+        }
 
         return facialFeaturesAttributes;
     }

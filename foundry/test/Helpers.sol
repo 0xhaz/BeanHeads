@@ -10,7 +10,7 @@ contract Helpers is Test {
     Genesis.BodyParams bodyParams = Genesis.BodyParams({bodyType: 1, skinColor: 3});
     Genesis.ClothingParams clothingParams = Genesis.ClothingParams({clothes: 3, clothingColor: 0, clothesGraphic: 2});
     Genesis.FacialFeaturesParams facialFeaturesParams =
-        Genesis.FacialFeaturesParams({eyebrowShape: 3, eyeShape: 5, facialHairType: 2, mouthStyle: 6, lipColor: 1});
+        Genesis.FacialFeaturesParams({eyebrowShape: 3, eyeShape: 5, facialHairType: 2, mouthStyle: 1, lipColor: 1});
     Genesis.AccessoryParams accessoryParams = Genesis.AccessoryParams({accessoryId: 1, hatStyle: 1, hatColor: 3});
     Genesis.OtherParams otherParams =
         Genesis.OtherParams({faceMask: false, faceMaskColor: 3, shapes: false, shapeColor: 1, lashes: true});
