@@ -59,8 +59,10 @@ library Errors {
     error InvalidColor(uint8 id);
     error BeanHeads__TokenDoesNotExist();
     error NotOwner();
+    error WithdrawFailed();
 }
 
 library Events {
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
+    event Withdrawn(address indexed owner, uint256 amount);
 }
