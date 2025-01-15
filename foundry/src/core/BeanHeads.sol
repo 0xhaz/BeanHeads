@@ -30,7 +30,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
     mapping(uint256 => string) private _customTokenURIs;
 
     constructor() ERC721A("BeanHeads", "BEAN") Ownable(msg.sender) {
-        royaltyFeeBps = 500; // 5% royalty
+        royaltyFeeBps = 500; // 5% royalty fee
         royaltyReceiver = msg.sender;
     }
 
