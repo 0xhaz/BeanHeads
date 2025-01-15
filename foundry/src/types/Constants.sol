@@ -60,6 +60,7 @@ library Errors {
     error BeanHeads__TokenDoesNotExist();
     error NotOwner();
     error WithdrawFailed();
+    error InvalidRoyaltyFee();
 }
 
 library Events {
