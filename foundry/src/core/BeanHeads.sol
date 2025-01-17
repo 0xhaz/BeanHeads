@@ -47,7 +47,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
     /**
      * @notice Sets the royalty fee and receiver
      * @param receiver The address that will receive the royalties
-     * @param feeBps The royalty fee in basis points (1% = 100 BPS)
+     * @param feeBps The royalty fee in basis points (1% = 100 BPS
      */
     function setRoyalyInfo(address receiver, uint96 feeBps) external onlyOwner {
         if (feeBps >= MAX_BPS) revert Errors.InvalidRoyaltyFee();
