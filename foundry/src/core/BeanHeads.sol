@@ -133,7 +133,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
             )
         );
 
-        // Return metadata as base64 encoded JSON.
+        // Return metadata as base64 encoded JSON
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(metadata))));
     }
 
