@@ -2,10 +2,12 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "src/libraries/baseModel/SVGBody.sol";
-import {Colors, Errors} from "src/types/Constants.sol";
+import {Colors} from "src/types/Constants.sol";
 import {BytesConverter} from "src/libraries/BytesConverter.sol";
 
 library OptItems {
+    error Errors__InvalidColor(uint8 id);
+
     using Colors for bytes3;
 
     enum Color {
@@ -45,7 +47,7 @@ library OptItems {
         Color colorId = Color(id);
         string[5] memory colors = ["White", "Blue", "Black", "Green", "Red"];
 
-        if (id >= colors.length) revert Errors.InvalidColor(uint8(colorId));
+        if (id >= colors.length) revert Errors__InvalidColor(uint8(colorId));
         return colors[uint8(id)];
     }
 
@@ -84,7 +86,7 @@ library OptItems {
         Color colorId = Color(id);
         string[5] memory colors = ["White", "Blue", "Black", "Green", "Red"];
 
-        if (id >= colors.length) revert Errors.InvalidColor(uint8(colorId));
+        if (id >= colors.length) revert Errors__InvalidColor(uint8(colorId));
         return colors[uint8(id)];
     }
 
@@ -98,7 +100,7 @@ library OptItems {
         if (color == Color.BLACK) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
         if (color == Color.GREEN) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
         if (color == Color.RED) return (Colors.RED_BASE, Colors.RED_SHADOW);
-        revert Errors.InvalidColor(uint8(color));
+        revert Errors__InvalidColor(uint8(color));
     }
 
     function _getColorsForShape(Color color) private pure returns (bytes3, bytes3) {
@@ -107,7 +109,7 @@ library OptItems {
         if (color == Color.BLACK) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
         if (color == Color.GREEN) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
         if (color == Color.RED) return (Colors.RED_BASE, Colors.RED_SHADOW);
-        revert Errors.InvalidColor(uint8(color));
+        revert Errors__InvalidColor(uint8(color));
     }
 
     function renderFaceMaskSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {

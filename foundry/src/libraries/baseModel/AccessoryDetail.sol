@@ -2,9 +2,10 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
-import {Errors} from "src/types/Constants.sol";
 
 library AccessoryDetail {
+    error AccessoryDetail__InvalidType(uint8 id);
+
     enum AccessoryType {
         NONE,
         ROUNDGLASSES,
@@ -35,7 +36,7 @@ library AccessoryDetail {
     function getAccessoryById(uint8 id) internal pure returns (string memory svg, string memory name) {
         if (id == uint8(AccessoryType.NONE)) return ("", "");
         string[4] memory accessories = ["", roundGlassesSVG(), shadesSVG(), tinyGlassesSVG()];
-        if (id >= accessories.length) revert Errors.InvalidType(id);
+        if (id >= accessories.length) revert AccessoryDetail__InvalidType(id);
 
         svg = accessories[id];
         name = getAccessoryName(id);
@@ -45,7 +46,7 @@ library AccessoryDetail {
     function getAccessoryName(uint8 id) internal pure returns (string memory) {
         string[4] memory accessoryNames = ["None", "Round Glasses", "Shades", "Tiny Glasses"];
 
-        if (id >= accessoryNames.length) revert Errors.InvalidType(id);
+        if (id >= accessoryNames.length) revert AccessoryDetail__InvalidType(id);
         return accessoryNames[id];
     }
 

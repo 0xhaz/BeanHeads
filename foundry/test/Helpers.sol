@@ -24,7 +24,7 @@ contract Helpers is Test {
     });
 
     function getParams(Genesis.SVGParams memory) public view returns (string memory) {
-        return string(
+        string memory part1 = string(
             abi.encodePacked(
                 Strings.toString(params.accessoryParams.accessoryId),
                 Strings.toString(params.bodyParams.bodyType),
@@ -32,14 +32,24 @@ contract Helpers is Test {
                 Strings.toString(params.hairParams.hairStyle),
                 Strings.toString(params.clothingParams.clothesGraphic),
                 Strings.toString(params.facialFeaturesParams.eyebrowShape),
-                Strings.toString(params.facialFeaturesParams.eyeShape),
+                Strings.toString(params.facialFeaturesParams.eyeShape)
+            )
+        );
+
+        string memory part2 = string(
+            abi.encodePacked(
                 Strings.toString(params.facialFeaturesParams.facialHairType),
                 Strings.toString(params.accessoryParams.hatStyle),
                 Strings.toString(params.facialFeaturesParams.mouthStyle),
                 Strings.toString(params.bodyParams.skinColor),
                 Strings.toString(params.clothingParams.clothingColor),
                 Strings.toString(params.hairParams.hairColor),
-                Strings.toString(params.accessoryParams.hatColor),
+                Strings.toString(params.accessoryParams.hatColor)
+            )
+        );
+
+        string memory part3 = string(
+            abi.encodePacked(
                 Strings.toString(params.otherParams.shapeColor),
                 Strings.toString(params.facialFeaturesParams.lipColor),
                 Strings.toString(params.otherParams.faceMaskColor),
@@ -48,5 +58,7 @@ contract Helpers is Test {
                 params.otherParams.lashes ? "true" : "false"
             )
         );
+
+        return string(abi.encodePacked(part1, part2, part3));
     }
 }

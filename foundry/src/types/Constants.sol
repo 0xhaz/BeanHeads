@@ -53,17 +53,3 @@ library Colors {
     bytes3 constant LIPS_GREEN_BASE = 0x4ab749;
     bytes3 constant LIPS_GREEN_SHADOW = 0x3ca047;
 }
-
-library Errors {
-    error InvalidType(uint8 id);
-    error InvalidColor(uint8 id);
-    error BeanHeads__TokenDoesNotExist();
-    error NotOwner();
-    error WithdrawFailed();
-    error InvalidRoyaltyFee();
-}
-
-library Events {
-    event MintedGenesis(address indexed owner, uint256 indexed tokenId);
-    event Withdrawn(address indexed owner, uint256 amount);
-}

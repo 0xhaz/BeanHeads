@@ -2,9 +2,10 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
-import {Errors} from "src/types/Constants.sol";
 
 library FacialHairDetail {
+    error FacialHairDetail__InvalidType(uint8 id);
+
     enum FacialHairType {
         NONE,
         MEDIUM_BEARD,
@@ -27,7 +28,7 @@ library FacialHairDetail {
     /// @dev Returns the SVG content for a facial hair detail
     function getFacialHairById(uint8 id) internal pure returns (string memory svg, string memory name) {
         string[3] memory facialHairs = ["", mediumBeardSVG(), stubbleSVG()];
-        if (id >= facialHairs.length) revert Errors.InvalidType(id);
+        if (id >= facialHairs.length) revert FacialHairDetail__InvalidType(id);
 
         svg = facialHairs[id];
         name = getFacialHairName(id);
@@ -36,7 +37,7 @@ library FacialHairDetail {
 
     function getFacialHairName(uint8 id) internal pure returns (string memory) {
         string[3] memory facialHairNames = ["None", "Medium Beard", "Stubble"];
-        if (id >= facialHairNames.length) revert Errors.InvalidType(id);
+        if (id >= facialHairNames.length) revert FacialHairDetail__InvalidType(id);
         return facialHairNames[id];
     }
 

@@ -9,7 +9,7 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 contract DeployBeanHeads is Script {
     function run() public returns (BeanHeads) {
         vm.startBroadcast();
-        BeanHeads beanHeads = new BeanHeads();
+        BeanHeads beanHeads = new BeanHeads(msg.sender);
         vm.stopBroadcast();
         return beanHeads;
     }

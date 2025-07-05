@@ -2,10 +2,13 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
-import {Colors, Errors} from "src/types/Constants.sol";
+import {Colors} from "src/types/Constants.sol";
 import {BytesConverter} from "src/libraries/BytesConverter.sol";
 
 library HatsDetail {
+    error HatsDetail__InvalidColor(uint8 id);
+    error HatsDetail__InvalidType(uint8 id);
+
     using Colors for bytes3;
     using BytesConverter for bytes3;
 
@@ -33,7 +36,7 @@ library HatsDetail {
         if (color == HatColor.BLACK) return (Colors.BLACK_BASE, Colors.BLACK_SHADOW);
         if (color == HatColor.GREEN) return (Colors.GREEN_BASE, Colors.GREEN_SHADOW);
         if (color == HatColor.RED) return (Colors.RED_BASE, Colors.RED_SHADOW);
-        revert Errors.InvalidColor(uint8(color));
+        revert HatsDetail__InvalidColor(uint8(color));
     }
 
     /// @dev SVG content for a beanie hat
@@ -57,7 +60,7 @@ library HatsDetail {
         if (!isAllowedHats(id, hairStyle)) return ("", "");
 
         string[3] memory hats = ["", beanieHatSVG(color), turbanHatSVG(color)];
-        if (id >= hats.length) revert Errors.InvalidType(id);
+        if (id >= hats.length) revert HatsDetail__InvalidType(id);
 
         svg = hats[id];
         string memory hatName = getHatsName(id);
@@ -69,7 +72,7 @@ library HatsDetail {
 
     function getHatsName(uint8 id) internal pure returns (string memory) {
         string[3] memory hatNames = ["None", "Beanie", "Turban"];
-        if (id >= hatNames.length) revert Errors.InvalidType(id);
+        if (id >= hatNames.length) revert HatsDetail__InvalidType(id);
         return hatNames[id];
     }
 
@@ -77,7 +80,7 @@ library HatsDetail {
         HatColor color = HatColor(id);
         string[5] memory hatColorNames = ["White", "Blue", "Black", "Green", "Red"];
 
-        if (id >= hatColorNames.length) revert Errors.InvalidType(uint8(color));
+        if (id >= hatColorNames.length) revert HatsDetail__InvalidColor(uint8(id));
         return hatColorNames[uint8(color)];
     }
 

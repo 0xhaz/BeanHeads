@@ -4,9 +4,10 @@ pragma solidity ^0.8.26;
 import {SVGBody} from "./SVGBody.sol";
 import {BodyDetail} from "./BodyDetail.sol";
 import {BytesConverter} from "../BytesConverter.sol";
-import {Errors} from "src/types/Constants.sol";
 
 library EyesDetail {
+    error EyesDetail__InvalidType(uint8 id);
+
     enum EyeType {
         CONTENT,
         DIZZY,
@@ -82,7 +83,7 @@ library EyesDetail {
             squintEyeSVG(color),
             winkEyeSVG()
         ];
-        if (id >= eyes.length) revert Errors.InvalidType(id);
+        if (id >= eyes.length) revert EyesDetail__InvalidType(id);
 
         svg = eyes[id];
         name = getEyeName(id);
@@ -92,7 +93,7 @@ library EyesDetail {
     function getEyeName(uint8 id) internal pure returns (string memory) {
         string[9] memory eyeNames =
             ["Content", "Dizzy", "Happy", "Heart", "Left Twitch", "Normal", "Simple", "Squint", "Wink"];
-        if (id >= eyeNames.length) revert Errors.InvalidType(id);
+        if (id >= eyeNames.length) revert EyesDetail__InvalidType(id);
         return eyeNames[id];
     }
 

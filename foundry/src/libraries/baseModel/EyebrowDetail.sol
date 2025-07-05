@@ -2,9 +2,10 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
-import {Errors} from "src/types/Constants.sol";
 
 library EyebrowDetail {
+    error EyebrowDetail__InvalidType(uint8 id);
+
     enum EyebrowType {
         ANGRY,
         CONCERNED,
@@ -46,7 +47,7 @@ library EyebrowDetail {
         string[5] memory eyebrows =
             [angryEyebrowSVG(), concernedEyebrowSVG(), leftLoweredEyebrowSVG(), normalEyebrowSVG(), seriousEyebrowSVG()];
 
-        if (id >= eyebrows.length) revert Errors.InvalidType(id);
+        if (id >= eyebrows.length) revert EyebrowDetail__InvalidType(id);
 
         svg = eyebrows[id];
         name = getEyebrowName(id);
@@ -55,7 +56,7 @@ library EyebrowDetail {
 
     function getEyebrowName(uint8 id) internal pure returns (string memory) {
         string[5] memory eyebrowNames = ["Angry", "Concerned", "Left Lowered", "Normal", "Serious"];
-        if (id >= eyebrowNames.length) revert Errors.InvalidType(id);
+        if (id >= eyebrowNames.length) revert EyebrowDetail__InvalidType(id);
         return eyebrowNames[id];
     }
 

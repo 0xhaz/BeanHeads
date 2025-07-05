@@ -2,10 +2,11 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
-import {Errors} from "src/types/Constants.sol";
 import {ClothingDetail} from "src/libraries/baseModel/ClothingDetail.sol";
 
 library ClothingGraphicDetail {
+    error ClothingGraphicDetail__InvalidType(uint8 id);
+
     enum ClothingGraphicType {
         NONE,
         GATSBY,
@@ -55,7 +56,7 @@ library ClothingGraphicDetail {
 
         // if (graphicType == ClothingGraphicType.NONE) return "";
         string[6] memory graphics = ["", gatsbySVG(), graphqlSVG(), reactSVG(), redwoodSVG(), vueSVG()];
-        if (id >= graphics.length) revert Errors.InvalidType(id);
+        if (id >= graphics.length) revert ClothingGraphicDetail__InvalidType(id);
 
         svg = graphics[id];
         name = getClothingGraphicName(id);
@@ -67,7 +68,7 @@ library ClothingGraphicDetail {
         if (graphicType == ClothingGraphicType.NONE) return "";
         string[6] memory graphicNames = ["None", "Gatsby", "Graphql", "React", "Redwood", "Vue"];
 
-        if (id >= graphicNames.length) revert Errors.InvalidType(id);
+        if (id >= graphicNames.length) revert ClothingGraphicDetail__InvalidType(id);
         return graphicNames[id];
     }
 

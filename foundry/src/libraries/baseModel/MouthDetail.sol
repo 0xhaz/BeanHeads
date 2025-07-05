@@ -2,10 +2,13 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
-import {Colors, Errors} from "src/types/Constants.sol";
+import {Colors} from "src/types/Constants.sol";
 import {BytesConverter} from "src/libraries/BytesConverter.sol";
 
 library MouthDetail {
+    error MouthDetail__InvalidColor(uint8 id);
+    error MouthDetail__InvalidType(uint8 id);
+
     using Colors for bytes3;
 
     enum LipsColor {
@@ -32,7 +35,7 @@ library MouthDetail {
         if (color == LipsColor.LIPS_PINK) return (Colors.LIPS_PINK_BASE, Colors.LIPS_PINK_SHADOW);
         if (color == LipsColor.LIPS_TURQUOISE) return (Colors.LIPS_TURQUOISE_BASE, Colors.LIPS_TURQUOISE_SHADOW);
         if (color == LipsColor.LIPS_GREEN) return (Colors.LIPS_GREEN_BASE, Colors.LIPS_GREEN_SHADOW);
-        revert Errors.InvalidColor(uint8(color));
+        revert MouthDetail__InvalidColor(uint8(color));
     }
 
     /// @dev Returns the SVG for a grin mouth
@@ -82,7 +85,7 @@ library MouthDetail {
             seriousMouthSVG(),
             tongueMouthSVG()
         ];
-        if (id >= mouths.length) revert Errors.InvalidType(id);
+        if (id >= mouths.length) revert MouthDetail__InvalidType(id);
 
         svg = mouths[id];
         string memory mouthName = getMouthName(id);
@@ -94,13 +97,13 @@ library MouthDetail {
 
     function getMouthName(uint8 id) internal pure returns (string memory) {
         string[7] memory mouthNames = ["Grin", "Lips", "Open", "Open Smile", "Sad", "Serious", "Tongue"];
-        if (id >= mouthNames.length) revert Errors.InvalidType(id);
+        if (id >= mouthNames.length) revert MouthDetail__InvalidType(id);
         return mouthNames[id];
     }
 
     function getMouthColor(uint8 id) internal pure returns (string memory) {
         string[5] memory mouthColors = ["Red", "Purple", "Pink", "Turquoise", "Green"];
-        if (id >= mouthColors.length) revert Errors.InvalidType(id);
+        if (id >= mouthColors.length) revert MouthDetail__InvalidColor(id);
         return mouthColors[id];
     }
 

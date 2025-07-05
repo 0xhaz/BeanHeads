@@ -2,10 +2,13 @@
 pragma solidity ^0.8.26;
 
 import {SVGBody} from "./SVGBody.sol";
-import {Colors, Errors} from "src/types/Constants.sol";
+import {Colors} from "src/types/Constants.sol";
 import {BytesConverter} from "src/libraries/BytesConverter.sol";
 
 library HairDetail {
+    error HairDetail__InvalidType(uint8 id);
+    error HairDetail__InvalidColor(uint8 id);
+
     using Colors for bytes3;
 
     enum HairColor {
@@ -119,7 +122,7 @@ library HairDetail {
         string[8] memory hairs =
             ["", "", baldHairSVG(color), "", bunHairSVG(color), "", pixieCutSVG(color), shortHairSVG(color)];
 
-        if (id >= hairs.length) revert Errors.InvalidType(id);
+        if (id >= hairs.length) revert HairDetail__InvalidType(id);
 
         svg = hairs[id];
         name = getHairTypeName(id);
@@ -129,14 +132,14 @@ library HairDetail {
     function getHairColorName(uint8 id) internal pure returns (string memory) {
         string[7] memory hairColors = ["Blonde", "Orange", "Black", "White", "Brown", "Blue", "Pink"];
 
-        if (id >= hairColors.length) revert Errors.InvalidColor(id);
+        if (id >= hairColors.length) revert HairDetail__InvalidColor(id);
         return hairColors[id];
     }
 
     function getHairTypeName(uint8 id) internal pure returns (string memory) {
         string[8] memory hairTypes = ["None", "Afro", "Bald", "Bob Cut", "Bun", "Long Hair", "Pixie Cut", "Short Hair"];
 
-        if (id >= hairTypes.length) revert Errors.InvalidType(id);
+        if (id >= hairTypes.length) revert HairDetail__InvalidType(id);
         return hairTypes[id];
     }
 
@@ -153,7 +156,7 @@ library HairDetail {
         if (color == HairColor.BROWN) return (Colors.HAIR_BROWN_BASE, Colors.HAIR_BROWN_SHADOW);
         if (color == HairColor.BLUE) return (Colors.HAIR_BLUE_BASE, Colors.HAIR_BLUE_SHADOW);
         if (color == HairColor.PINK) return (Colors.HAIR_PINK_BASE, Colors.HAIR_PINK_SHADOW);
-        revert Errors.InvalidColor(uint8(color));
+        revert HairDetail__InvalidColor(uint8(color));
     }
 
     function renderAfroBackSVG(bytes3 baseColor, bytes3 shadowColor) private pure returns (string memory) {
