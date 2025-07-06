@@ -10,9 +10,17 @@ interface IBeanHeads {
     error IBeanHeads__NotOwner();
     error IBeanHeads__WithdrawFailed();
     error IBeanHeads__InvalidRoyaltyFee();
+    error IBeanHeads__PriceMustBeGreaterThanZero();
+    error IBeanHeads__PriceMismatch();
+    error IBeanHeads__TokenIsNotForSale();
+    error IBeanHeads__RoyaltyPaymentFailed(uint256 tokenId);
 
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
-    event Withdrawn(address indexed owner, uint256 amount);
+    event TokenWithdrawn(address indexed owner, uint256 amount);
+    event SetTokenPrice(address indexed owner, uint256 indexed tokenId, uint256 price);
+    event RoyaltyPaid(address indexed receiver, uint256 indexed tokenId, uint256 salePrice, uint256 royaltyAmount);
+    event RoyaltyInfoUpdated(address indexed receiver, uint256 feeBps);
+    event TokenSaleCancelled(address indexed owner, uint256 indexed tokenId);
 
     function mintGenesis(Genesis.SVGParams memory params) external returns (uint256);
 
@@ -22,15 +30,17 @@ interface IBeanHeads {
 
     function getOwnerTokensCount(address owner) external view returns (uint256);
 
-    function getOwnerTokensCount() external view returns (uint256);
-
     function getOwnerOf(uint256 tokenId) external view returns (address);
 
     function getAttributesByTokenId(uint256 tokenId) external view returns (Genesis.SVGParams memory);
 
     function getAttributesByOwner(address owner, uint256 tokenId) external view returns (Genesis.SVGParams memory);
 
-    function withdrawToken() external;
+    function sellToken(uint256 tokenId, uint256 price) external;
+
+    function buyToken(uint256 tokenId, uint256 price) external payable;
+
+    function cancelTokenSale(uint256 tokenId) external;
 
     /// @notice Produces the URI describing the metadata of the token ID
     /// @dev Note this URI may be a data: URI with JSON contents directly inlined

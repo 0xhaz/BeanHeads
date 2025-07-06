@@ -2,9 +2,10 @@
 pragma solidity ^0.8.26;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {BeanHeads} from "src/core/BeanHeads.sol";
+import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
 import {Helpers} from "test/Helpers.sol";
 import {Genesis} from "src/types/Genesis.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 contract BeanHeadsTest is Test, Helpers {
     BeanHeads beanHeads;
@@ -13,6 +14,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     address public USER = makeAddr("USER");
     address public USER2 = makeAddr("USER2");
+    address public DEPLOYER = makeAddr("DEPLOYER");
 
     string public expectedTokenURI =
         "data:application/json;base64,eyJuYW1lIjogIkJlYW5IZWFkcyAjMCIsICJkZXNjcmlwdGlvbiI6ICJCZWFuSGVhZHMgaXMgYSBjdXN0b21pemFibGUgYXZhdGFyIG9uIGNoYWluIE5GVCBjb2xsZWN0aW9uIiwgImltYWdlIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jaUlIWnBaWGRDYjNnOUlqQWdNQ0ExTURBZ05UQXdJajQ4Y21WamRDQjNhV1IwYUQwaU5UQXdJaUJvWldsbmFIUTlJalV3TUNJZ1ptbHNiRDBpQXlJdlBqeDBaWGgwSUhnOUlqVXdKU0lnZVQwaU5UQWxJaUJrYjIxcGJtRnVkQzFpWVhObGJHbHVaVDBpYldsa1pHeGxJaUIwWlhoMExXRnVZMmh2Y2owaWJXbGtaR3hsSWlCbWIyNTBMWE5wZW1VOUlqSTBJajVDWldGdVNHVmhaSE1nUVhaaGRHRnlQQzkwWlhoMFBqd3ZjM1puUGc9PSIsICJhdHRyaWJ1dGVzIjpbeyJ0cmFpdF90eXBlIjogIkhhaXIgU3R5bGUiLCAidmFsdWUiOiAiQWZybyJ9LHsidHJhaXRfdHlwZSI6ICJIYWlyIENvbG9yIiwgInZhbHVlIjogIkJsb25kZSJ9LHsidHJhaXRfdHlwZSI6ICJBY2Nlc3NvcnkiLCAidmFsdWUiOiAiUm91bmQgR2xhc3NlcyJ9LHsidHJhaXRfdHlwZSI6ICJIYXQgU3R5bGUiLCAidmFsdWUiOiAiQmVhbmllIn0seyJ0cmFpdF90eXBlIjogIkhhdCBDb2xvciIsICJ2YWx1ZSI6ICJHcmVlbiJ9LHsidHJhaXRfdHlwZSI6ICJCb2R5IFR5cGUiLCAidmFsdWUiOiAiQnJlYXN0In0seyJ0cmFpdF90eXBlIjogIlNraW4gQ29sb3IiLCAidmFsdWUiOiAiRGFyayBTa2luIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMiLCAidmFsdWUiOiAiVC1TaGlydCJ9LHsidHJhaXRfdHlwZSI6ICJDbG90aGVzIENvbG9yIiwgInZhbHVlIjogIldoaXRlIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMgR3JhcGhpYyIsICJ2YWx1ZSI6ICJHcmFwaHFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZWJyb3cgU2hhcGUiLCAidmFsdWUiOiAiTm9ybWFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZSBTaGFwZSIsICJ2YWx1ZSI6ICJOb3JtYWwifSx7InRyYWl0X3R5cGUiOiAiRmFjaWFsIEhhaXIgVHlwZSIsICJ2YWx1ZSI6ICJTdHViYmxlIn0seyJ0cmFpdF90eXBlIjogIk1vdXRoIFN0eWxlIiwgInZhbHVlIjogIkxpcHMifSx7InRyYWl0X3R5cGUiOiAiTGlwIENvbG9yIiwgInZhbHVlIjogIlB1cnBsZSJ9LHsidHJhaXRfdHlwZSI6ICJMYXNoZXMiLCAidmFsdWUiOiAidHJ1ZSJ9XX0=";
@@ -21,8 +23,12 @@ contract BeanHeadsTest is Test, Helpers {
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
 
     function setUp() public {
-        beanHeads = new BeanHeads(USER);
+        beanHeads = new BeanHeads(DEPLOYER);
         helpers = new Helpers();
+
+        vm.startPrank(DEPLOYER);
+        beanHeads.setRoyaltyInfo(600); // Set royalty to 6%
+        vm.stopPrank();
     }
 
     function test_InitialSetup() public view {
@@ -37,15 +43,36 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_mintGenesis_ReturnSVGParams() public {
         vm.startPrank(USER);
+        vm.recordLogs();
         uint256 tokenId = beanHeads.mintGenesis(params);
         assertEq(tokenId, 0);
         // assertTrue(tokenId > beanHeads._sequentialUpTo());
 
-        // Genesis.SVGParams memory svgParams = beanHeads.getAttributesByTokenId(tokenId);
-        // string memory svgParamsStr = helpers.getParams(svgParams);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries.length, 2);
 
-        // string memory expected = "01212352063003010falsefalsetrue";
-        // assertEq(svgParamsStr, expected);
+        // Decode the Transfer event
+        assertEq(entries[0].topics[0], keccak256("Transfer(address,address,uint256)"));
+        address from = address(uint160(uint256(entries[0].topics[1])));
+        address to = address(uint160(uint256(entries[0].topics[2])));
+        uint256 tid = uint256(entries[0].topics[3]);
+        assertEq(from, address(0)); // Minting from zero address
+        assertEq(to, USER); // Minting to USER
+        assertEq(tid, tokenId);
+
+        // Decode the MintedGenesis event
+        assertEq(entries[1].topics[0], keccak256("MintedGenesis(address,uint256)"));
+        address owner = address(uint160(uint256(entries[1].topics[1])));
+        uint256 mintedTokenId = uint256(entries[1].topics[2]);
+        assertEq(owner, USER); // Minted to USER
+        assertEq(mintedTokenId, tokenId);
+
+        Genesis.SVGParams memory svgParams = beanHeads.getAttributesByTokenId(tokenId);
+        string memory svgParamsStr = helpers.getParams(svgParams);
+        // console2.logString(svgParamsStr);
+
+        string memory expected = "11312352113003113falsefalsetrue";
+        assertEq(svgParamsStr, expected);
         assertEq(accessoryParams.accessoryId, 1);
         assertEq(bodyParams.bodyType, 1);
         assertEq(clothingParams.clothes, 3);
@@ -91,7 +118,163 @@ contract BeanHeadsTest is Test, Helpers {
         // console2.logUint(tokenId);
         // console2.logUint(tokens[0]);
 
-        assertEq(tokens.length, 1);
+        assertEq(beanHeads.getOwnerTokensCount(USER), 1);
         assertEq(tokens[0], tokenId);
+    }
+
+    function test_MintTokensFuzzTest(uint256 count) public {
+        bound(count, 1, 100); // Ensure count is between 1 and 100
+        vm.assume(count > 0 && count <= 100);
+
+        vm.startPrank(USER);
+        for (uint256 i = 0; i < count; i++) {
+            uint256 tokenId = beanHeads.mintGenesis(params);
+            assertEq(tokenId, i);
+        }
+        vm.stopPrank();
+        uint256[] memory tokens = beanHeads.getOwnerTokens(USER);
+        assertEq(tokens.length, count);
+        for (uint256 i = 0; i < count; i++) {
+            assertEq(tokens[i], i);
+        }
+    }
+
+    function test_SellTokens_Success() public {
+        vm.startPrank(USER);
+        uint256 tokenId = beanHeads.mintGenesis(params);
+        uint256 price = 1 ether;
+
+        vm.recordLogs();
+        beanHeads.sellToken(tokenId, price);
+        assertTrue(beanHeads.getTokenOnSale(tokenId, price));
+        assertEq(beanHeads.getTokenSalePrice(tokenId), price);
+        _assertSellLogs(tokenId, price);
+        vm.stopPrank();
+
+        vm.deal(USER2, 10 ether);
+        vm.startPrank(USER2);
+        uint256 salePrice = 1 ether;
+        uint256 expectedRoyalty = (salePrice * 600) / 10000;
+
+        vm.recordLogs();
+        beanHeads.buyToken{value: salePrice}(tokenId, salePrice);
+        _assertBuyLogs(tokenId, salePrice, expectedRoyalty);
+
+        assertEq(beanHeads.getOwnerOf(tokenId), USER2);
+        assertFalse(beanHeads.getTokenOnSale(tokenId, salePrice));
+        assertEq(beanHeads.getTokenSalePrice(tokenId), 0);
+
+        Genesis.SVGParams memory svgParams = beanHeads.getAttributesByOwner(USER2, tokenId);
+        string memory svgParamsStr = helpers.getParams(svgParams);
+        console2.logString(svgParamsStr);
+        vm.stopPrank();
+
+        _assertAttributes(tokenId);
+
+        vm.prank(DEPLOYER);
+        _assertRoyalty(tokenId, salePrice, expectedRoyalty);
+    }
+
+    function test_CancelTokenSale_Success() public {
+        vm.startPrank(USER);
+        uint256 tokenId = beanHeads.mintGenesis(params);
+        uint256 price = 1 ether;
+
+        vm.recordLogs();
+        beanHeads.sellToken(tokenId, price);
+        assertTrue(beanHeads.getTokenOnSale(tokenId, price));
+        assertEq(beanHeads.getTokenSalePrice(tokenId), price);
+        _assertSellLogs(tokenId, price);
+
+        beanHeads.cancelTokenSale(tokenId);
+        assertTrue(beanHeads.getTokenOnSale(tokenId, price));
+        assertEq(beanHeads.getTokenSalePrice(tokenId), 0);
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries.length, 2);
+
+        // Transfer event
+        assertEq(entries[0].topics[0], keccak256("Transfer(address,address,uint256)"));
+        address from = address(uint160(uint256(entries[0].topics[1])));
+        address to = address(uint160(uint256(entries[0].topics[2])));
+        uint256 tid = uint256(entries[0].topics[3]);
+        assertEq(from, address(beanHeads)); // Transfer from contract to USER
+        assertEq(to, USER);
+        assertEq(tid, tokenId);
+
+        // TokenSaleCancelled event
+        assertEq(entries[1].topics[0], keccak256("TokenSaleCancelled(address,uint256)"));
+        address saleOwner = address(uint160(uint256(entries[1].topics[1])));
+        uint256 cancelledTokenId = uint256(entries[1].topics[2]);
+        assertEq(saleOwner, USER);
+        assertEq(cancelledTokenId, tokenId);
+
+        vm.stopPrank();
+    }
+
+    function test_setRoyaltyInfo_FailWithRevert() public {
+        vm.startPrank(DEPLOYER);
+        vm.expectRevert(IBeanHeads.IBeanHeads__InvalidRoyaltyFee.selector);
+        beanHeads.setRoyaltyInfo(10001); // Royalty fee cannot exceed 10000 bps (100%)
+        vm.stopPrank();
+    }
+
+    // Helper Functions
+    function _assertSellLogs(uint256 tokenId, uint256 price) internal {
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries.length, 2);
+
+        // Transfer event
+        assertEq(entries[0].topics[0], keccak256("Transfer(address,address,uint256)"));
+        address from = address(uint160(uint256(entries[0].topics[1])));
+        address to = address(uint160(uint256(entries[0].topics[2])));
+        uint256 tid = uint256(entries[0].topics[3]);
+        assertEq(from, USER);
+        assertEq(to, address(beanHeads));
+        assertEq(tid, tokenId);
+
+        // SetTokenPrice event
+        assertEq(entries[1].topics[0], keccak256("SetTokenPrice(address,uint256,uint256)"));
+        address owner = address(uint160(uint256(entries[1].topics[1])));
+        uint256 setTokenId = uint256(entries[1].topics[2]);
+        uint256 setPrice = abi.decode(entries[1].data, (uint256));
+        assertEq(owner, USER);
+        assertEq(setTokenId, tokenId);
+        assertEq(setPrice, price);
+    }
+
+    function _assertBuyLogs(uint256 tokenId, uint256 salePrice, uint256 expectedRoyaltyReceived) internal {
+        Vm.Log[] memory buyEntries = vm.getRecordedLogs();
+        assertEq(buyEntries.length, 2);
+
+        // Transfer event
+        assertEq(buyEntries[0].topics[0], keccak256("Transfer(address,address,uint256)"));
+        address buyerFrom = address(uint160(uint256(buyEntries[0].topics[1])));
+        address buyerTo = address(uint160(uint256(buyEntries[0].topics[2])));
+        uint256 buyerTid = uint256(buyEntries[0].topics[3]);
+        assertEq(buyerFrom, address(beanHeads));
+        assertEq(buyerTo, USER2);
+        assertEq(buyerTid, tokenId);
+
+        // RoyaltyPaid event
+        assertEq(buyEntries[1].topics[0], keccak256("RoyaltyPaid(address,uint256,uint256,uint256)"));
+        address royaltyReceiver = address(uint160(uint256(buyEntries[1].topics[1])));
+        uint256 royaltyTokenId = uint256(buyEntries[1].topics[2]);
+        (uint256 salePriceReceived, uint256 royaltyAmountReceived) = abi.decode(buyEntries[1].data, (uint256, uint256));
+        assertEq(royaltyReceiver, DEPLOYER);
+        assertEq(royaltyTokenId, tokenId);
+        assertEq(salePriceReceived, salePrice);
+        assertEq(royaltyAmountReceived, expectedRoyaltyReceived);
+    }
+
+    function _assertAttributes(uint256 tokenId) internal view {
+        string memory tokenAttributes = beanHeads.getAttributes(tokenId);
+        assertTrue(bytes(tokenAttributes).length > 0);
+    }
+
+    function _assertRoyalty(uint256 tokenId, uint256 salePrice, uint256 expectedRoyalty) internal view {
+        (address receiver, uint256 royaltyAmount) = beanHeads.royaltyInfo(tokenId, salePrice);
+        assertEq(receiver, DEPLOYER);
+        assertEq(royaltyAmount, expectedRoyalty);
     }
 }
