@@ -14,6 +14,7 @@ interface IBeanHeads {
     error IBeanHeads__PriceMismatch();
     error IBeanHeads__TokenIsNotForSale();
     error IBeanHeads__RoyaltyPaymentFailed(uint256 tokenId);
+    error IBeanHeads__InsufficientPayment();
 
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
     event TokenWithdrawn(address indexed owner, uint256 amount);
@@ -21,6 +22,7 @@ interface IBeanHeads {
     event RoyaltyPaid(address indexed receiver, uint256 indexed tokenId, uint256 salePrice, uint256 royaltyAmount);
     event RoyaltyInfoUpdated(address indexed receiver, uint256 feeBps);
     event TokenSaleCancelled(address indexed owner, uint256 indexed tokenId);
+    event TokenSold(address indexed buyer, address indexed seller, uint256 indexed tokenId, uint256 salePrice);
 
     function mintGenesis(Genesis.SVGParams memory params) external returns (uint256);
 

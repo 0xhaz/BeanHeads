@@ -7,6 +7,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC2981, IERC165} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 /**
@@ -15,7 +16,7 @@ import {IERC2981, IERC165} from "@openzeppelin/contracts/interfaces/IERC2981.sol
  * @dev Uses breeding concept to create new avatars similar to Cryptokitties
  * @dev Uses Chainlink VRF for attributes randomness
  */
-contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
+contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, ReentrancyGuard {
     using Base64 for bytes;
     using Strings for uint256;
 
@@ -29,9 +30,6 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
 
     /// @notice Mapping tokenId to custom token URI
     mapping(uint256 tokenId => string uriToken) private s_customTokenURIs;
-
-    /// @notice Mapping tokenId that set to sale with price
-    mapping(uint256 tokenId => mapping(uint256 price => bool)) private s_tokenIdToSalePrice;
 
     /// @notice Mapping tokenId to its sale price
     mapping(uint256 tokenId => uint256 price) private s_tokenIdToSalePriceValue;
@@ -58,7 +56,6 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
         s_tokenIdToParams[tokenId] = params;
         _safeMint(msg.sender, 1);
         s_tokenIdToSalePriceValue[tokenId] = 0; // Initialize sale price to 0
-        s_tokenIdToSalePrice[tokenId][0] = false; // Initialize sale price mapping
 
         emit MintedGenesis(msg.sender, tokenId);
     }
@@ -81,36 +78,34 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
      * @param price The price at which to sell the token
      */
     function sellToken(uint256 tokenId, uint256 price) public override {
+        if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
         if (msg.sender != ownerOf(tokenId)) revert IBeanHeads__NotOwner();
         if (price <= 0) revert IBeanHeads__PriceMustBeGreaterThanZero();
-        if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
 
         safeTransferFrom(msg.sender, address(this), tokenId);
 
         s_tokenIdToSalePriceValue[tokenId] = price;
-        s_tokenIdToSalePrice[tokenId][price] = true;
         s_tokenIdToSeller[tokenId] = msg.sender; // Store the seller address
 
         emit SetTokenPrice(msg.sender, tokenId, price);
     }
 
     /**
-     * @notice Buy a token that is on sale
-     * @param tokenId The ID of the token to buy
-     * @param price The price at which to buy the token
-     * @dev Royalties will be paid to the royalty receiver
+     * @notice Buys a token currently on sale.
+     * @param tokenId The ID of the token to buy.
+     * @param price The agreed sale price.
+     * @dev This function transfers the token to the buyer, pays the seller minus royalties, and emits relevant events.
      */
-    function buyToken(uint256 tokenId, uint256 price) public payable override {
+    function buyToken(uint256 tokenId, uint256 price) public payable override nonReentrant {
+        if (s_tokenIdToSalePriceValue[tokenId] == 0) revert IBeanHeads__TokenIsNotForSale();
         if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
-        if (!s_tokenIdToSalePrice[tokenId][price]) revert IBeanHeads__TokenIsNotForSale();
-        if (msg.value < price) revert IBeanHeads__PriceMustBeGreaterThanZero();
         if (s_tokenIdToSalePriceValue[tokenId] != price) revert IBeanHeads__PriceMismatch();
+        if (msg.value < price) revert IBeanHeads__InsufficientPayment();
 
         address seller = s_tokenIdToSeller[tokenId];
 
         // Reset sale price
         s_tokenIdToSalePriceValue[tokenId] = 0;
-        s_tokenIdToSalePrice[tokenId][price] = false;
         delete s_tokenIdToSeller[tokenId]; // Clear seller address
 
         // Pay royalties
@@ -125,6 +120,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
         IERC721A(address(this)).transferFrom(address(this), msg.sender, tokenId);
 
         emit RoyaltyPaid(royaltyReceiver, tokenId, price, royaltyAmount);
+        emit TokenSold(msg.sender, seller, tokenId, price);
     }
 
     /**
@@ -133,15 +129,13 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
      * @dev Resets the sale price and seller address
      */
     function cancelTokenSale(uint256 tokenId) public override {
-        if (msg.sender != s_tokenIdToSeller[tokenId]) revert IBeanHeads__NotOwner();
         if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
-        if (!s_tokenIdToSalePrice[tokenId][s_tokenIdToSalePriceValue[tokenId]]) revert IBeanHeads__TokenIsNotForSale();
+        if (msg.sender != s_tokenIdToSeller[tokenId]) revert IBeanHeads__NotOwner();
 
         IERC721A(address(this)).transferFrom(address(this), msg.sender, tokenId);
 
         // Reset sale price
         s_tokenIdToSalePriceValue[tokenId] = 0;
-        s_tokenIdToSalePrice[tokenId][s_tokenIdToSalePriceValue[tokenId]] = false;
         delete s_tokenIdToSeller[tokenId]; // Clear seller address
 
         emit TokenSaleCancelled(msg.sender, tokenId);
@@ -149,23 +143,21 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
 
     /**
      * @notice Returns the royalty information for a sale
-     * @param tokenId The token ID
      * @param salePrice The sale price of the token
      * @return receiver The address that will receive the royalty
      * @return royaltyAmount The amount of royalty to be paid
      */
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
+    function royaltyInfo(uint256, uint256 salePrice)
+        public
         view
-        onlyOwner
+        override
         returns (address receiver, uint256 royaltyAmount)
     {
-        if (!_exists(tokenId)) {
-            revert IBeanHeads__TokenDoesNotExist();
-        }
         receiver = royaltyReceiver;
         royaltyAmount = (salePrice * royaltyFeeBps) / MAX_BPS;
     }
+
+    receive() external payable {}
 
     /**
      * @notice Retrieves all token IDs owned by a specific address
@@ -265,19 +257,6 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
     }
 
     /**
-     * @notice Checks if a token is on sale at a specific price.
-     * @param tokenId The ID of the token to check.
-     * @param price The price to check against.
-     * @return True if the token is on sale at the specified price, false otherwise.
-     */
-    function getTokenOnSale(uint256 tokenId, uint256 price) external view returns (bool) {
-        if (!_exists(tokenId)) {
-            revert IBeanHeads__TokenDoesNotExist();
-        }
-        return s_tokenIdToSalePrice[tokenId][price];
-    }
-
-    /**
      * @notice Returns the sale price of a token.
      * @param tokenId The ID of the token to query.
      * @return The sale price of the token.
@@ -301,7 +280,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981 {
         override(ERC721A, IERC721A, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
