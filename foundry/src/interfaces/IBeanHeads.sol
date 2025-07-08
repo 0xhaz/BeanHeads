@@ -15,6 +15,7 @@ interface IBeanHeads {
     error IBeanHeads__TokenIsNotForSale();
     error IBeanHeads__RoyaltyPaymentFailed(uint256 tokenId);
     error IBeanHeads__InsufficientPayment();
+    error IBeanHeads__InvalidAmount();
 
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
     event TokenWithdrawn(address indexed owner, uint256 amount);
@@ -24,7 +25,10 @@ interface IBeanHeads {
     event TokenSaleCancelled(address indexed owner, uint256 indexed tokenId);
     event TokenSold(address indexed buyer, address indexed seller, uint256 indexed tokenId, uint256 salePrice);
 
-    function mintGenesis(Genesis.SVGParams memory params) external returns (uint256);
+    function mintGenesis(address to, Genesis.SVGParams memory params, uint256 amount)
+        external
+        payable
+        returns (uint256);
 
     function getAttributes(uint256 tokenId) external view returns (string memory);
 
@@ -43,6 +47,10 @@ interface IBeanHeads {
     function buyToken(uint256 tokenId, uint256 price) external payable;
 
     function cancelTokenSale(uint256 tokenId) external;
+
+    function withdraw() external;
+
+    function getMintPrice() external view returns (uint256);
 
     /// @notice Produces the URI describing the metadata of the token ID
     /// @dev Note this URI may be a data: URI with JSON contents directly inlined
