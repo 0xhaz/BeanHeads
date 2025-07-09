@@ -41,6 +41,9 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
     /// @notice Mapping to store token sales in contract
     mapping(uint256 amount => uint256 balance) private s_tokenSaleBalance;
 
+    /// @notice Mapping tokenId to its generation number
+    mapping(uint256 tokenId => uint256 generation) private s_tokenIdToGeneration;
+
     /**
      * @dev Initializes the contract with default royalty settings
      * @param initialOwner The address to own the contract
@@ -72,6 +75,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
 
         _safeMint(to, amount);
         s_tokenIdToSalePriceValue[tokenId] = 0; // Initialize sale price to 0
+        s_tokenIdToGeneration[tokenId] = 1;
 
         emit MintedGenesis(to, tokenId);
 
@@ -260,7 +264,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
         // Fetch token parameters
         Genesis.SVGParams memory params = s_tokenIdToParams[tokenId];
         // Build attributes and image
-        string memory attributes = Genesis.buildAttributes(params);
+        string memory attributes = Genesis.buildAttributes(params, s_tokenIdToGeneration[tokenId]);
         string memory image = Genesis.generateBase64SVG(params);
 
         // Generate metadata JSON
@@ -286,7 +290,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
      * @return A JSON string containing the attributes of the token.
      */
     function getAttributes(uint256 tokenId) external view override returns (string memory) {
-        return Genesis.buildAttributes(s_tokenIdToParams[tokenId]);
+        return Genesis.buildAttributes(s_tokenIdToParams[tokenId], s_tokenIdToGeneration[tokenId]);
     }
 
     /**

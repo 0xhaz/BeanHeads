@@ -17,6 +17,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 library Genesis {
     using Strings for uint8;
+    using Strings for uint256;
 
     struct HairParams {
         uint8 hairStyle;
@@ -177,7 +178,7 @@ library Genesis {
      * @param params A `SVGParams` struct containing details for avatar customization.
      * @return attributes A JSON string representing the attributes array.
      */
-    function buildAttributes(SVGParams memory params) internal pure returns (string memory) {
+    function buildAttributes(SVGParams memory params, uint256 generation) internal pure returns (string memory) {
         string memory attributes = "[";
         bool isFirst = true;
 
@@ -254,6 +255,13 @@ library Genesis {
             attributes = string(abi.encodePacked(attributes, '{"trait_type": "Lashes", "value": "true"}'));
             isFirst = false;
         }
+
+        if (!isFirst) {
+            attributes = string(abi.encodePacked(attributes, ","));
+        }
+
+        attributes =
+            string(abi.encodePacked(attributes, '{"trait_type": "Generation", "value": "', generation.toString(), '"}'));
 
         attributes = string(abi.encodePacked(attributes, "]"));
         return attributes;

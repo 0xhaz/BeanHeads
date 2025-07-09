@@ -16,6 +16,7 @@ interface IBeanHeads {
     error IBeanHeads__RoyaltyPaymentFailed(uint256 tokenId);
     error IBeanHeads__InsufficientPayment();
     error IBeanHeads__InvalidAmount();
+    error IBeanHeads__InvalidAttributesArray();
 
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
     event TokenWithdrawn(address indexed owner, uint256 amount);
