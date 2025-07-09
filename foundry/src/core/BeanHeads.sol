@@ -44,6 +44,15 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
     /// @notice Mapping tokenId to its generation number
     mapping(uint256 tokenId => uint256 generation) private s_tokenIdToGeneration;
 
+    /// @notice Mapping of addresses authorized to breed new tokens
+    mapping(address tokenOwner => bool isAuthorized) private s_authorizedBreeders;
+
+    /// @notice Modifier restricting access to authorized breeders
+    modifier onlyBreeder() {
+        if (!s_authorizedBreeders[msg.sender]) revert IBeanHeads__UnauthorizedBreeders();
+        _;
+    }
+
     /**
      * @dev Initializes the contract with default royalty settings
      * @param initialOwner The address to own the contract
@@ -76,10 +85,45 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
         _safeMint(to, amount);
         s_tokenIdToSalePriceValue[tokenId] = 0; // Initialize sale price to 0
         s_tokenIdToGeneration[tokenId] = 1;
+        s_authorizedBreeders[to] = true; // Authorize the minter to breed new tokens
 
         emit MintedGenesis(to, tokenId);
 
         uint256 excess = msg.value - totalPrice;
+        if (excess > 0) {
+            (bool success,) = to.call{value: excess}("");
+            if (!success) revert IBeanHeads__WithdrawFailed();
+        }
+    }
+
+    /**
+     * @notice Mints a new token with randomized attributes
+     * @dev Only callable by authorized breeders
+     * @param to The address to mint the token to
+     * @param params The generated SVG parameters for the token
+     * @param generation The generation number of the token
+     * @return tokenId The ID of the newly minted token
+     */
+    function mintFromBreeders(address to, Genesis.SVGParams memory params, uint256 generation)
+        external
+        payable
+        onlyBreeder
+        returns (uint256 tokenId)
+    {
+        if (msg.value < MINT_PRICE) revert IBeanHeads__InsufficientPayment();
+
+        tokenId = _nextTokenId();
+        s_tokenIdToParams[tokenId] = params;
+        s_tokenIdToSalePriceValue[tokenId] = 0; // Initialize sale price to 0
+        s_tokenIdToGeneration[tokenId] = generation;
+
+        _safeMint(to, 1);
+        s_authorizedBreeders[to] = true; // Ensure the minter is authorized to breed
+
+        emit MintedNewBreed(to, tokenId);
+
+        // Refund any excess payment
+        uint256 excess = msg.value - MINT_PRICE;
         if (excess > 0) {
             (bool success,) = to.call{value: excess}("");
             if (!success) revert IBeanHeads__WithdrawFailed();
@@ -307,6 +351,17 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
 
     function getMintPrice() external pure returns (uint256) {
         return MINT_PRICE;
+    }
+
+    function getGeneration(uint256 tokenId) external view returns (uint256) {
+        if (!_exists(tokenId)) {
+            revert IBeanHeads__TokenDoesNotExist();
+        }
+        return s_tokenIdToGeneration[tokenId];
+    }
+
+    function getAuthorizedBreeders(address owner) external view returns (bool) {
+        return s_authorizedBreeders[owner];
     }
 
     /**

@@ -4,8 +4,6 @@ pragma solidity ^0.8.26;
 import {Genesis} from "src/types/Genesis.sol";
 
 interface IBeanHeads {
-    error IBeanHeads__InvalidType(uint8 id);
-    error IBeanHeads__InvalidColor(uint8 id);
     error IBeanHeads__TokenDoesNotExist();
     error IBeanHeads__NotOwner();
     error IBeanHeads__WithdrawFailed();
@@ -17,6 +15,9 @@ interface IBeanHeads {
     error IBeanHeads__InsufficientPayment();
     error IBeanHeads__InvalidAmount();
     error IBeanHeads__InvalidAttributesArray();
+    error IBeanHeads__InvalidRequestId();
+    error IBeanHeads__UnauthorizedBreeders();
+    error IBeanHeads__NotParentGeneration();
 
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
     event TokenWithdrawn(address indexed owner, uint256 amount);
@@ -25,6 +26,7 @@ interface IBeanHeads {
     event RoyaltyInfoUpdated(address indexed receiver, uint256 feeBps);
     event TokenSaleCancelled(address indexed owner, uint256 indexed tokenId);
     event TokenSold(address indexed buyer, address indexed seller, uint256 indexed tokenId, uint256 salePrice);
+    event MintedNewBreed(address indexed owner, uint256 indexed tokenId);
 
     function mintGenesis(address to, Genesis.SVGParams memory params, uint256 amount)
         external
@@ -52,6 +54,15 @@ interface IBeanHeads {
     function withdraw() external;
 
     function getMintPrice() external view returns (uint256);
+
+    function getGeneration(uint256 tokenId) external view returns (uint256);
+
+    function mintFromBreeders(address to, Genesis.SVGParams memory params, uint256 generation)
+        external
+        payable
+        returns (uint256);
+
+    function getAuthorizedBreeders(address owner) external view returns (bool);
 
     /// @notice Produces the URI describing the metadata of the token ID
     /// @dev Note this URI may be a data: URI with JSON contents directly inlined
