@@ -1,9 +1,11 @@
-[submodule "foundry/lib/openzeppelin-contracts"]
-	path = foundry/lib/openzeppelin-contracts
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-[submodule "foundry/lib/chainlink-brownie-contracts"]
-	path = foundry/lib/chainlink-brownie-contracts
-	url = https://github.com/smartcontractkit/chainlink-brownie-contracts
 [submodule "foundry/lib/ERC721A"]
 	path = foundry/lib/ERC721A
 	url = https://github.com/chiru-labs/ERC721A
+[submodule "lib/openzeppelin-contracts"]
+	branch = next-v5.0
+[submodule "foundry/lib/chainlink-brownie-contracts"]
+	path = foundry/lib/chainlink-brownie-contracts
+	url = https://github.com/smartcontractkit/chainlink-brownie-contracts
+[submodule "foundry/lib/openzeppelin-contracts"]
+	path = foundry/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

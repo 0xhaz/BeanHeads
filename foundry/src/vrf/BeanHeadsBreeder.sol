@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.24;
 
-import {VRFConsumerBaseV2} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
-import {VRFCoordinatorV2Interface} from
-    "chainlink-brownie-contracts/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
+import {VRFConsumerBaseV2Plus} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFCoordinatorV2_5} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFCoordinatorV2_5.sol";
+import {VRFV2PlusClient} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import {IERC721A} from "ERC721A/IERC721A.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
+import {IBeanHeadsBreeder} from "src/interfaces/IBeanHeadsBreeder.sol";
 import {Genesis} from "src/types/Genesis.sol";
 
 /**
@@ -13,64 +15,111 @@ import {Genesis} from "src/types/Genesis.sol";
  * It extends the VRFConsumerBaseV2 to handle randomness requests and fulfillments.
  * Only user that has Gen1 BeanHeads can breed new BeanHeads.
  */
-contract BeanHeadsBreeder is VRFConsumerBaseV2 {
-    error BeanHeadsBreeder__InvalidRequestId();
-    error BeanHeadsBreeder__CannotBreedSameBeanHead();
-
+contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     IBeanHeads private immutable i_beanHeads;
 
     // Chainlink VRF parameters
-    VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
-    uint64 private immutable i_subscriptionId;
+    uint256 private immutable i_subscriptionId;
     bytes32 private immutable i_keyHash;
     uint32 private constant GAS_LIMIT = 200_000; // Gas limit for the VRF callback
     uint16 private constant REQUEST_CONFIRMATIONS = 3; // Number of confirmations for the VRF request
 
-    // Event emitted when a breed request is made
-    event RequestBreed(address indexed owner, uint256 parent1Id, uint256 parent2Id, uint256 requestId);
+    /// @notice Mapping to store the breed requests
+    mapping(uint256 requestId => BreedRequest) public s_breedRequests;
 
-    struct BreedRequest {
-        address owner;
-        uint256 parent1Id;
-        uint256 parent2Id;
-    }
+    /// @notice Mapping of parent tokenId => owner that will be sent to the contract
+    mapping(uint256 tokenId => address owner) public s_escrowedTokens;
 
-    // Mapping to store the breed requests
-    mapping(uint256 requestId => BreedRequest) private s_breedRequests;
+    /// @notice Mapping of rarity points to the Mutated BeanHead
+    mapping(uint256 tokenId => uint256 rarityPoints) public s_mutatedRarityPoints;
 
-    constructor(address _beanHeads, address _vrfCoordinator, uint64 _subscriptionId, bytes32 _keyHash)
-        VRFConsumerBaseV2(_vrfCoordinator)
+    constructor(address _beanHeads, address _vrfCoordinator, uint256 _subscriptionId, bytes32 _keyHash)
+        VRFConsumerBaseV2Plus(_vrfCoordinator)
     {
         i_beanHeads = IBeanHeads(_beanHeads);
-        i_vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinator);
+        s_vrfCoordinator = VRFCoordinatorV2_5(_vrfCoordinator);
         i_subscriptionId = _subscriptionId;
         i_keyHash = _keyHash;
     }
 
-    /**
-     * @notice Initiates breeding of two generation 1 BeanHeads.
-     * @param parent1Id The token ID of the first parent BeanHead.
-     * @param parent2Id The token ID of the second parent BeanHead.
-     * returns The request ID for the breeding request.
-     */
-    function requestBreed(uint256 parent1Id, uint256 parent2Id) external returns (uint256 requestId) {
-        if (parent1Id == parent2Id) revert BeanHeadsBreeder__CannotBreedSameBeanHead();
-
-        if (i_beanHeads.getOwnerOf(parent1Id) != msg.sender || i_beanHeads.getOwnerOf(parent2Id) != msg.sender) {
-            revert IBeanHeads.IBeanHeads__NotOwner();
+    /// @notice Inherits from IBeanHeadsBreeder
+    function depositBeanHeads(uint256 parent1Id, uint256 parent2Id) external override {
+        if (parent1Id == parent2Id) {
+            revert IBeanHeadsBreeder__CannotBreedSameBeanHead();
         }
 
-        requestId = i_vrfCoordinator.requestRandomWords(
-            i_keyHash,
-            i_subscriptionId,
-            REQUEST_CONFIRMATIONS, // Number of confirmations
-            GAS_LIMIT, // Gas limit for the callback
-            1 // Number of random words
+        // Transfer the BeanHeads to this contract
+        i_beanHeads.safeTransferFrom(msg.sender, address(this), parent1Id);
+        i_beanHeads.safeTransferFrom(msg.sender, address(this), parent2Id);
+
+        // Save ownership information
+        s_escrowedTokens[parent1Id] = msg.sender;
+        s_escrowedTokens[parent2Id] = msg.sender;
+    }
+
+    /// @notice Inherits from IBeanHeadsBreeder
+    function withdrawBeanHeads(uint256 tokenId) external override {
+        address owner = s_escrowedTokens[tokenId];
+        if (owner != msg.sender) {
+            revert IBeanHeadsBreeder__TokensNotEscrowedBySender();
+        }
+
+        // Clear the ownership mapping
+        delete s_escrowedTokens[tokenId];
+
+        // Transfer the BeanHead back to the owner
+        i_beanHeads.safeTransferFrom(address(this), msg.sender, tokenId);
+    }
+
+    /// @notice Inherits from IBeanHeadsBreeder
+    function requestBreed(uint256 parent1Id, uint256 parent2Id, BreedingMode mode)
+        external
+        override
+        returns (uint256 requestId)
+    {
+        if (mode == BreedingMode.Ascension) {
+            // For Ascension, only parent1Id is used, parent2Id is ignored
+            if (parent2Id != 0) revert IBeanHeadsBreeder__InvalidRequestId();
+            if (s_escrowedTokens[parent1Id] != msg.sender) revert IBeanHeadsBreeder__TokensNotEscrowedBySender();
+        } else {
+            if (parent1Id == parent2Id) revert IBeanHeadsBreeder__CannotBreedSameBeanHead();
+            if (s_escrowedTokens[parent1Id] != msg.sender || s_escrowedTokens[parent2Id] != msg.sender) {
+                revert IBeanHeadsBreeder__TokensNotEscrowedBySender();
+            }
+        }
+
+        requestId = s_vrfCoordinator.requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
+                keyHash: i_keyHash,
+                subId: i_subscriptionId,
+                requestConfirmations: REQUEST_CONFIRMATIONS,
+                callbackGasLimit: GAS_LIMIT,
+                numWords: 1,
+                extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
+            })
         );
 
-        s_breedRequests[requestId] = BreedRequest({owner: msg.sender, parent1Id: parent1Id, parent2Id: parent2Id});
+        s_breedRequests[requestId] =
+            BreedRequest({owner: msg.sender, parent1Id: parent1Id, parent2Id: parent2Id, mode: mode});
 
-        emit RequestBreed(msg.sender, parent1Id, parent2Id, requestId);
+        emit RequestBreed(msg.sender, parent1Id, parent2Id, requestId, mode);
+    }
+
+    /// @notice Inherits from IBeanHeadsBreeder
+    function getRarityPoints(uint256 tokenId) external view override returns (uint256) {
+        return s_mutatedRarityPoints[tokenId];
+    }
+
+    /// @notice Inherits from IBeanHeadsBreeder
+    function getBreedRequest(uint256 requestId) external view override returns (BreedRequest memory request) {
+        request = s_breedRequests[requestId];
+        if (request.owner == address(0)) revert IBeanHeadsBreeder__InvalidRequestId();
+    }
+
+    /// @notice Inherits from IBeanHeadsBreeder
+    function getEscrowedTokenOwner(uint256 tokenId) external view override returns (address owner) {
+        owner = s_escrowedTokens[tokenId];
+        if (owner == address(0)) revert IBeanHeadsBreeder__InvalidRequestId();
     }
 
     /**
@@ -78,19 +127,170 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2 {
      * @param requestId The ID of the request.
      * @param randomWords The array of random words returned by Chainlink VRF.
      */
-    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal override {
+    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
         BreedRequest memory request = s_breedRequests[requestId];
-        if (request.owner == address(0)) revert BeanHeadsBreeder__InvalidRequestId();
+        if (request.owner == address(0)) revert IBeanHeadsBreeder__InvalidRequestId();
 
         Genesis.SVGParams memory childParams = _randomizeAttributes(randomWords[0]);
 
-        uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
-        uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
-        uint256 childGeneration = (gen1 > gen2 ? gen1 : gen2) + 1;
-
-        i_beanHeads.mintFromBreeders(request.owner, childParams, childGeneration);
-
         delete s_breedRequests[requestId];
+
+        uint256 newTokenId;
+        if (request.mode == BreedingMode.NewBreed) {
+            // Non-destructive breeding, both parents remain intact
+            uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
+            uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
+            uint256 childGen = (gen1 > gen2 ? gen1 : gen2) + 1;
+
+            // Mint the new BeanHead with the randomized attributes
+            newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
+            // Store the rarity points for the new BeanHead
+            uint256 rarityPoints =
+                _calculateRarity(request.parent1Id, request.parent2Id, gen1, gen2, randomWords[0], request.mode);
+            s_mutatedRarityPoints[newTokenId] = rarityPoints;
+
+            // Return parents to the owner
+            i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent1Id);
+            i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent2Id);
+
+            emit NewBreedCompleted(
+                request.owner, requestId, request.parent1Id, request.parent2Id, newTokenId, childGen, rarityPoints
+            );
+        }
+
+        if (request.mode == BreedingMode.Mutation) {
+            // Destructive breeding, one parent is mutated into a new BeanHead
+            uint256 childGeneration = i_beanHeads.getGeneration(request.parent1Id) + 1;
+
+            // Mint the new BeanHead with the randomized attributes
+            newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGeneration);
+
+            // Get the generation of the parents
+            uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
+            uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
+
+            // Store the rarity points for the mutated BeanHead
+            uint256 rarityPoints =
+                _calculateRarity(request.parent1Id, request.parent2Id, gen1, gen2, randomWords[0], request.mode);
+
+            // Store the rarity points for the mutated BeanHead
+            s_mutatedRarityPoints[request.parent1Id] = rarityPoints;
+
+            // Return the second parent to the owner
+            i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent2Id);
+
+            // Burn the first parent
+            i_beanHeads.burn(request.parent1Id);
+
+            emit MutationCompleted(
+                request.owner,
+                requestId,
+                request.parent1Id,
+                request.parent2Id,
+                newTokenId,
+                childGeneration,
+                rarityPoints
+            );
+        }
+
+        if (request.mode == BreedingMode.Fusion) {
+            // Fusion breeding, both parents are burned and a new BeanHead is created
+            uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
+            uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
+            uint256 childGen = (gen1 > gen2 ? gen1 : gen2) + 1;
+
+            // Mint the new BeanHead with the randomized attributes
+            newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
+
+            // Store the rarity points for the mutated BeanHead
+            uint256 rarityPoints =
+                _calculateRarity(request.parent1Id, request.parent2Id, gen1, gen2, randomWords[0], request.mode);
+
+            s_mutatedRarityPoints[newTokenId] = rarityPoints;
+
+            // Burn both parents
+            i_beanHeads.burn(request.parent1Id);
+            i_beanHeads.burn(request.parent2Id);
+
+            emit FusionCompleted(
+                request.owner, requestId, request.parent1Id, request.parent2Id, newTokenId, childGen, rarityPoints
+            );
+        }
+
+        if (request.mode == BreedingMode.Ascension) {
+            // Ascension breeding, only parent1Id is used
+            uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
+            uint256 childGen = gen1 + 1;
+
+            // Mint the new BeanHead with the randomized attributes
+            newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
+
+            // Store the rarity points for the ascended BeanHead
+            uint256 rarityPoints = _calculateRarity(request.parent1Id, 0, gen1, 0, randomWords[0], request.mode);
+            s_mutatedRarityPoints[newTokenId] = rarityPoints;
+
+            // Burn the parent
+            i_beanHeads.burn(request.parent1Id);
+
+            emit AscensionCompleted(request.owner, requestId, request.parent1Id, newTokenId, childGen, rarityPoints);
+        }
+
+        emit BreedRequestFulfilled(request.owner, requestId, request.mode, newTokenId);
+    }
+
+    /**
+     * @notice Calculates the rarity points for a mutated BeanHead based on the parent IDs and randomness.
+     * @param parent1Id The token ID of the first parent BeanHead.
+     * @param parent2Id The token ID of the second parent BeanHead.
+     * @param gen1 The generation of the first parent BeanHead.
+     * @param gen2 The generation of the second parent BeanHead.
+     * @param randomness The random number provided by Chainlink VRF.
+     * @return rarityPoints The calculated rarity points for the new BeanHead.
+     */
+    function _calculateRarity(
+        uint256 parent1Id,
+        uint256 parent2Id,
+        uint256 gen1,
+        uint256 gen2,
+        uint256 randomness,
+        BreedingMode mode
+    ) private pure returns (uint256 rarityPoints) {
+        if (mode == BreedingMode.NewBreed) {
+            uint256 baseGeneration = (gen1 + gen2) * 10; // Base rarity points based on the generation of the parents
+
+            uint256 generationGapBonus;
+
+            if (gen1 != gen2) {
+                generationGapBonus = 20; // Bonus for different generations
+            }
+
+            uint256 uniquePairing = uint256(keccak256(abi.encodePacked(parent1Id, parent2Id))) % 30; // Unique pairing bonus based on the parent IDs
+            uint256 randomLuck = randomness % 30; // Random luck factor
+
+            rarityPoints = baseGeneration + generationGapBonus + uniquePairing + randomLuck + 10;
+        }
+
+        if (mode == BreedingMode.Mutation) {
+            uint256 baseGeneration = (gen1 + gen2) * 15;
+            uint256 uniquePairing = uint256(keccak256(abi.encodePacked(parent1Id, parent2Id))) % 40;
+            uint256 randomLuck = randomness % 40;
+            rarityPoints = baseGeneration + uniquePairing + randomLuck + 20;
+        }
+
+        if (mode == BreedingMode.Fusion) {
+            uint256 baseGeneration = (gen1 + gen2) * 20;
+            uint256 uniquePairing = uint256(keccak256(abi.encodePacked(parent1Id, parent2Id))) % 50; // Unique pairing bonus based on the parent IDs
+            uint256 randomLuck = randomness % 50; // Random luck factor
+            rarityPoints = baseGeneration + uniquePairing + randomLuck + 100;
+        }
+
+        if (mode == BreedingMode.Ascension) {
+            uint256 baseGeneration = gen1 * 40;
+            uint256 randomLuck = randomness % 40;
+            rarityPoints = baseGeneration + randomLuck + 50; // Ascension rarity points
+        }
+
+        return rarityPoints;
     }
 
     /**
@@ -130,5 +330,9 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2 {
         });
 
         return Genesis.SVGParams(hair, body, clothing, facialFeatures, accessory, other);
+    }
+
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }

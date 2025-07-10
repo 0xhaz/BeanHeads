@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.19;
 
 import {SVGBody} from "src/libraries/baseModel/SVGBody.sol";
 import {Colors} from "src/types/Constants.sol";

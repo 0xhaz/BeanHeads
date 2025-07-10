@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.24;
 
 import "ERC721A/extensions/ERC721AQueryable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -362,6 +362,20 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
 
     function getAuthorizedBreeders(address owner) external view returns (bool) {
         return s_authorizedBreeders[owner];
+    }
+
+    function burn(uint256 tokenId) external {
+        if (msg.sender != ownerOf(tokenId)) revert IBeanHeads__NotOwner();
+        _burn(tokenId, true);
+    }
+
+    function safeTransferFrom(address from, address to, uint256 tokenId)
+        public
+        payable
+        override(IBeanHeads, IERC721A, ERC721A)
+    {
+        if (msg.sender != ownerOf(tokenId)) revert IBeanHeads__NotOwner();
+        super.safeTransferFrom(from, to, tokenId);
     }
 
     /**

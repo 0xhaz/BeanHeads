@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.19;
 
 import {Genesis} from "src/types/Genesis.sol";
 
@@ -63,6 +63,10 @@ interface IBeanHeads {
         returns (uint256);
 
     function getAuthorizedBreeders(address owner) external view returns (bool);
+
+    function burn(uint256 tokenId) external;
+
+    function safeTransferFrom(address from, address to, uint256 tokenId) external payable;
 
     /// @notice Produces the URI describing the metadata of the token ID
     /// @dev Note this URI may be a data: URI with JSON contents directly inlined

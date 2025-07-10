@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.19;
 
 library Colors {
     bytes3 constant WHITE_BASE = 0xFFFFFF;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.19;
 
 library SVGBody {
     /// @dev Generates a full SVG document with the provided content

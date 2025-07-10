@@ -5,7 +5,13 @@ libs = ["lib"]
 ffi = true
 via_ir = true
 optimizer = true
-optimizer-runs = 200
+optimizer-runs = 2000
 fs_permissions = [{access = "read", path = "./images/"}, { access = "write", path = "./output/"}]
 
+[dependencies]
+openzeppelin-contracts = "https://github.com/OpenZeppelin/openzeppelin-contracts#next-v5.0"
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+
+
