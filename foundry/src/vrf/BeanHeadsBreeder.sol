@@ -17,17 +17,22 @@ import {Genesis} from "src/types/Genesis.sol";
  * Only user that has Gen1 BeanHeads can breed new BeanHeads.
  */
 contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
+    /*//////////////////////////////////////////////////////////////
+                              GLOBAL STATE
+    //////////////////////////////////////////////////////////////*/
     IBeanHeads private immutable i_beanHeads;
-
     // Chainlink VRF parameters
     uint256 private immutable i_subscriptionId;
     bytes32 private immutable i_keyHash;
     uint32 private constant GAS_LIMIT = 500_000; // Gas limit for the VRF callback
     uint16 private constant REQUEST_CONFIRMATIONS = 3; // Number of confirmations for the VRF request
-    uint256 private constant BREED_COOL_DOWN = 50; // Cool down period for breeding requests
+    uint256 private BREED_COOL_DOWN = 50; // Cool down period for breeding requests
     uint256 private constant MAX_BREED_REQUESTS = 5; // Maximum number of breed requests per user
     uint256 private constant MINT_PRICE = 0.01 ether; // Minting price for breeding
 
+    /*//////////////////////////////////////////////////////////////
+                                MAPPINGS
+    //////////////////////////////////////////////////////////////*/
     /// @notice Mapping to store the breed requests
     mapping(uint256 requestId => BreedRequest) public s_breedRequests;
 
@@ -43,6 +48,9 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     /// @notice Mapping of each parent used in breeding
     mapping(uint256 tokenId => uint256 count) public s_parentBreedingCount;
 
+    /*//////////////////////////////////////////////////////////////
+                              CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
     constructor(address _beanHeads, address _vrfCoordinator, uint256 _subscriptionId, bytes32 _keyHash)
         VRFConsumerBaseV2Plus(_vrfCoordinator)
     {
@@ -52,8 +60,11 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         i_keyHash = _keyHash;
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     /// @notice Inherits from IBeanHeadsBreeder
-    function depositBeanHeads(uint256 tokenId) external override {
+    function depositBeanHeads(uint256 tokenId) public override {
         // Ensure the token is a valid BeanHead
         if (!i_beanHeads.exists(tokenId)) {
             revert IBeanHeadsBreeder__InvalidTokenId();
@@ -74,7 +85,7 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     }
 
     /// @notice Inherits from IBeanHeadsBreeder
-    function withdrawBeanHeads(uint256 tokenId) external override {
+    function withdrawBeanHeads(uint256 tokenId) public override {
         address owner = s_escrowedTokens[tokenId];
         if (owner != msg.sender) {
             revert IBeanHeadsBreeder__TokensNotEscrowedBySender();
@@ -91,7 +102,7 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
 
     /// @notice Inherits from IBeanHeadsBreeder
     function requestBreed(uint256 parent1Id, uint256 parent2Id, BreedingMode mode)
-        external
+        public
         payable
         override
         returns (uint256 requestId)
@@ -148,6 +159,13 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         emit RequestBreed(msg.sender, parent1Id, parent2Id, requestId, mode);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+    function setCoolDown(uint256 coolDown) external onlyOwner {
+        BREED_COOL_DOWN = coolDown;
+    }
+
     /// @notice Inherits from IBeanHeadsBreeder
     function getRarityPoints(uint256 tokenId) external view override returns (uint256) {
         return s_mutatedRarityPoints[tokenId];
@@ -173,8 +191,22 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     function withdrawFunds() external onlyOwner {
         uint256 balance = address(this).balance;
         if (balance > 0) {
-            payable(msg.sender).transfer(balance);
+            (bool success,) = payable(msg.sender).call{value: balance}("");
+            if (!success) revert IBeanHeadsBreeder__TransferFailed();
         }
+    }
+
+    receive() external payable {}
+    fallback() external payable {}
+
+    /*//////////////////////////////////////////////////////////////
+                           CALLBACK FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+    /**
+     * @notice Callback function that is called when a BeanHead is transferred to this contract.
+     */
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 
     /**
@@ -288,6 +320,10 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         emit BreedRequestFulfilled(request.owner, requestId, request.mode, newTokenId);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     /**
      * @notice Calculates the rarity points for a mutated BeanHead based on the parent IDs and randomness.
      * @param parent1Id The token ID of the first parent BeanHead.
@@ -380,9 +416,5 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         });
 
         return Genesis.SVGParams(hair, body, clothing, facialFeatures, accessory, other);
-    }
-
-    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
-        return this.onERC721Received.selector;
     }
 }

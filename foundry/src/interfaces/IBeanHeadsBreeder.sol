@@ -10,6 +10,7 @@ interface IBeanHeadsBreeder {
     error IBeanHeadsBreeder__BreedLimitReached();
     error IBeanHeadsBreeder__InvalidTokenId();
     error IBeanHeadsBreeder__NotOwner();
+    error IBeanHeadsBreeder__TransferFailed();
 
     /**
      * @notice Enum representing the different breeding modes.
