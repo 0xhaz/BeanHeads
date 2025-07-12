@@ -59,7 +59,6 @@ interface IBeanHeads {
 
     function mintFromBreeders(address to, Genesis.SVGParams memory params, uint256 generation)
         external
-        payable
         returns (uint256);
 
     function getAuthorizedBreeders(address owner) external view returns (bool);
@@ -67,6 +66,14 @@ interface IBeanHeads {
     function burn(uint256 tokenId) external;
 
     function safeTransferFrom(address from, address to, uint256 tokenId) external payable;
+
+    function approve(address to, uint256 tokenId) external payable;
+
+    function authorizeBreeder(address breeder) external;
+
+    function getNextTokenId() external view returns (uint256);
+
+    function exists(uint256 tokenId) external view returns (bool);
 
     /// @notice Produces the URI describing the metadata of the token ID
     /// @dev Note this URI may be a data: URI with JSON contents directly inlined

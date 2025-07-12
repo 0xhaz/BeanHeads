@@ -7,6 +7,7 @@ via_ir = true
 optimizer = true
 optimizer-runs = 2000
 fs_permissions = [{access = "read", path = "./images/"}, { access = "write", path = "./output/"}]
+gas_reports = ["*"]
 
 [dependencies]
 openzeppelin-contracts = "https://github.com/OpenZeppelin/openzeppelin-contracts#next-v5.0"

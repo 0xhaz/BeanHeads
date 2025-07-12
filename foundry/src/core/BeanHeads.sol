@@ -49,7 +49,9 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
 
     /// @notice Modifier restricting access to authorized breeders
     modifier onlyBreeder() {
-        if (!s_authorizedBreeders[msg.sender]) revert IBeanHeads__UnauthorizedBreeders();
+        if (!s_authorizedBreeders[msg.sender]) {
+            revert IBeanHeads__UnauthorizedBreeders();
+        }
         _;
     }
 
@@ -106,12 +108,9 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
      */
     function mintFromBreeders(address to, Genesis.SVGParams memory params, uint256 generation)
         external
-        payable
         onlyBreeder
         returns (uint256 tokenId)
     {
-        if (msg.value < MINT_PRICE) revert IBeanHeads__InsufficientPayment();
-
         tokenId = _nextTokenId();
         s_tokenIdToParams[tokenId] = params;
         s_tokenIdToSalePriceValue[tokenId] = 0; // Initialize sale price to 0
@@ -121,13 +120,6 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
         s_authorizedBreeders[to] = true; // Ensure the minter is authorized to breed
 
         emit MintedNewBreed(to, tokenId);
-
-        // Refund any excess payment
-        uint256 excess = msg.value - MINT_PRICE;
-        if (excess > 0) {
-            (bool success,) = to.call{value: excess}("");
-            if (!success) revert IBeanHeads__WithdrawFailed();
-        }
     }
 
     /**
@@ -244,6 +236,14 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
         emit TokenWithdrawn(msg.sender, amount);
     }
 
+    function approve(address to, uint256 tokenId) public payable override(IERC721A, ERC721A, IBeanHeads) {
+        super.approve(to, tokenId);
+    }
+
+    function getNextTokenId() external view returns (uint256) {
+        return _nextTokenId();
+    }
+
     receive() external payable {}
 
     /**
@@ -278,6 +278,14 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
      */
     function getAttributesByTokenId(uint256 tokenId) external view returns (Genesis.SVGParams memory params) {
         params = s_tokenIdToParams[tokenId];
+    }
+
+    /**
+     * @notice Allows the contract owner to authorize a breeder contract
+     * @param breeder The address of the breeder contract to authorize
+     */
+    function authorizeBreeder(address breeder) external onlyOwner {
+        s_authorizedBreeders[breeder] = true;
     }
 
     /**
@@ -365,7 +373,6 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
     }
 
     function burn(uint256 tokenId) external {
-        if (msg.sender != ownerOf(tokenId)) revert IBeanHeads__NotOwner();
         _burn(tokenId, true);
     }
 
@@ -374,8 +381,11 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
         payable
         override(IBeanHeads, IERC721A, ERC721A)
     {
-        if (msg.sender != ownerOf(tokenId)) revert IBeanHeads__NotOwner();
         super.safeTransferFrom(from, to, tokenId);
+    }
+
+    function exists(uint256 tokenId) external view returns (bool) {
+        return _exists(tokenId);
     }
 
     /**

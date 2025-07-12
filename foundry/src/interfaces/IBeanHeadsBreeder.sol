@@ -5,6 +5,11 @@ interface IBeanHeadsBreeder {
     error IBeanHeadsBreeder__InvalidRequestId();
     error IBeanHeadsBreeder__CannotBreedSameBeanHead();
     error IBeanHeadsBreeder__TokensNotEscrowedBySender();
+    error IBeanHeadsBreeder__CoolDownNotPassed();
+    error IBeanHeadsBreeder__InsufficientPayment();
+    error IBeanHeadsBreeder__BreedLimitReached();
+    error IBeanHeadsBreeder__InvalidTokenId();
+    error IBeanHeadsBreeder__NotOwner();
 
     /**
      * @notice Enum representing the different breeding modes.
@@ -35,13 +40,40 @@ interface IBeanHeadsBreeder {
         BreedingMode mode;
     }
 
-    // Event emitted when a breed request is made
+    /**
+     * @notice Emitted when a breed request is initiated.
+     * @param owner The address of the owner who made the request.
+     * @param parent1Id The token ID of the first parent BeanHead.
+     * @param parent2Id The token ID of the second parent BeanHead.
+     * @param requestId The Chainlink VRF request ID.
+     * @param mode The breeding mode used for this request.
+     */
     event RequestBreed(
         address indexed owner, uint256 parent1Id, uint256 parent2Id, uint256 requestId, BreedingMode mode
     );
 
-    // Event emitted when a breed request is fulfilled
+    /**
+     * @notice Emitted when a breed request is fulfilled.
+     * @param owner The address of the owner who made the request.
+     * @param requestId The Chainlink VRF request ID.
+     * @param mode The breeding mode used for this request.
+     * @param newTokenId The token ID of the newly bred BeanHead.
+     */
     event BreedRequestFulfilled(address indexed owner, uint256 requestId, BreedingMode mode, uint256 newTokenId);
+
+    /**
+     * @notice Emitted when BeanHeads are deposited into the breeder contract.
+     * @param owner The address of the owner depositing the BeanHeads.
+     * @param parent1Id The token ID of the first parent BeanHead.
+     */
+    event BeanHeadsDeposited(address indexed owner, uint256 parent1Id);
+
+    /**
+     * @notice Emitted when a BeanHead is withdrawn from the breeder contract.
+     * @param owner The address of the owner withdrawing the BeanHead.
+     * @param tokenId The token ID of the BeanHead being withdrawn.
+     */
+    event BeanHeadsWithdrawn(address indexed owner, uint256 tokenId);
 
     /**
      * @notice Emitted when a new BeanHead is bred without burning parents.
@@ -124,10 +156,9 @@ interface IBeanHeadsBreeder {
     /**
      * @notice Deposits a BeanHead token into the breeder contract.
      * @param parent1Id The token ID of the BeanHead to deposit.
-     * @param parent2Id The token ID of the second BeanHead to deposit.
      * @dev This function allows the owner of the BeanHead to deposit it into the breeder
      */
-    function depositBeanHeads(uint256 parent1Id, uint256 parent2Id) external;
+    function depositBeanHeads(uint256 parent1Id) external;
 
     /**
      * @notice Withdraws a BeanHead token from the breeder contract.
@@ -144,6 +175,7 @@ interface IBeanHeadsBreeder {
      */
     function requestBreed(uint256 parent1Id, uint256 parent2Id, BreedingMode mode)
         external
+        payable
         returns (uint256 requestId);
 
     /**
@@ -169,4 +201,14 @@ interface IBeanHeadsBreeder {
      * @dev This function retrieves the owner of a BeanHead that is currently escrowed in the breeder contract.
      */
     function getEscrowedTokenOwner(uint256 tokenId) external view returns (address owner);
+
+    /**
+     * @notice Gets the last breeding count for a specific parent token.
+     * @param tokenId The token ID of the parent BeanHead.
+     * @return count The number of times this parent has been used in breeding.
+     * @dev This function retrieves how many times a specific parent BeanHead has been used in
+     * breeding requests.
+     * It helps to track the breeding history of each parent BeanHead.
+     */
+    function getParentBreedingCount(uint256 tokenId) external view returns (uint256 count);
 }

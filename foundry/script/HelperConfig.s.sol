@@ -35,6 +35,8 @@ contract HelperConfig is Script {
 
     NetworkConfig public activeNetworkConfig;
 
+    VRFCoordinatorV2_5Mock public vrfCoordinatorMock;
+
     mapping(uint256 => NetworkConfig) public chainIdToNetworkConfig;
 
     constructor() {
@@ -53,8 +55,7 @@ contract HelperConfig is Script {
         }
 
         vm.startBroadcast();
-        VRFCoordinatorV2_5Mock vrfCoordinatorMock =
-            new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UINT_LINK);
+        vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UINT_LINK);
 
         uint256 subscriptionId = vrfCoordinatorMock.createSubscription();
         MockLinkToken linkToken = new MockLinkToken();

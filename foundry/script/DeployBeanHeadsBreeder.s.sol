@@ -19,6 +19,7 @@ contract DeployBeanHeadsBreeder is Script {
         vm.startBroadcast(deployerKey);
         BeanHeadsBreeder beanHeadsBreeder =
             new BeanHeadsBreeder(address(beanHeads), vrfCoordinator, subscriptionId, keyHash);
+        // beanHeads.authorizeBreeder(address(beanHeadsBreeder));
         vm.stopBroadcast();
 
         return beanHeadsBreeder;
