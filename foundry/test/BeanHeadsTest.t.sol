@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {IERC2981, IERC165} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
 import {Helpers} from "test/Helpers.sol";
 import {Genesis} from "src/types/Genesis.sol";
@@ -43,7 +44,9 @@ contract BeanHeadsTest is Test, Helpers {
         assertEq(name, "BeanHeads");
         assertEq(symbol, "BEAN");
 
-        // (address receiver, uint256 royaltyAmount) = beanHeads.getRoyaltyInfo(0, 10000);
+        (address receiver, uint256 royaltyAmount) = beanHeads.royaltyInfo(0, 10000 ether);
+        assertEq(receiver, DEPLOYER);
+        assertEq(royaltyAmount, 600 ether); // 6% of 10000 ether
     }
 
     function test_mintGenesis_ReturnSVGParams() public {
@@ -114,6 +117,26 @@ contract BeanHeadsTest is Test, Helpers {
         beanHeads.withdraw();
         uint256 contractBalanceAfter = address(beanHeads).balance;
         assertEq(contractBalanceAfter, contractBalanceBefore - MINT_PRICE * 2);
+        vm.stopPrank();
+    }
+
+    function test_mintGenesis_MultipleAmount() public {
+        vm.startPrank(USER);
+        Genesis.SVGParams memory multiParams = params;
+        uint256 amount = 3;
+        uint256 totalPrice = MINT_PRICE * amount;
+        uint256 tokenId = beanHeads.mintGenesis{value: totalPrice}(USER, multiParams, amount);
+        assertEq(tokenId, 0); // First token ID should be 0
+        assertEq(beanHeads.balanceOf(USER), amount); // USER should own 3 tokens
+        assertEq(beanHeads.getOwnerTokensCount(USER), amount); // USER should have 3 tokens in their collection
+        assertEq(beanHeads.ownerOf(0), USER); // First token should be owned by USER
+        assertEq(beanHeads.ownerOf(1), USER); // Second token should be owned by USER
+        assertEq(beanHeads.ownerOf(2), USER); // Third token should be owned by USER
+
+        Genesis.SVGParams memory fetchedParams0 = beanHeads.getAttributesByTokenId(0);
+        string memory paramsStr0 = helpers.getParams(fetchedParams0);
+        assertEq(paramsStr0, helpers.getParams(multiParams));
+
         vm.stopPrank();
     }
 
@@ -233,6 +256,96 @@ contract BeanHeadsTest is Test, Helpers {
         vm.stopPrank();
     }
 
+    function test_authorizedBreeder_Success() public {
+        address breeder = makeAddr("Breeder");
+        vm.startPrank(DEPLOYER);
+        beanHeads.authorizeBreeder(breeder);
+        assertTrue(beanHeads.getAuthorizedBreeders(breeder));
+        vm.stopPrank();
+    }
+
+    function test_authorizeBreeder_OnlyOwner() public {
+        address breeder = makeAddr("BREEDER");
+        vm.expectRevert(); // Ownable revert
+        vm.prank(USER);
+        beanHeads.authorizeBreeder(breeder);
+    }
+
+    function test_mintFromBreeders_Success() public {
+        address breeder = makeAddr("BREEDER");
+        vm.prank(DEPLOYER);
+        beanHeads.authorizeBreeder(breeder);
+
+        vm.startPrank(breeder);
+        vm.recordLogs();
+        Genesis.SVGParams memory breedParams = params;
+        uint256 generation = 2;
+        uint256 tokenId = beanHeads.mintFromBreeders(USER, breedParams, generation);
+        assertEq(tokenId, 0); // First token
+        assertEq(beanHeads.ownerOf(tokenId), USER);
+        assertEq(beanHeads.getGeneration(tokenId), generation);
+        assertTrue(beanHeads.getAuthorizedBreeders(USER)); // Authorized after mint
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries.length, 2); // Transfer and MintedNewBreed
+
+        // Decode the MintedNewBreed event
+        assertEq(entries[1].topics[0], keccak256("MintedNewBreed(address,uint256)"));
+        address owner = address(uint160(uint256(entries[1].topics[1])));
+        uint256 mintedTokenId = uint256(entries[1].topics[2]);
+        assertEq(owner, USER);
+        assertEq(mintedTokenId, tokenId);
+
+        Genesis.SVGParams memory fetchedParams = beanHeads.getAttributesByTokenId(tokenId);
+        string memory paramsStr = helpers.getParams(fetchedParams);
+        assertEq(paramsStr, "11312352113003113falsefalsetrue");
+
+        vm.stopPrank();
+    }
+
+    function test_setRoyaltyInfo_Success() public {
+        vm.startPrank(DEPLOYER);
+        vm.recordLogs();
+        uint96 newFee = 1000; // 10%
+        beanHeads.setRoyaltyInfo(newFee);
+
+        (address receiver, uint256 royaltyAmount) = beanHeads.royaltyInfo(0, 10000 ether);
+        assertEq(royaltyAmount, 1000 ether);
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries.length, 1);
+
+        assertEq(entries[0].topics[0], keccak256("RoyaltyInfoUpdated(address,uint96)"));
+
+        address eventReceiver = address(uint160(uint256(entries[0].topics[1])));
+        uint256 eventFee = abi.decode(entries[0].data, (uint96));
+
+        assertEq(eventReceiver, receiver);
+        assertEq(eventFee, newFee);
+
+        vm.stopPrank();
+    }
+
+    function test_burnToken_Success() public {
+        vm.prank(USER);
+        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+
+        vm.prank(USER);
+        beanHeads.burn(tokenId);
+
+        vm.expectRevert(); // ERC721A revert for non-existent
+        beanHeads.ownerOf(tokenId);
+        assertFalse(beanHeads.exists(tokenId));
+    }
+
+    function test_getMintPrice() public view {
+        assertEq(beanHeads.getMintPrice(), MINT_PRICE);
+    }
+
+    function test_supportsInterface_IERC2981() public view {
+        assertTrue(beanHeads.supportsInterface(type(IERC2981).interfaceId));
+    }
+
     function test_setRoyaltyInfo_FailWithRevert() public {
         vm.startPrank(DEPLOYER);
         vm.expectRevert(IBeanHeads.IBeanHeads__InvalidRoyaltyFee.selector);
@@ -308,6 +421,52 @@ contract BeanHeadsTest is Test, Helpers {
         vm.expectRevert(IBeanHeads.IBeanHeads__TokenDoesNotExist.selector);
         beanHeads.cancelTokenSale(tokenId + 1); // USER cancelling their own token sale
         vm.stopPrank();
+    }
+
+    function test_mintGenesis_FailedWithReverts() public {
+        vm.startPrank(USER);
+        vm.expectRevert(IBeanHeads.IBeanHeads__InvalidAmount.selector);
+        beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 0); // Invalid amount of 0
+
+        vm.expectRevert(IBeanHeads.IBeanHeads__InsufficientPayment.selector);
+        beanHeads.mintGenesis{value: MINT_PRICE / 2}(USER, params, 1); // Insufficient payment
+        vm.stopPrank();
+    }
+
+    function test_mintGenesis_ExcessPaymentRefund() public {
+        vm.startPrank(USER);
+        uint256 excessPayment = 0.005 ether;
+        uint256 userBalanceBefore = USER.balance;
+        beanHeads.mintGenesis{value: MINT_PRICE + excessPayment}(USER, params, 1);
+        uint256 userBalanceAfter = USER.balance;
+        assertEq(userBalanceBefore - userBalanceAfter, MINT_PRICE);
+        vm.stopPrank();
+    }
+
+    function test_mintFromBreeders_Unauthorized() public {
+        vm.expectRevert(IBeanHeads.IBeanHeads__UnauthorizedBreeders.selector);
+        vm.prank(USER);
+        beanHeads.mintFromBreeders(USER, params, 2);
+    }
+
+    function test_withdraw_ZeroBalance() public {
+        vm.startPrank(DEPLOYER);
+        vm.expectRevert(IBeanHeads.IBeanHeads__WithdrawFailed.selector);
+        beanHeads.withdraw();
+        vm.stopPrank();
+    }
+
+    function test_tokenURI_NonExistent() public {
+        vm.expectRevert(IBeanHeads.IBeanHeads__TokenDoesNotExist.selector);
+        beanHeads.tokenURI(999);
+    }
+
+    function test_getAttributesByOwner_WrongOwner() public {
+        vm.prank(USER);
+        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+
+        vm.expectRevert(IBeanHeads.IBeanHeads__NotOwner.selector);
+        beanHeads.getAttributesByOwner(USER2, tokenId);
     }
 
     // Helper Functions

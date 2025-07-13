@@ -8,6 +8,9 @@ optimizer = true
 optimizer-runs = 2000
 fs_permissions = [{access = "read", path = "./images/"}, { access = "write", path = "./output/"}]
 gas_reports = ["*"]
+fuzz_runs = 1000
+invariant_runs = 500
+invariant_depth = 20
 
 [dependencies]
 openzeppelin-contracts = "https://github.com/OpenZeppelin/openzeppelin-contracts#next-v5.0"

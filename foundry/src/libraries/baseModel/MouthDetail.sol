@@ -19,6 +19,16 @@ library MouthDetail {
         LIPS_GREEN
     }
 
+    enum MouthType {
+        GRIN,
+        LIPS,
+        OPEN,
+        OPEN_SMILE,
+        SAD,
+        SERIOUS,
+        TONGUE
+    }
+
     /*//////////////////////////////////////////////////////////////
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
