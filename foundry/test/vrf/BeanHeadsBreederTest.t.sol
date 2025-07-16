@@ -9,6 +9,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {DeployBeanHeadsBreeder} from "script/DeployBeanHeadsBreeder.s.sol";
 import {BeanHeadsBreeder} from "src/vrf/BeanHeadsBreeder.sol";
+import {BeanHeads} from "src/core/BeanHeads.sol";
 import {IBeanHeadsBreeder} from "src/interfaces/IBeanHeadsBreeder.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
@@ -18,12 +19,15 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 
 contract BeanHeadsBreederTest is Test, Helpers {
     BeanHeadsBreeder private beanHeadsBreeder;
-    IBeanHeads private beanHeads;
+    // IBeanHeads private beanHeads;
     Helpers helpers;
     HelperConfig private helperConfig;
+    DeployBeanHeads private deployBeanHeads;
+    address beanHeads;
 
     address public USER1 = makeAddr("user1");
     address public USER2 = makeAddr("user2");
+    address public deployerAddress;
     uint256 public MINT_PRICE = 0.01 ether;
     uint256 public constant BREEDING_COOLDOWN = 50;
     uint256 public constant MAX_BREED_REQUESTS = 5;
@@ -46,17 +50,22 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         (,, address linkToken, address vrfCoordinatorMock, uint256 subId, bytes32 keyHash,) =
             helperConfig.activeNetworkConfig();
-        DeployBeanHeads deployBeanHeads = new DeployBeanHeads();
-        beanHeads = deployBeanHeads.run();
-        beanHeadsBreeder = new BeanHeadsBreeder(address(beanHeads), address(vrfCoordinatorMock), subId, keyHash);
 
-        vm.startPrank(0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38); // Deployer address
+        deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
+        deployBeanHeads = new DeployBeanHeads();
+        (address beanHeadsAddress,) = deployBeanHeads.run();
+        beanHeads = beanHeadsAddress; // Get the address of the BeanHeads contract
+        beanHeadsBreeder = new BeanHeadsBreeder(deployerAddress, address(beanHeads), vrfCoordinatorMock, subId, keyHash);
+
+        vm.startPrank(deployerAddress); // Deployer address
+        beanHeadsBreeder.acceptOwnership(); // Accept ownership of the breeder contract
+
+        MockLinkToken(linkToken).setBalance(deployerAddress, 1000 ether); // Fund the deployer with LINK tokens
         MockLinkToken(linkToken).transfer(address(beanHeadsBreeder), 100 ether); // Fund the breeder contract with LINK tokens
         VRFCoordinatorV2_5Mock(vrfCoordinatorMock).fundSubscription(subId, 100 ether); // Fund the subscription with LINK tokens
         VRFCoordinatorV2_5Mock(vrfCoordinatorMock).addConsumer(subId, address(beanHeadsBreeder));
+        IBeanHeads(beanHeads).authorizeBreeder(address(beanHeadsBreeder));
         vm.stopPrank();
-
-        beanHeads.authorizeBreeder(address(beanHeadsBreeder));
 
         vm.deal(USER1, 100 ether);
         // vm.deal(USER2, 10 ether);
@@ -73,10 +82,10 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
     function testRequestNewBreed_PairingTokens() public MintedBeanHeads {
         vm.startPrank(USER1);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
 
-        uint256 tokenBalanceBefore = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceBefore = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceBefore, 2);
 
         vm.recordLogs();
@@ -87,7 +96,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 blockConfirmations = block.number + BREEDING_COOLDOWN;
         vm.roll(blockConfirmations);
 
-        uint256 tokenBalanceAfter = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfter = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfter, 0); // Tokens should be in the breeder contract
 
         vm.recordLogs();
@@ -123,14 +132,14 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 expectedRarityPoints = 68; // Assuming the expected rarity points for this test
         assertEq(rarityPoints, expectedRarityPoints);
 
-        uint256 tokenBalanceAfterBreed = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfterBreed = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfterBreed, 3); // User should have 2 tokens + 1 new breed token
 
         assertEq(beanHeadsBreeder.s_parentBreedingCount(tokenId), 1);
         assertEq(beanHeadsBreeder.s_parentBreedingCount(tokenId2), 1);
 
-        beanHeads.approve(address(beanHeadsBreeder), tokenId);
-        beanHeads.approve(address(beanHeadsBreeder), mintedTokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), mintedTokenId);
         beanHeadsBreeder.depositBeanHeads(tokenId);
         beanHeadsBreeder.depositBeanHeads(mintedTokenId);
 
@@ -186,10 +195,10 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
     function testRequestNewBreed_MutationMode() public MintedBeanHeads {
         vm.startPrank(USER1);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
 
-        uint256 tokenBalanceBefore = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceBefore = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceBefore, 2);
 
         vm.recordLogs();
@@ -200,7 +209,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 blockConfirmations = block.number + BREEDING_COOLDOWN;
         vm.roll(blockConfirmations);
 
-        uint256 tokenBalanceAfter = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfter = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfter, 0); // Tokens should be in the breeder contract
 
         vm.recordLogs();
@@ -233,13 +242,13 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         uint256 rarityPoints = beanHeadsBreeder.getRarityPoints(mintedTokenId);
         assertEq(rarityPoints, 118);
-        uint256 tokenBalanceAfterBreed = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfterBreed = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfterBreed, 2); // User should have 1 parent tokens + 1 new breed token
         assertEq(beanHeadsBreeder.s_parentBreedingCount(tokenId), 1);
         assertEq(beanHeadsBreeder.s_parentBreedingCount(tokenId2), 1);
 
-        beanHeads.approve(address(beanHeadsBreeder), tokenId2);
-        beanHeads.approve(address(beanHeadsBreeder), mintedTokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), mintedTokenId);
         beanHeadsBreeder.depositBeanHeads(tokenId2);
         beanHeadsBreeder.depositBeanHeads(mintedTokenId);
 
@@ -293,10 +302,10 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
     function testRequestNewBreed_FusionMode() public MintedBeanHeads {
         vm.startPrank(USER1);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
 
-        uint256 tokenBalanceBefore = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceBefore = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceBefore, 2);
 
         vm.recordLogs();
@@ -307,7 +316,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 blockConfirmations = block.number + BREEDING_COOLDOWN;
         vm.roll(blockConfirmations);
 
-        uint256 tokenBalanceAfter = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfter = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfter, 0); // Tokens should be in the breeder contract
 
         vm.recordLogs();
@@ -357,15 +366,15 @@ contract BeanHeadsBreederTest is Test, Helpers {
         assertEq(fulfillmentLogs[0].topics[2], expectedTopicFusion2);
         assertEq(fulfillmentLogs[0].data, expectedDataFusion);
 
-        uint256 tokenBalanceAfterBreed = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfterBreed = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfterBreed, 1); // User should have 1 parent tokens + 1 new breed token
     }
 
     function testRequestNewBreed_AscensionMode() public MintedBeanHeads {
         vm.startPrank(USER1);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
 
-        uint256 tokenBalanceBefore = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceBefore = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceBefore, 2);
 
         beanHeadsBreeder.depositBeanHeads(tokenId2);
@@ -373,7 +382,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 blockConfirmations = block.number + BREEDING_COOLDOWN;
         vm.roll(blockConfirmations);
 
-        uint256 tokenBalanceAfter = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfter = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfter, 1);
 
         vm.recordLogs();
@@ -419,7 +428,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         assertEq(fulfillmentLogs[0].topics[2], expectedTopicAscension2);
         assertEq(fulfillmentLogs[0].data, expectedDataAscension);
 
-        uint256 tokenBalanceAfterBreed = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfterBreed = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfterBreed, 2); // User should have 1 parent tokens + 1 new breed token
         assertEq(beanHeadsBreeder.s_parentBreedingCount(tokenId), 1);
         assertEq(beanHeadsBreeder.s_parentBreedingCount(tokenId2), 1);
@@ -428,10 +437,10 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
     function test_WithdrawTokens() public MintedBeanHeads {
         vm.startPrank(USER1);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
 
-        uint256 tokenBalanceBefore = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceBefore = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceBefore, 2);
 
         vm.recordLogs();
@@ -443,7 +452,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         _assertDepositTokenLogs(tokenId, tokenId2);
 
-        uint256 tokenBalanceAfter = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfter = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfter, 0); // Tokens should be in the breeder contract
 
         beanHeadsBreeder.withdrawBeanHeads(tokenId);
@@ -460,14 +469,14 @@ contract BeanHeadsBreederTest is Test, Helpers {
         assertEq(withdrawalLogs[0].topics[1], expectedTopic4);
         assertEq(withdrawalLogs[0].data, expectedData2);
 
-        uint256 tokenBalanceAfterWithdrawal = beanHeads.getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfterWithdrawal = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfterWithdrawal, 2); // User should have 2 tokens back
     }
 
     function testDepositBeanHeads_FailedWithReverts() public MintedBeanHeads {
         vm.startPrank(USER1);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
 
         // Attempt to deposit a non-owned token
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__InvalidTokenId.selector);
@@ -482,8 +491,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
     function testWithdrawTokens_FailedWithReverts() public MintedBeanHeads {
         vm.startPrank(USER1);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
 
         // Deposit tokens
         beanHeadsBreeder.depositBeanHeads(tokenId);
@@ -499,8 +508,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
     function testRequestBreed_FailedWithReverts() public MintedBeanHeads {
         vm.startPrank(USER1);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId);
-        beanHeads.approve(address(beanHeadsBreeder), tokenId2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
 
         // Deposit tokens
         beanHeadsBreeder.depositBeanHeads(tokenId);
@@ -522,8 +531,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 t1 = IBeanHeads(address(beanHeads)).mintGenesis{value: MINT_PRICE}(USER2, params, 1);
         uint256 t2 = IBeanHeads(address(beanHeads)).mintGenesis{value: MINT_PRICE}(USER2, params, 1);
 
-        beanHeads.approve(address(beanHeadsBreeder), t1);
-        beanHeads.approve(address(beanHeadsBreeder), t2);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), t1);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), t2);
 
         // Deposit tokens for USER2
         beanHeadsBreeder.depositBeanHeads(t1);
@@ -549,8 +558,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 lastBlock = block.number;
 
         for (uint256 i = 0; i < MAX_BREED_REQUESTS; i++) {
-            beanHeads.approve(address(beanHeadsBreeder), tokenId);
-            beanHeads.approve(address(beanHeadsBreeder), tokenId2);
+            IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+            IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
 
             // Deposit tokens
             beanHeadsBreeder.depositBeanHeads(tokenId);
@@ -574,12 +583,12 @@ contract BeanHeadsBreederTest is Test, Helpers {
         beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed);
         vm.stopPrank();
 
-        vm.startPrank(0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496);
+        vm.startPrank(deployerAddress);
         // Withdraw balance from the breeder contract
         uint256 breederBalance = address(beanHeadsBreeder).balance;
         beanHeadsBreeder.withdrawFunds();
-        uint256 userBalanceAfter = address(msg.sender).balance;
-        assertGt(userBalanceAfter, breederBalance); // Gt is set due to mixed up with LINK tokens
+        uint256 userBalanceAfter = address(deployerAddress).balance;
+        assertEq(userBalanceAfter, breederBalance);
         assertEq(address(beanHeadsBreeder).balance, 0); // Ensure the breeder contract balance is zero after withdrawal
         vm.stopPrank();
     }

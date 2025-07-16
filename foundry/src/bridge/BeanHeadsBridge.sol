@@ -12,85 +12,20 @@ import {SafeERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
+import {IBeanHeadsBridge} from "src/interfaces/IBeanHeadsBridge.sol";
 
-contract BeanHeadsBridge is CCIPReceiver, Ownable {
+contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge {
     using SafeERC20 for IERC20;
-
-    error BeanHeadsBridge__InvalidRemoteAddress();
-    error BeanHeadsBridge__InsufficientLinkBalance(uint256 amount);
-    error BeanHeadsBridge__InvalidAmount();
-    error BeanHeadsBridge__UnauthorizedSender(address sender);
-    error BeanHeadsBridge__TokenNotDeposited(uint256 tokenId);
-    error BeanHeadsBridge__InsufficientPayment();
 
     IRouterClient private immutable i_router;
     address public s_remoteBridge;
     IERC20 private s_linkToken;
     address private immutable i_beanHeadsContract;
 
-    enum ActionType {
-        MINT,
-        SELL,
-        BUY,
-        CANCEL,
-        TRANSFER
-    }
-
-    /// @notice Emitted when the remote bridge address is updated.
-    event RemoteBridgeUpdated(address newRemoteBridge);
-
-    /// @notice Emitted when a mint token request is sent.
-    event SentMintTokenRequest(
-        bytes32 indexed messageId, uint64 indexed destinationChainSelector, address indexed receiver, uint256 amount
-    );
-
-    /// @notice Emitted when a sell token request is sent.
-    event SentSellTokenRequest(
-        bytes32 indexed messageId,
-        uint64 indexed destinationChainSelector,
-        address indexed receiver,
-        uint256 tokenId,
-        uint256 price
-    );
-
-    /// @notice Emitted when a buy token request is sent.
-    event SentBuyTokenRequest(
-        bytes32 indexed messageId,
-        uint64 indexed destinationChainSelector,
-        address indexed receiver,
-        uint256 tokenId,
-        uint256 price
-    );
-
-    /// @notice Emitted when a token transfer request is sent.
-    event SentTransferTokenRequest(
-        bytes32 indexed messageId, uint64 indexed destinationChainSelector, address indexed receiver, uint256 tokenId
-    );
-
-    /// @notice Emitted when a cancel token sale request is sent.
-    event CancelSellTokenRequest(
-        bytes32 indexed messageId, uint64 indexed destinationChainSelector, address indexed receiver, uint256 tokenId
-    );
-
-    /// @notice Emitted when a token is bought cross-chain.
-    event TokenBoughtCrossChain(address indexed buyer, uint256 tokenId, uint256 price);
-
-    /// @notice Emitted when a token is minted cross-chain.
-    event TokenMintedCrossChain(address indexed receiver, Genesis.SVGParams params, uint256 amount);
-
-    /// @notice Emitted when a token is listed for sale cross-chain.
-    event TokenListedCrossChain(address indexed seller, uint256 tokenId, uint256 price);
-
-    /// @notice Emitted when a token sale is cancelled cross-chain.
-    event TokenSaleCancelled(address indexed owner, uint256 tokenId);
-
-    /// @notice Emitted when a token is transferred cross-chain.
-    event TokenTransferredCrossChain(address indexed receiver, uint256 tokenId);
-
     /// @notice Modifier to ensure that the caller is the owner
     modifier onlyTokenOwner(uint256 tokenId) {
         if (IBeanHeads(i_beanHeadsContract).getOwnerOf(tokenId) != address(this)) {
-            revert BeanHeadsBridge__TokenNotDeposited(tokenId);
+            revert IBeanHeadsBridge__TokenNotDeposited(tokenId);
         }
         _;
     }
@@ -105,30 +40,22 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
         i_beanHeadsContract = beanHeads;
     }
 
-    /**
-     * @notice Updates the trusted remote bridge address.
-     * @dev Only callable by the owner.
-     * @param _newRemoteBridge The new remote bridge address.
-     */
+    /// @notice Inherits from IBeanHeadsBridge
     function setRemoteBridge(address _newRemoteBridge) external onlyOwner {
-        if (_newRemoteBridge == address(0)) revert BeanHeadsBridge__InvalidRemoteAddress();
+        // if (_newRemoteBridge == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
         s_remoteBridge = _newRemoteBridge;
 
         emit RemoteBridgeUpdated(_newRemoteBridge);
     }
 
-    /**
-     * @notice Initiates a cross-chain mint token request.
-     * @param _destinationChainSelector The target chain selector for the mint request.
-     * @param _receiver The address that will receive the minted token.
-     */
+    /// @notice Inherits from IBeanHeadsBridge
     function sendMintTokenRequest(
         uint64 _destinationChainSelector,
         address _receiver,
         Genesis.SVGParams calldata _params,
         uint256 _amount
     ) external payable returns (bytes32 messageId) {
-        if (_amount == 0) revert BeanHeadsBridge__InvalidAmount();
+        if (_amount == 0) revert IBeanHeadsBridge__InvalidAmount();
 
         uint256 mintPayment = IBeanHeads(i_beanHeadsContract).getMintPrice() * _amount;
 
@@ -157,7 +84,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
 
         uint256 ccipFee = i_router.getFee(_destinationChainSelector, message);
 
-        if (ccipFee > s_linkToken.balanceOf(address(this))) revert BeanHeadsBridge__InsufficientLinkBalance(ccipFee);
+        if (ccipFee > s_linkToken.balanceOf(address(this))) revert IBeanHeadsBridge__InsufficientLinkBalance(ccipFee);
 
         s_linkToken.approve(address(i_router), ccipFee);
 
@@ -166,19 +93,13 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
         emit SentMintTokenRequest(messageId, _destinationChainSelector, _receiver, _amount);
     }
 
-    /**
-     * @notice Send sellToken request to the remote bridge.
-     * @param _destinationChainSelector The target chain selector for the sell request.
-     * @param _tokenId The ID of the token to be sold.
-     * @param _price The price of the token to be sold.
-     * @return messageId The ID of the sent message.
-     */
+    /// @notice Inherits from IBeanHeadsBridge
     function sendSellTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, uint256 _price)
         external
         onlyTokenOwner(_tokenId)
         returns (bytes32 messageId)
     {
-        if (_price == 0) revert BeanHeadsBridge__InvalidAmount();
+        if (_price == 0) revert IBeanHeadsBridge__InvalidAmount();
 
         bytes memory sellTokenCalldata = abi.encode(ActionType.SELL, msg.sender, _tokenId, _price);
 
@@ -196,7 +117,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
 
         uint256 ccipFee = i_router.getFee(_destinationChainSelector, message);
 
-        if (ccipFee > s_linkToken.balanceOf(address(this))) revert BeanHeadsBridge__InsufficientLinkBalance(ccipFee);
+        if (ccipFee > s_linkToken.balanceOf(address(this))) revert IBeanHeadsBridge__InsufficientLinkBalance(ccipFee);
 
         s_linkToken.approve(address(i_router), ccipFee);
 
@@ -205,21 +126,15 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
         emit SentSellTokenRequest(messageId, _destinationChainSelector, msg.sender, _tokenId, _price);
     }
 
-    /**
-     * @notice Send the buyToken request to the remote bridge.
-     * @param _destinationChainSelector The target chain selector for the buy request.
-     * @param _tokenId The ID of the token to be bought.
-     * @param _price The price of the token to be bought.
-     * @return messageId The ID of the sent message.
-     */
+    /// @notice Inherits from IBeanHeadsBridge
     function sendBuyTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, uint256 _price)
         external
         payable
         returns (bytes32 messageId)
     {
-        if (_price == 0) revert BeanHeadsBridge__InvalidAmount();
+        if (_price == 0) revert IBeanHeadsBridge__InvalidAmount();
 
-        if (msg.value < _price) revert BeanHeadsBridge__InsufficientPayment();
+        if (msg.value < _price) revert IBeanHeadsBridge__InsufficientPayment();
 
         bytes memory buyTokenCalldata = abi.encode(ActionType.BUY, msg.sender, _tokenId, _price);
 
@@ -244,7 +159,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
 
         uint256 ccipFee = i_router.getFee(_destinationChainSelector, message);
 
-        if (ccipFee > s_linkToken.balanceOf(address(this))) revert BeanHeadsBridge__InsufficientLinkBalance(ccipFee);
+        if (ccipFee > s_linkToken.balanceOf(address(this))) revert IBeanHeadsBridge__InsufficientLinkBalance(ccipFee);
 
         s_linkToken.approve(address(i_router), ccipFee);
 
@@ -264,7 +179,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
         onlyTokenOwner(_tokenId)
         returns (bytes32 messageId)
     {
-        if (_tokenId == 0) revert BeanHeadsBridge__InvalidAmount();
+        if (_tokenId == 0) revert IBeanHeadsBridge__InvalidAmount();
 
         bytes memory cancelTokenCalldata = abi.encode(ActionType.CANCEL, msg.sender, _tokenId);
 
@@ -282,7 +197,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
 
         uint256 ccipFee = i_router.getFee(_destinationChainSelector, message);
 
-        if (ccipFee > s_linkToken.balanceOf(address(this))) revert BeanHeadsBridge__InsufficientLinkBalance(ccipFee);
+        if (ccipFee > s_linkToken.balanceOf(address(this))) revert IBeanHeadsBridge__InsufficientLinkBalance(ccipFee);
 
         s_linkToken.approve(address(i_router), ccipFee);
 
@@ -291,19 +206,13 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
         emit CancelSellTokenRequest(messageId, _destinationChainSelector, msg.sender, _tokenId);
     }
 
-    /**
-     * @notice Initiates a cross-chain transfer of a token.
-     * @param _destinationChainSelector The target chain selector for the transfer.
-     * @param _tokenId The ID of the token to be transferred.
-     * @param _receiver The address that will receive the transferred token.
-     * @return messageId The ID of the sent message.
-     */
+    /// @notice Inherits from IBeanHeadsBridge
     function sendTransferTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, address _receiver)
         external
         onlyTokenOwner(_tokenId)
         returns (bytes32 messageId)
     {
-        if (_receiver == address(0)) revert BeanHeadsBridge__InvalidRemoteAddress();
+        if (_receiver == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
 
         // Transfer NFT to the bridge contract
         IERC721A(address(i_beanHeadsContract)).safeTransferFrom(msg.sender, address(this), _tokenId);
@@ -327,7 +236,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
 
         uint256 ccipFee = i_router.getFee(_destinationChainSelector, message);
 
-        if (ccipFee > s_linkToken.balanceOf(address(this))) revert BeanHeadsBridge__InsufficientLinkBalance(ccipFee);
+        if (ccipFee > s_linkToken.balanceOf(address(this))) revert IBeanHeadsBridge__InsufficientLinkBalance(ccipFee);
 
         s_linkToken.approve(address(i_router), ccipFee);
 
@@ -336,31 +245,23 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
         emit SentTransferTokenRequest(messageId, _destinationChainSelector, _receiver, _tokenId);
     }
 
-    /**
-     * @notice Deposit LINK tokens to the bridge contract.
-     * @dev This function allows the owner to deposit LINK tokens into the bridge contract.
-     * @param amount The amount of LINK tokens to deposit.
-     */
+    /// @notice Inherits from IBeanHeadsBridge
     function depositLink(uint256 amount) external onlyOwner {
-        if (amount == 0) revert BeanHeadsBridge__InvalidAmount();
+        if (amount == 0) revert IBeanHeadsBridge__InvalidAmount();
         s_linkToken.transferFrom(msg.sender, address(this), amount);
     }
 
-    /**
-     * @notice Withdraw LINK tokens from the bridge contract.
-     * @dev This function allows the owner to withdraw LINK tokens from the bridge contract.
-     * @param amount The amount of LINK tokens to withdraw.
-     */
+    /// @notice Inherits from IBeanHeadsBridge
     function withdrawLink(uint256 amount) external onlyOwner {
-        if (amount == 0) revert BeanHeadsBridge__InvalidAmount();
+        if (amount == 0) revert IBeanHeadsBridge__InvalidAmount();
         uint256 contractBalance = s_linkToken.balanceOf(address(this));
-        if (amount > contractBalance) revert BeanHeadsBridge__InsufficientLinkBalance(contractBalance);
+        if (amount > contractBalance) revert IBeanHeadsBridge__InsufficientLinkBalance(contractBalance);
         s_linkToken.safeTransfer(msg.sender, amount);
     }
 
     function _ccipReceive(Client.Any2EVMMessage memory message) internal override {
         address sender = abi.decode(message.sender, (address));
-        if (sender != s_remoteBridge) revert BeanHeadsBridge__UnauthorizedSender(sender);
+        if (sender != s_remoteBridge) revert IBeanHeadsBridge__UnauthorizedSender(sender);
 
         // Decode the action type from the message data
         (ActionType action, bytes memory rest) = abi.decode(message.data, (ActionType, bytes));
@@ -381,7 +282,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
 
             // Ensure the bridge owns the token
             if (IBeanHeads(i_beanHeadsContract).getOwnerOf(tokenId) != address(this)) {
-                revert BeanHeadsBridge__TokenNotDeposited(tokenId);
+                revert IBeanHeadsBridge__TokenNotDeposited(tokenId);
             }
 
             IBeanHeads(i_beanHeadsContract).sellToken(tokenId, price);
@@ -395,7 +296,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
 
             // Ensure the bridge owns the token
             if (IBeanHeads(i_beanHeadsContract).getOwnerOf(buyTokenId) != address(this)) {
-                revert BeanHeadsBridge__TokenNotDeposited(buyTokenId);
+                revert IBeanHeadsBridge__TokenNotDeposited(buyTokenId);
             }
 
             IBeanHeads(i_beanHeadsContract).buyToken{value: msg.value}(buyTokenId, buyPrice);
@@ -410,7 +311,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable {
 
             // Ensure the bridge owns the token
             if (IBeanHeads(i_beanHeadsContract).getOwnerOf(cancelTokenId) != address(this)) {
-                revert BeanHeadsBridge__TokenNotDeposited(cancelTokenId);
+                revert IBeanHeadsBridge__TokenNotDeposited(cancelTokenId);
             }
 
             IBeanHeads(i_beanHeadsContract).cancelTokenSale(cancelTokenId);

@@ -13,15 +13,28 @@ library SVGBody {
     /// @param tag the SVG tag (e.g., "g", "circle", etc)
     /// @param attributes The attributes for the tag (e.g, 'id="group1")
     /// @param children Nested SVG content
+    // function base(string memory tag, string memory attributes, string memory children)
+    //     internal
+    //     pure
+    //     returns (string memory)
+    // {
+    //     string memory openingTag = bytes(attributes).length > 0
+    //         ? string(abi.encodePacked("<", tag, " ", attributes, ">"))
+    //         : string(abi.encodePacked("<", tag, ">"));
+
+    //     return string(abi.encodePacked(openingTag, children, "</", tag, ">"));
+    // }
+
+    /// @dev Generates an SVG wrapper for a tag
     function base(string memory tag, string memory attributes, string memory children)
         internal
         pure
-        returns (string memory)
+        returns (bytes memory)
     {
-        string memory openingTag = bytes(attributes).length > 0
-            ? string(abi.encodePacked("<", tag, " ", attributes, ">"))
-            : string(abi.encodePacked("<", tag, ">"));
+        bytes memory openingTag = bytes(attributes).length > 0
+            ? bytes.concat(bytes("<"), bytes(tag), bytes(" "), bytes(attributes), bytes(">"))
+            : bytes.concat(bytes("<"), bytes(tag), bytes(">"));
 
-        return string(abi.encodePacked(openingTag, children, "</", tag, ">"));
+        return bytes.concat(openingTag, bytes(children), bytes("</"), bytes(tag), bytes(">"));
     }
 }

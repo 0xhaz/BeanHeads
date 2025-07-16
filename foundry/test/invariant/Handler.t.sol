@@ -5,6 +5,7 @@ import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
 import {Helpers} from "test/Helpers.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {CommonBase} from "forge-std/Base.sol";
+import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 
 contract Handler is CommonBase, Helpers {
     BeanHeads internal beanHeads;
@@ -18,8 +19,8 @@ contract Handler is CommonBase, Helpers {
 
     Genesis.SVGParams internal defaultParams;
 
-    constructor(BeanHeads _beanHeads, address _deployer, address _user) {
-        beanHeads = _beanHeads;
+    constructor(address _beanHeads, address _deployer, address _user) {
+        beanHeads = BeanHeads(payable(_beanHeads));
         deployer = _deployer;
         user = _user;
         helpers = new Helpers();

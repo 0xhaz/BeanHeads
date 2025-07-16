@@ -4,20 +4,34 @@ pragma solidity ^0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {BeanHeads} from "src/core/BeanHeads.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
-// import {Images} from "src/types/Constants.sol";
+import {BeanHeadsRoyalty} from "src/core/BeanHeadsRoyalty.sol";
+import {HelperConfig} from "script/HelperConfig.s.sol";
 
 contract DeployBeanHeads is Script {
-    function run() public returns (BeanHeads) {
-        vm.startBroadcast();
-        BeanHeads beanHeads = new BeanHeads(msg.sender);
+    uint96 public ROYALTY_FEE_BPS = 500; // 5% royalty fee in basis points
+    BeanHeadsRoyalty public royalty;
+    BeanHeads public beanHeads;
+
+    function run() public returns (address, address) {
+        HelperConfig helperConfig = new HelperConfig();
+        HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
+
+        address deployerAddress = vm.addr(config.deployerKey);
+
+        vm.startBroadcast(config.deployerKey);
+        royalty = new BeanHeadsRoyalty(deployerAddress, ROYALTY_FEE_BPS);
+        beanHeads = new BeanHeads(deployerAddress, address(royalty));
         vm.stopBroadcast();
-        return beanHeads;
+
+        console.log("BeanHeads deployed at:", address(beanHeads));
+        console.log("BeanHeadsRoyalty deployed at:", address(royalty));
+        return (address(beanHeads), address(royalty));
     }
 
-    function svgToImageURI(string memory svg) public pure returns (string memory) {
-        string memory baseURL = "data:image/svg+xml;base64,";
-        string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(svg))));
+    // function svgToImageURI(string memory svg) public pure returns (string memory) {
+    //     string memory baseURL = "data:image/svg+xml;base64,";
+    //     string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(svg))));
 
-        return string(abi.encodePacked(baseURL, svgBase64Encoded));
-    }
+    //     return string(abi.encodePacked(baseURL, svgBase64Encoded));
+    // }
 }

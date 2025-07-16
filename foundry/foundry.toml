@@ -1,3 +1,12 @@
+[profile.solx]
+solc_version = "/Users/haz/.local/bin/solx"
+optimization = 3
+gas_limit = 100_000_000
+fs_permissions = [{access = "read", path = "./images/"}, { access = "write", path = "./output/"}]
+#fuzz_runs = 1000
+#invariant_runs = 500
+#invariant_depth = 20
+
 [profile.default]
 src = "src"
 out = "out"
@@ -5,8 +14,14 @@ libs = ["lib"]
 ffi = true
 via_ir = true
 optimizer = true
-optimizer-runs = 2000
-fs_permissions = [{access = "read", path = "./images/"}, { access = "write", path = "./output/"}]
+#optimizer-runs = 2000
+optimizer-runs = 20000
+fs_permissions = [
+    {access = "read", path = "./images/"}, 
+    { access = "write", path = "./output/"}, 
+    {access = "read", path = "./broadcast"},
+    { access = "read", path = "./reports" },
+]
 gas_reports = ["*"]
 fuzz_runs = 1000
 invariant_runs = 500
@@ -14,6 +29,11 @@ invariant_depth = 20
 
 [dependencies]
 openzeppelin-contracts = "https://github.com/OpenZeppelin/openzeppelin-contracts#next-v5.0"
+
+[profile.default.rpc_endpoints]
+sepolia-eth = "${SEPOLIA_RPC_URL}"
+arb-sepolia = "${ARBITRUM_SEPOLIA_RPC_URL}"
+base-sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 

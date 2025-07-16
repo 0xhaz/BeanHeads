@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
+import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
+import {BeanHeadsRoyalty} from "src/core/BeanHeadsRoyalty.sol";
 import {Helpers} from "test/Helpers.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {Handler} from "test/invariant/Handler.t.sol";
@@ -12,6 +14,8 @@ contract BeanHeadsInvariantTest is Test {
     BeanHeads internal beanHeads;
     Handler internal handler;
     Helpers internal helpers;
+    DeployBeanHeads internal deployBeanHeads;
+    BeanHeadsRoyalty internal royalty;
 
     address internal USER = makeAddr("user");
     address internal USER2 = makeAddr("user2");
@@ -40,9 +44,12 @@ contract BeanHeadsInvariantTest is Test {
     Genesis.SVGParams internal params;
 
     function setUp() public {
-        beanHeads = new BeanHeads(DEPLOYER);
+        deployBeanHeads = new DeployBeanHeads();
+        (address beanHeadsAddr, address royaltyAddress) = deployBeanHeads.run();
+        beanHeads = BeanHeads(payable(beanHeadsAddr));
+        royalty = deployBeanHeads.royalty();
         helpers = new Helpers();
-        handler = new Handler(beanHeads, DEPLOYER, USER);
+        handler = new Handler(beanHeadsAddr, DEPLOYER, USER);
 
         (
             Genesis.HairParams memory hair,
@@ -62,7 +69,7 @@ contract BeanHeadsInvariantTest is Test {
         });
 
         vm.startPrank(DEPLOYER);
-        beanHeads.setRoyaltyInfo(600);
+        royalty.setRoyaltyInfo(600);
         beanHeads.authorizeBreeder(address(handler));
         vm.stopPrank();
 
@@ -305,7 +312,7 @@ contract BeanHeadsInvariantTest is Test {
 
     function invariant_RoyaltyCalculation() public view {
         uint256 samplesalePrice = 1 ether;
-        (address receiver, uint256 amount) = beanHeads.royaltyInfo(0, samplesalePrice);
+        (address receiver, uint256 amount) = royalty.royaltyInfo(0, samplesalePrice);
         assertEq(receiver, DEPLOYER);
         assertEq(amount, (samplesalePrice * 600) / 10_000);
     }

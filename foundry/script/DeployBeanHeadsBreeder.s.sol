@@ -6,22 +6,42 @@ import {BeanHeadsBreeder} from "src/vrf/BeanHeadsBreeder.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {BeanHeads} from "src/core/BeanHeads.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
+import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
 
 contract DeployBeanHeadsBreeder is Script {
-    function run() public returns (BeanHeadsBreeder) {
+    function run() public returns (address) {
         HelperConfig helperConfig = new HelperConfig();
         (,,, address vrfCoordinator, uint256 subscriptionId, bytes32 keyHash, uint256 deployerKey) =
             helperConfig.activeNetworkConfig();
 
-        DeployBeanHeads deployBeanHeads = new DeployBeanHeads();
-        BeanHeads beanHeads = deployBeanHeads.run();
+        HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
+
+        address deployerAddress = vm.addr(config.deployerKey);
+
+        address beanHeads;
+
+        if (block.chainid == helperConfig.LOCAL_CHAIN_ID()) {
+            DeployBeanHeads deployBeanHeads = new DeployBeanHeads();
+            (beanHeads,) = deployBeanHeads.run();
+        } else if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
+            beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
+        } else if (block.chainid == helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID()) {
+            beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
+        } else {
+            beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
+        }
 
         vm.startBroadcast(deployerKey);
         BeanHeadsBreeder beanHeadsBreeder =
-            new BeanHeadsBreeder(address(beanHeads), vrfCoordinator, subscriptionId, keyHash);
+            new BeanHeadsBreeder(deployerAddress, beanHeads, vrfCoordinator, subscriptionId, keyHash);
         // beanHeads.authorizeBreeder(address(beanHeadsBreeder));
         vm.stopBroadcast();
 
-        return beanHeadsBreeder;
+        console.log("Deployer (msg.sender):", msg.sender);
+        console.log("Tx.origin:", tx.origin);
+        console.log("Owner in contract:", beanHeadsBreeder.owner());
+
+        console.log("BeanHeadsBreeder deployed at:", address(beanHeadsBreeder));
+        return address(beanHeadsBreeder);
     }
 }

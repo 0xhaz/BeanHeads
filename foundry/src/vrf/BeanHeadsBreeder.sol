@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {VRFConsumerBaseV2Plus} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {ConfirmedOwner} from "chainlink-brownie-contracts/contracts/src/v0.8/shared/access/ConfirmedOwner.sol";
 import {VRFCoordinatorV2_5} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFCoordinatorV2_5.sol";
 import {VRFV2PlusClient} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 import {IERC721A} from "ERC721A/IERC721A.sol";
@@ -51,13 +52,14 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(address _beanHeads, address _vrfCoordinator, uint256 _subscriptionId, bytes32 _keyHash)
+    constructor(address _owner, address _beanHeads, address _vrfCoordinator, uint256 _subscriptionId, bytes32 _keyHash)
         VRFConsumerBaseV2Plus(_vrfCoordinator)
     {
         i_beanHeads = IBeanHeads(_beanHeads);
         s_vrfCoordinator = VRFCoordinatorV2_5(_vrfCoordinator);
         i_subscriptionId = _subscriptionId;
         i_keyHash = _keyHash;
+        transferOwnership(_owner);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -224,97 +226,19 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
 
         uint256 newTokenId;
         if (request.mode == BreedingMode.NewBreed) {
-            // Non-destructive breeding, both parents remain intact
-            uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
-            uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
-            uint256 childGen = (gen1 > gen2 ? gen1 : gen2) + 1;
-
-            // Mint the new BeanHead with the randomized attributes
-            newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
-
-            // Store the rarity points for the new BeanHead
-            uint256 rarityPoints =
-                _calculateRarity(request.parent1Id, request.parent2Id, gen1, gen2, randomWords[0], request.mode);
-            s_mutatedRarityPoints[newTokenId] = rarityPoints;
-
-            // Return parents to the owner
-            i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent1Id);
-            i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent2Id);
-
-            emit NewBreedCompleted(
-                request.owner, requestId, request.parent1Id, request.parent2Id, newTokenId, childGen, rarityPoints
-            );
+            newTokenId = _handleNewBreed(request, requestId, childParams, randomWords[0]);
         }
 
         if (request.mode == BreedingMode.Mutation) {
-            // Destructive breeding, one parent is mutated into a new BeanHead
-            uint256 childGen = i_beanHeads.getGeneration(request.parent1Id) + 1;
-
-            // Mint the new BeanHead with the randomized attributes
-            newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
-
-            // Get the generation of the parents
-            uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
-            uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
-
-            // Store the rarity points for the mutated BeanHead
-            uint256 rarityPoints =
-                _calculateRarity(request.parent1Id, request.parent2Id, gen1, gen2, randomWords[0], request.mode);
-
-            // Store the rarity points for the mutated BeanHead
-            s_mutatedRarityPoints[newTokenId] = rarityPoints;
-
-            // Return the second parent to the owner
-            i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent2Id);
-
-            // Burn the first parent
-            i_beanHeads.burn(request.parent1Id);
-
-            emit MutationCompleted(
-                request.owner, requestId, request.parent1Id, request.parent2Id, newTokenId, childGen, rarityPoints
-            );
+            newTokenId = _handleMutation(request, requestId, childParams, randomWords[0]);
         }
 
         if (request.mode == BreedingMode.Fusion) {
-            // Fusion breeding, both parents are burned and a new BeanHead is created
-            uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
-            uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
-            uint256 childGen = (gen1 > gen2 ? gen1 : gen2) + 1;
-
-            // Mint the new BeanHead with the randomized attributes
-            newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
-
-            // Store the rarity points for the mutated BeanHead
-            uint256 rarityPoints =
-                _calculateRarity(request.parent1Id, request.parent2Id, gen1, gen2, randomWords[0], request.mode);
-
-            s_mutatedRarityPoints[newTokenId] = rarityPoints;
-
-            // Burn both parents
-            i_beanHeads.burn(request.parent1Id);
-            i_beanHeads.burn(request.parent2Id);
-
-            emit FusionCompleted(
-                request.owner, requestId, request.parent1Id, request.parent2Id, newTokenId, childGen, rarityPoints
-            );
+            newTokenId = _handleFusion(request, requestId, childParams, randomWords[0]);
         }
 
         if (request.mode == BreedingMode.Ascension) {
-            // Ascension breeding, only parent1Id is used
-            uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
-            uint256 childGen = gen1 + 1;
-
-            // Mint the new BeanHead with the randomized attributes
-            newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
-
-            // Store the rarity points for the ascended BeanHead
-            uint256 rarityPoints = _calculateRarity(request.parent1Id, 0, gen1, 0, randomWords[0], request.mode);
-            s_mutatedRarityPoints[newTokenId] = rarityPoints;
-
-            // Burn the parent
-            i_beanHeads.burn(request.parent1Id);
-
-            emit AscensionCompleted(request.owner, requestId, request.parent1Id, newTokenId, childGen, rarityPoints);
+            newTokenId = _handleAscension(request, requestId, childParams, randomWords[0]);
         }
 
         emit BreedRequestFulfilled(request.owner, requestId, request.mode, newTokenId);
@@ -323,6 +247,160 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     /*//////////////////////////////////////////////////////////////
                            PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Mint new Generation of BeanHead with randomized attributes.
+     * @param request The breed request containing the parent IDs and owner address.
+     * @param requestId The Chainlink VRF request ID.
+     * @param childParams The randomized SVG parameters for the new BeanHead.
+     * @param randomWords The random words returned by Chainlink VRF.
+     */
+    function _handleNewBreed(
+        BreedRequest memory request,
+        uint256 requestId,
+        Genesis.SVGParams memory childParams,
+        uint256 randomWords
+    ) private returns (uint256) {
+        // Non-destructive breeding, both parents remain intact
+        uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
+        uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
+        uint256 childGen = (gen1 > gen2 ? gen1 : gen2) + 1;
+
+        // Mint the new BeanHead with the randomized attributes
+        uint256 newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
+
+        // Store the rarity points for the new BeanHead
+        uint256 rarityPoints =
+            _calculateRarity(request.parent1Id, request.parent2Id, gen1, gen2, randomWords, request.mode);
+        s_mutatedRarityPoints[newTokenId] = rarityPoints;
+
+        // Return parents to the owner
+        i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent1Id);
+        i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent2Id);
+
+        emit NewBreedCompleted(
+            request.owner, requestId, request.parent1Id, request.parent2Id, newTokenId, childGen, rarityPoints
+        );
+
+        return newTokenId;
+    }
+
+    /**
+     * @notice Handles the mutation breeding mode.
+     * In this mode, one parent is mutated into a new BeanHead, and the other parent is returned to the owner.
+     * @param request The breed request containing the parent IDs and owner address.
+     * @param requestId The Chainlink VRF request ID.
+     * @param childParams The randomized SVG parameters for the new BeanHead.
+     * @param randomWords The random words returned by Chainlink VRF.
+     */
+    function _handleMutation(
+        BreedRequest memory request,
+        uint256 requestId,
+        Genesis.SVGParams memory childParams,
+        uint256 randomWords
+    ) private returns (uint256) {
+        // Destructive breeding, one parent is mutated into a new BeanHead
+        uint256 childGen = i_beanHeads.getGeneration(request.parent1Id) + 1;
+
+        // Mint the new BeanHead with the randomized attributes
+        uint256 newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
+
+        // Get the generation of the parents
+        uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
+        uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
+
+        // Store the rarity points for the mutated BeanHead
+        uint256 rarityPoints =
+            _calculateRarity(request.parent1Id, request.parent2Id, gen1, gen2, randomWords, request.mode);
+
+        // Store the rarity points for the mutated BeanHead
+        s_mutatedRarityPoints[newTokenId] = rarityPoints;
+
+        // Return the second parent to the owner
+        i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent2Id);
+
+        // Burn the first parent
+        i_beanHeads.burn(request.parent1Id);
+
+        emit MutationCompleted(
+            request.owner, requestId, request.parent1Id, request.parent2Id, newTokenId, childGen, rarityPoints
+        );
+
+        return newTokenId;
+    }
+
+    /**
+     * @notice Handles the fusion breeding mode.
+     * In this mode, both parents are burned, and a new BeanHead is created with randomized attributes.
+     * @param request The breed request containing the parent IDs and owner address.
+     * @param requestId The Chainlink VRF request ID.
+     * @param childParams The randomized SVG parameters for the new BeanHead.
+     * @param randomWords The random words returned by Chainlink VRF.
+     */
+    function _handleFusion(
+        BreedRequest memory request,
+        uint256 requestId,
+        Genesis.SVGParams memory childParams,
+        uint256 randomWords
+    ) private returns (uint256) {
+        // Fusion breeding, both parents are burned and a new BeanHead is created
+        uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
+        uint256 gen2 = i_beanHeads.getGeneration(request.parent2Id);
+        uint256 childGen = (gen1 > gen2 ? gen1 : gen2) + 1;
+
+        // Mint the new BeanHead with the randomized attributes
+        uint256 newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
+
+        // Store the rarity points for the mutated BeanHead
+        uint256 rarityPoints =
+            _calculateRarity(request.parent1Id, request.parent2Id, gen1, gen2, randomWords, request.mode);
+
+        s_mutatedRarityPoints[newTokenId] = rarityPoints;
+
+        // Burn both parents
+        i_beanHeads.burn(request.parent1Id);
+        i_beanHeads.burn(request.parent2Id);
+
+        emit FusionCompleted(
+            request.owner, requestId, request.parent1Id, request.parent2Id, newTokenId, childGen, rarityPoints
+        );
+
+        return newTokenId;
+    }
+
+    /**
+     * @notice Handles the ascension breeding mode.
+     * In this mode, the first parent is burned, and a new BeanHead is created with randomized attributes.
+     * @param request The breed request containing the parent IDs and owner address.
+     * @param requestId The Chainlink VRF request ID.
+     * @param childParams The randomized SVG parameters for the new BeanHead.
+     * @param randomWords The random words returned by Chainlink VRF.
+     */
+    function _handleAscension(
+        BreedRequest memory request,
+        uint256 requestId,
+        Genesis.SVGParams memory childParams,
+        uint256 randomWords
+    ) private returns (uint256) {
+        // Ascension breeding, only parent1Id is used
+        uint256 gen1 = i_beanHeads.getGeneration(request.parent1Id);
+        uint256 childGen = gen1 + 1;
+
+        // Mint the new BeanHead with the randomized attributes
+        uint256 newTokenId = i_beanHeads.mintFromBreeders(request.owner, childParams, childGen);
+
+        // Store the rarity points for the ascended BeanHead
+        uint256 rarityPoints = _calculateRarity(request.parent1Id, 0, gen1, 0, randomWords, request.mode);
+        s_mutatedRarityPoints[newTokenId] = rarityPoints;
+
+        // Burn the parent
+        i_beanHeads.burn(request.parent1Id);
+
+        emit AscensionCompleted(request.owner, requestId, request.parent1Id, newTokenId, childGen, rarityPoints);
+
+        // Return the new token ID
+        return newTokenId;
+    }
 
     /**
      * @notice Calculates the rarity points for a mutated BeanHead based on the parent IDs and randomness.

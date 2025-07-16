@@ -3,13 +3,12 @@ pragma solidity ^0.8.24;
 
 import "ERC721A/extensions/ERC721AQueryable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {IERC2981, IERC165} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import {RenderLib} from "src/libraries/RenderLib.sol";
 
 /**
  * @title BeanHeads
@@ -17,20 +16,12 @@ import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receive
  * @dev Uses breeding concept to create new avatars similar to Cryptokitties
  * @dev Uses Chainlink VRF for attributes randomness
  */
-contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, ReentrancyGuard {
-    /*//////////////////////////////////////////////////////////////
-                                 TYPES
-    //////////////////////////////////////////////////////////////*/
-    using Base64 for bytes;
-    using Strings for uint256;
-
+contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, ReentrancyGuard {
     /*//////////////////////////////////////////////////////////////
                               GLOBAL STATE
     //////////////////////////////////////////////////////////////*/
     /// @notice Royalty information
-    uint96 private royaltyFeeBps;
-    address private royaltyReceiver;
-    uint96 private constant MAX_BPS = 10000;
+    IERC2981 public immutable i_royaltyContract;
 
     /// @notice Token mint price
     uint256 public constant MINT_PRICE = 0.01 ether;
@@ -46,9 +37,6 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
 
     /// @notice Mapping tokenId to the contract owner (seller)
     mapping(uint256 tokenId => address owner) private s_tokenIdToSeller;
-
-    /// @notice Mapping to store token sales in contract
-    mapping(uint256 amount => uint256 balance) private s_tokenSaleBalance;
 
     /// @notice Mapping tokenId to its generation number
     mapping(uint256 tokenId => uint256 generation) private s_tokenIdToGeneration;
@@ -75,9 +63,8 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
      * @dev Initializes the contract with default royalty settings
      * @param initialOwner The address to own the contract
      */
-    constructor(address initialOwner) ERC721A("BeanHeads", "BEAN") Ownable(initialOwner) {
-        royaltyFeeBps = 500; // 5% royalty fee
-        royaltyReceiver = initialOwner; // Set initial royalty receiver to the contract owner
+    constructor(address initialOwner, address royalty_) ERC721A("BeanHeads", "BEAN") Ownable(initialOwner) {
+        i_royaltyContract = IERC2981(royalty_);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -96,9 +83,6 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
         tokenId = _nextTokenId();
         s_tokenIdToParams[tokenId] = params;
 
-        // Track funds collected from minting
-        s_tokenSaleBalance[amount] += msg.value; // Update the contract's balance with the mint price
-
         _safeMint(to, amount);
         s_tokenIdToSalePriceValue[tokenId] = 0; // Initialize sale price to 0
         s_tokenIdToGeneration[tokenId] = 1;
@@ -114,7 +98,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
     }
 
     /// @notice Inherits from IBeanHeads interface
-    function sellToken(uint256 tokenId, uint256 price) public override {
+    function sellToken(uint256 tokenId, uint256 price) public {
         if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
         if (msg.sender != ownerOf(tokenId)) revert IBeanHeads__NotOwner();
         if (price <= 0) revert IBeanHeads__PriceMustBeGreaterThanZero();
@@ -128,7 +112,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
     }
 
     /// @notice Inherits from IBeanHeads interface
-    function buyToken(uint256 tokenId, uint256 price) public payable override nonReentrant {
+    function buyToken(uint256 tokenId, uint256 price) public payable nonReentrant {
         if (s_tokenIdToSalePriceValue[tokenId] == 0) revert IBeanHeads__TokenIsNotForSale();
         if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
         if (s_tokenIdToSalePriceValue[tokenId] != price) revert IBeanHeads__PriceMismatch();
@@ -141,7 +125,8 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
         delete s_tokenIdToSeller[tokenId]; // Clear seller address
 
         // Pay royalties
-        uint256 royaltyAmount = (price * royaltyFeeBps) / MAX_BPS;
+
+        (address royaltyReceiver, uint256 royaltyAmount) = _royaltyInfo(tokenId, price);
         (bool success,) = royaltyReceiver.call{value: royaltyAmount}("");
         if (!success) revert IBeanHeads__RoyaltyPaymentFailed(tokenId);
 
@@ -176,22 +161,6 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
         emit TokenSaleCancelled(msg.sender, tokenId);
     }
 
-    /**
-     * @notice Returns the royalty information for a sale
-     * @param salePrice The sale price of the token
-     * @return receiver The address that will receive the royalty
-     * @return royaltyAmount The amount of royalty to be paid
-     */
-    function royaltyInfo(uint256, uint256 salePrice)
-        public
-        view
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = royaltyReceiver;
-        royaltyAmount = (salePrice * royaltyFeeBps) / MAX_BPS;
-    }
-
     // @notice Inherits from IERC721A and ERC721A
     function approve(address to, uint256 tokenId) public payable override(IERC721A, ERC721A, IBeanHeads) {
         super.approve(to, tokenId);
@@ -205,25 +174,9 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
 
         // Fetch token parameters
         Genesis.SVGParams memory params = s_tokenIdToParams[tokenId];
-        // Build attributes and image
-        string memory attributes = Genesis.buildAttributes(params, s_tokenIdToGeneration[tokenId]);
-        string memory image = Genesis.generateBase64SVG(params);
-
-        // Generate metadata JSON
-        string memory metadata = string(
-            abi.encodePacked(
-                '{"name": "BeanHeads #',
-                tokenId.toString(),
-                '", "description": "BeanHeads is a customizable avatar on chain NFT collection", "image": "',
-                image,
-                '", "attributes":',
-                attributes,
-                "}"
-            )
-        );
 
         // Return metadata as base64 encoded JSON.
-        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(metadata))));
+        return RenderLib.buildMetadata(tokenId, params, s_tokenIdToGeneration[tokenId]);
     }
 
     /// @notice Inherits from IERC721A and ERC721A
@@ -291,7 +244,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
     }
 
     /// @notice Inherits from IBeanHeads interface
-    function getAttributes(uint256 tokenId) external view override returns (string memory) {
+    function getAttributes(uint256 tokenId) external view returns (string memory) {
         return Genesis.buildAttributes(s_tokenIdToParams[tokenId], s_tokenIdToGeneration[tokenId]);
     }
 
@@ -336,27 +289,30 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
     }
 
     /*//////////////////////////////////////////////////////////////
+                            ROYALTY FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+    /**
+     * @notice Returns the royalty information for a sale
+     * @param salePrice The sale price of the token
+     * @return receiver The address that will receive the royalty
+     * @return royaltyAmount The amount of royalty to be paid
+     */
+    function _royaltyInfo(uint256 tokenId, uint256 salePrice)
+        private
+        view
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        return i_royaltyContract.royaltyInfo(tokenId, salePrice);
+    }
+
+    /*//////////////////////////////////////////////////////////////
                             ADMIN FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Sets the royalty fee and receiver
-     * @param feeBps The royalty fee in basis points (1% = 100 BPS)
-     */
-    function setRoyaltyInfo(uint96 feeBps) external onlyOwner {
-        if (feeBps >= MAX_BPS) revert IBeanHeads__InvalidRoyaltyFee();
-
-        royaltyFeeBps = feeBps;
-
-        emit RoyaltyInfoUpdated(royaltyReceiver, feeBps);
-    }
 
     /// @notice Inherits from IBeanHeads interface
     function withdraw() external onlyOwner nonReentrant {
         uint256 amount = address(this).balance;
         if (amount == 0) revert IBeanHeads__WithdrawFailed();
-
-        s_tokenSaleBalance[amount] = 0; // Reset the balance for the amount
 
         (bool success,) = msg.sender.call{value: amount}("");
         if (!success) revert IBeanHeads__WithdrawFailed();
@@ -381,13 +337,7 @@ contract BeanHeads is ERC721AQueryable, Ownable, IBeanHeads, IERC2981, Reentranc
      * @param interfaceId The interface identifier.
      * @return True if supported.
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721A, IERC721A, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC721A) returns (bool) {
         return interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId);
     }
 

@@ -3,34 +3,47 @@ pragma solidity ^0.8.24;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {IERC2981, IERC165} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import {BeanHeadsRoyalty} from "src/core/BeanHeadsRoyalty.sol";
 import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
+import {DeployBeanHeads, HelperConfig} from "script/DeployBeanHeads.s.sol";
 import {Helpers} from "test/Helpers.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 contract BeanHeadsTest is Test, Helpers {
     BeanHeads beanHeads;
+    BeanHeadsRoyalty royalty;
+    DeployBeanHeads deployBeanHeads;
+    HelperConfig helperConfig;
 
     Helpers helpers;
 
     address public USER = makeAddr("USER");
     address public USER2 = makeAddr("USER2");
-    address public DEPLOYER = makeAddr("DEPLOYER");
 
     uint256 public MINT_PRICE = 0.01 ether;
 
+    address deployerAddress;
+
     string public expectedTokenURI =
-        "data:application/json;base64,eyJuYW1lIjogIkJlYW5IZWFkcyAjMCIsICJkZXNjcmlwdGlvbiI6ICJCZWFuSGVhZHMgaXMgYSBjdXN0b21pemFibGUgYXZhdGFyIG9uIGNoYWluIE5GVCBjb2xsZWN0aW9uIiwgImltYWdlIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jaUlIWnBaWGRDYjNnOUlqQWdNQ0ExTURBZ05UQXdJajQ4Y21WamRDQjNhV1IwYUQwaU5UQXdJaUJvWldsbmFIUTlJalV3TUNJZ1ptbHNiRDBpQXlJdlBqeDBaWGgwSUhnOUlqVXdKU0lnZVQwaU5UQWxJaUJrYjIxcGJtRnVkQzFpWVhObGJHbHVaVDBpYldsa1pHeGxJaUIwWlhoMExXRnVZMmh2Y2owaWJXbGtaR3hsSWlCbWIyNTBMWE5wZW1VOUlqSTBJajVDWldGdVNHVmhaSE1nUVhaaGRHRnlQQzkwWlhoMFBqd3ZjM1puUGc9PSIsICJhdHRyaWJ1dGVzIjpbeyJ0cmFpdF90eXBlIjogIkhhaXIgU3R5bGUiLCAidmFsdWUiOiAiQWZybyJ9LHsidHJhaXRfdHlwZSI6ICJIYWlyIENvbG9yIiwgInZhbHVlIjogIkJsb25kZSJ9LHsidHJhaXRfdHlwZSI6ICJBY2Nlc3NvcnkiLCAidmFsdWUiOiAiUm91bmQgR2xhc3NlcyJ9LHsidHJhaXRfdHlwZSI6ICJIYXQgU3R5bGUiLCAidmFsdWUiOiAiQmVhbmllIn0seyJ0cmFpdF90eXBlIjogIkhhdCBDb2xvciIsICJ2YWx1ZSI6ICJHcmVlbiJ9LHsidHJhaXRfdHlwZSI6ICJCb2R5IFR5cGUiLCAidmFsdWUiOiAiQnJlYXN0In0seyJ0cmFpdF90eXBlIjogIlNraW4gQ29sb3IiLCAidmFsdWUiOiAiRGFyayBTa2luIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMiLCAidmFsdWUiOiAiVC1TaGlydCJ9LHsidHJhaXRfdHlwZSI6ICJDbG90aGVzIENvbG9yIiwgInZhbHVlIjogIldoaXRlIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMgR3JhcGhpYyIsICJ2YWx1ZSI6ICJHcmFwaHFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZWJyb3cgU2hhcGUiLCAidmFsdWUiOiAiTm9ybWFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZSBTaGFwZSIsICJ2YWx1ZSI6ICJOb3JtYWwifSx7InRyYWl0X3R5cGUiOiAiRmFjaWFsIEhhaXIgVHlwZSIsICJ2YWx1ZSI6ICJTdHViYmxlIn0seyJ0cmFpdF90eXBlIjogIk1vdXRoIFN0eWxlIiwgInZhbHVlIjogIkxpcHMifSx7InRyYWl0X3R5cGUiOiAiTGlwIENvbG9yIiwgInZhbHVlIjogIlB1cnBsZSJ9LHsidHJhaXRfdHlwZSI6ICJMYXNoZXMiLCAidmFsdWUiOiAidHJ1ZSJ9LHsidHJhaXRfdHlwZSI6ICJHZW5lcmF0aW9uIiwgInZhbHVlIjogIjEifV19";
+        "data:application/json;base64,eyJuYW1lIjoiQmVhbkhlYWRzICMwIiwiZGVzY3JpcHRpb24iOiJCZWFuSGVhZHMgaXMgYSBjdXN0b21pemFibGUgYXZhdGFyIG9uLWNoYWluIE5GVCBjb2xsZWN0aW9uIiwiaW1hZ2UiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBMU1EQWdOVEF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlOVEF3SWlCb1pXbG5hSFE5SWpVd01DSWdabWxzYkQwaUF5SXZQangwWlhoMElIZzlJalV3SlNJZ2VUMGlOVEFsSWlCa2IyMXBibUZ1ZEMxaVlYTmxiR2x1WlQwaWJXbGtaR3hsSWlCMFpYaDBMV0Z1WTJodmNqMGliV2xrWkd4bElpQm1iMjUwTFhOcGVtVTlJakkwSWo1Q1pXRnVTR1ZoWkhNZ1FYWmhkR0Z5UEM5MFpYaDBQand2YzNablBnPT0iLCJhdHRyaWJ1dGVzIjpbeyJ0cmFpdF90eXBlIjogIkhhaXIgU3R5bGUiLCAidmFsdWUiOiAiQWZybyJ9LHsidHJhaXRfdHlwZSI6ICJIYWlyIENvbG9yIiwgInZhbHVlIjogIkJsb25kZSJ9LHsidHJhaXRfdHlwZSI6ICJBY2Nlc3NvcnkiLCAidmFsdWUiOiAiUm91bmQgR2xhc3NlcyJ9LHsidHJhaXRfdHlwZSI6ICJIYXQgU3R5bGUiLCAidmFsdWUiOiAiQmVhbmllIn0seyJ0cmFpdF90eXBlIjogIkhhdCBDb2xvciIsICJ2YWx1ZSI6ICJHcmVlbiJ9LHsidHJhaXRfdHlwZSI6ICJCb2R5IFR5cGUiLCAidmFsdWUiOiAiQnJlYXN0In0seyJ0cmFpdF90eXBlIjogIlNraW4gQ29sb3IiLCAidmFsdWUiOiAiRGFyayBTa2luIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMiLCAidmFsdWUiOiAiVC1TaGlydCJ9LHsidHJhaXRfdHlwZSI6ICJDbG90aGVzIENvbG9yIiwgInZhbHVlIjogIldoaXRlIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMgR3JhcGhpYyIsICJ2YWx1ZSI6ICJHcmFwaHFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZWJyb3cgU2hhcGUiLCAidmFsdWUiOiAiTm9ybWFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZSBTaGFwZSIsICJ2YWx1ZSI6ICJOb3JtYWwifSx7InRyYWl0X3R5cGUiOiAiRmFjaWFsIEhhaXIgVHlwZSIsICJ2YWx1ZSI6ICJTdHViYmxlIn0seyJ0cmFpdF90eXBlIjogIk1vdXRoIFN0eWxlIiwgInZhbHVlIjogIkxpcHMifSx7InRyYWl0X3R5cGUiOiAiTGlwIENvbG9yIiwgInZhbHVlIjogIlB1cnBsZSJ9LHsidHJhaXRfdHlwZSI6ICJMYXNoZXMiLCAidmFsdWUiOiAidHJ1ZSJ9LHsidHJhaXRfdHlwZSI6ICJHZW5lcmF0aW9uIiwgInZhbHVlIjogIjEifV19";
 
     event Transfer(address indexed from, address indexed to, uint256 tokenId);
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
 
     function setUp() public {
-        beanHeads = new BeanHeads(DEPLOYER);
         helpers = new Helpers();
+        helperConfig = new HelperConfig();
 
-        vm.startPrank(DEPLOYER);
-        beanHeads.setRoyaltyInfo(600); // Set royalty to 6%
+        // vm.startPrank(DEPLOYER);
+        deployBeanHeads = new DeployBeanHeads();
+        (address beanHeadsAddress, address royaltyAddress) = deployBeanHeads.run();
+        beanHeads = BeanHeads(payable(beanHeadsAddress));
+
+        deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
+        vm.startPrank(deployerAddress);
+        royalty = deployBeanHeads.royalty();
+        royalty.setRoyaltyInfo(600); // Set royalty to 6%
         vm.stopPrank();
 
         vm.deal(USER, 10 ether); // Give USER some ether to mint
@@ -44,8 +57,8 @@ contract BeanHeadsTest is Test, Helpers {
         assertEq(name, "BeanHeads");
         assertEq(symbol, "BEAN");
 
-        (address receiver, uint256 royaltyAmount) = beanHeads.royaltyInfo(0, 10000 ether);
-        assertEq(receiver, DEPLOYER);
+        (address receiver, uint256 royaltyAmount) = royalty.royaltyInfo(0, 10000 ether);
+        assertEq(receiver, deployerAddress);
         assertEq(royaltyAmount, 600 ether); // 6% of 10000 ether
     }
 
@@ -111,7 +124,7 @@ contract BeanHeadsTest is Test, Helpers {
         tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER2, params, 1);
         assertEq(tokenId, 1);
 
-        vm.startPrank(DEPLOYER);
+        vm.startPrank(deployerAddress);
         uint256 contractBalanceBefore = address(beanHeads).balance;
         assertEq(contractBalanceBefore, MINT_PRICE * 2);
         beanHeads.withdraw();
@@ -215,7 +228,7 @@ contract BeanHeadsTest is Test, Helpers {
 
         _assertAttributes(tokenId);
 
-        vm.prank(DEPLOYER);
+        vm.prank(deployerAddress);
         _assertRoyalty(tokenId, salePrice, expectedRoyalty);
     }
 
@@ -258,7 +271,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_authorizedBreeder_Success() public {
         address breeder = makeAddr("Breeder");
-        vm.startPrank(DEPLOYER);
+        vm.startPrank(deployerAddress);
         beanHeads.authorizeBreeder(breeder);
         assertTrue(beanHeads.getAuthorizedBreeders(breeder));
         vm.stopPrank();
@@ -273,7 +286,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_mintFromBreeders_Success() public {
         address breeder = makeAddr("BREEDER");
-        vm.prank(DEPLOYER);
+        vm.prank(deployerAddress);
         beanHeads.authorizeBreeder(breeder);
 
         vm.startPrank(breeder);
@@ -304,12 +317,12 @@ contract BeanHeadsTest is Test, Helpers {
     }
 
     function test_setRoyaltyInfo_Success() public {
-        vm.startPrank(DEPLOYER);
+        vm.startPrank(deployerAddress);
         vm.recordLogs();
         uint96 newFee = 1000; // 10%
-        beanHeads.setRoyaltyInfo(newFee);
+        royalty.setRoyaltyInfo(newFee);
 
-        (address receiver, uint256 royaltyAmount) = beanHeads.royaltyInfo(0, 10000 ether);
+        (address receiver, uint256 royaltyAmount) = royalty.royaltyInfo(0, 10000 ether);
         assertEq(royaltyAmount, 1000 ether);
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
@@ -347,9 +360,9 @@ contract BeanHeadsTest is Test, Helpers {
     }
 
     function test_setRoyaltyInfo_FailWithRevert() public {
-        vm.startPrank(DEPLOYER);
-        vm.expectRevert(IBeanHeads.IBeanHeads__InvalidRoyaltyFee.selector);
-        beanHeads.setRoyaltyInfo(10001); // Royalty fee cannot exceed 10000 bps (100%)
+        vm.startPrank(deployerAddress);
+        vm.expectRevert(BeanHeadsRoyalty.BeanHeadsRoyalty__InvalidRoyaltyFee.selector);
+        royalty.setRoyaltyInfo(10001); // Royalty fee cannot exceed 10000 bps (100%)
         vm.stopPrank();
     }
 
@@ -450,7 +463,7 @@ contract BeanHeadsTest is Test, Helpers {
     }
 
     function test_withdraw_ZeroBalance() public {
-        vm.startPrank(DEPLOYER);
+        vm.startPrank(deployerAddress);
         vm.expectRevert(IBeanHeads.IBeanHeads__WithdrawFailed.selector);
         beanHeads.withdraw();
         vm.stopPrank();
@@ -504,7 +517,7 @@ contract BeanHeadsTest is Test, Helpers {
             uint256 royaltyTokenId = uint256(buyEntries[0].topics[2]);
             (uint256 salePriceReceived, uint256 royaltyAmountReceived) =
                 abi.decode(buyEntries[0].data, (uint256, uint256));
-            assertEq(royaltyReceiver, DEPLOYER);
+            assertEq(royaltyReceiver, deployerAddress);
             assertEq(royaltyTokenId, tokenId);
             assertEq(salePriceReceived, salePrice);
             assertEq(royaltyAmountReceived, expectedRoyaltyReceived);
@@ -541,8 +554,8 @@ contract BeanHeadsTest is Test, Helpers {
     }
 
     function _assertRoyalty(uint256 tokenId, uint256 salePrice, uint256 expectedRoyalty) internal view {
-        (address receiver, uint256 royaltyAmount) = beanHeads.royaltyInfo(tokenId, salePrice);
-        assertEq(receiver, DEPLOYER);
+        (address receiver, uint256 royaltyAmount) = royalty.royaltyInfo(tokenId, salePrice);
+        assertEq(receiver, deployerAddress);
         assertEq(royaltyAmount, expectedRoyalty);
     }
 }

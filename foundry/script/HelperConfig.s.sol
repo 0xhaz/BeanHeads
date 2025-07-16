@@ -27,11 +27,14 @@ contract HelperConfig is Script {
 
     uint256 public DEFAULT_ANVIL_PRIVATE_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
     uint256 public constant ETH_SEPOLIA_CHAIN_ID = 11155111;
+    uint256 public constant OPTIMISM_SEPOLIA_CHAIN_ID = 11155420;
+    uint256 public constant BASE_SEPOLIA_CHAIN_ID = 84532;
     uint256 public constant LOCAL_CHAIN_ID = 31337;
     uint96 public MOCK_BASE_FEE = 0.01 ether;
     uint96 public MOCK_GAS_PRICE_LINK = 1e9;
     // LINK/ETH price
     int256 public MOCK_WEI_PER_UINT_LINK = 4e15;
+    uint64 public constant OP_SEPOLIA_CHAIN_SELECTOR = 5224473277236331295;
 
     NetworkConfig public activeNetworkConfig;
 
@@ -44,9 +47,15 @@ contract HelperConfig is Script {
             _setAnvilConfig();
         } else if (block.chainid == ETH_SEPOLIA_CHAIN_ID) {
             _setSepoliaConfig();
+        } else if (block.chainid == OPTIMISM_SEPOLIA_CHAIN_ID) {
+            _setOpSepoliaConfig();
+        } else if (block.chainid == BASE_SEPOLIA_CHAIN_ID) {
+            _setBaseSepoliaConfig();
         } else {
             revert("Unsupported network");
         }
+        chainIdToNetworkConfig[block.chainid] = activeNetworkConfig;
+        console.log("Active network config set for chain ID:", block.chainid);
     }
 
     function _setAnvilConfig() public returns (NetworkConfig memory) {
@@ -54,7 +63,7 @@ contract HelperConfig is Script {
             return activeNetworkConfig;
         }
 
-        vm.startBroadcast();
+        vm.startBroadcast(DEFAULT_ANVIL_PRIVATE_KEY);
         vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UINT_LINK);
 
         uint256 subscriptionId = vrfCoordinatorMock.createSubscription();
@@ -83,6 +92,36 @@ contract HelperConfig is Script {
             keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             deployerKey: DEFAULT_ANVIL_PRIVATE_KEY
         });
+        return activeNetworkConfig;
+    }
+
+    function _setOpSepoliaConfig() public returns (NetworkConfig memory) {
+        activeNetworkConfig = NetworkConfig({
+            routerClient: 0x114A20A10b43D4115e5aeef7345a1A71d2a60C57,
+            remoteBridge: address(0),
+            linkToken: 0xE4aB69C077896252FAFBD49EFD26B5D171A32410,
+            vrfCoordinator: 0x02667f44a6a44E4BDddCF80e724512Ad3426B17d,
+            subscriptionId: 258,
+            keyHash: 0xc3d5bc4d5600fa71f7a50b9ad841f14f24f9ca4236fd00bdb5fda56b052b28a4,
+            deployerKey: DEFAULT_ANVIL_PRIVATE_KEY
+        });
+        return activeNetworkConfig;
+    }
+
+    function _setBaseSepoliaConfig() public returns (NetworkConfig memory) {
+        activeNetworkConfig = NetworkConfig({
+            routerClient: 0xD3b06cEbF099CE7DA4AcCf578aaebFDBd6e88a93,
+            remoteBridge: address(0),
+            linkToken: 0xE4aB69C077896252FAFBD49EFD26B5D171A32410,
+            vrfCoordinator: 0x02667f44a6a44E4BDddCF80e724512Ad3426B17d,
+            subscriptionId: 409,
+            keyHash: 0xc3d5bc4d5600fa71f7a50b9ad841f14f24f9ca4236fd00bdb5fda56b052b28a4,
+            deployerKey: DEFAULT_ANVIL_PRIVATE_KEY
+        });
+        return activeNetworkConfig;
+    }
+
+    function getActiveNetworkConfig() public view returns (NetworkConfig memory) {
         return activeNetworkConfig;
     }
 }
