@@ -6,20 +6,22 @@ import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {BeanHeadsRoyalty} from "src/core/BeanHeadsRoyalty.sol";
 import {Helpers} from "test/Helpers.sol";
+import {HelperConfig} from "script/HelperConfig.s.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {Handler} from "test/invariant/Handler.t.sol";
 import {Vm} from "forge-std/Vm.sol";
+import {StdInvariant} from "forge-std/StdInvariant.sol";
 
-contract BeanHeadsInvariantTest is Test {
+contract BeanHeadsInvariantTest is StdInvariant, Test {
     BeanHeads internal beanHeads;
     Handler internal handler;
     Helpers internal helpers;
     DeployBeanHeads internal deployBeanHeads;
-    BeanHeadsRoyalty internal royalty;
+    BeanHeadsRoyalty internal royaltyContract;
+    HelperConfig internal helperConfig;
 
     address internal USER = makeAddr("user");
     address internal USER2 = makeAddr("user2");
-    address internal DEPLOYER = makeAddr("deployer");
 
     uint256 internal constant MINT_PRICE = 0.01 ether;
 
@@ -43,13 +45,17 @@ contract BeanHeadsInvariantTest is Test {
 
     Genesis.SVGParams internal params;
 
+    address internal deployerAddress;
+
     function setUp() public {
+        helperConfig = new HelperConfig();
         deployBeanHeads = new DeployBeanHeads();
-        (address beanHeadsAddr, address royaltyAddress) = deployBeanHeads.run();
+        deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
+        (address beanHeadsAddr,) = deployBeanHeads.run();
         beanHeads = BeanHeads(payable(beanHeadsAddr));
-        royalty = deployBeanHeads.royalty();
+        royaltyContract = deployBeanHeads.royalty();
         helpers = new Helpers();
-        handler = new Handler(beanHeadsAddr, DEPLOYER, USER);
+        handler = new Handler(address(beanHeads), deployerAddress, USER);
 
         (
             Genesis.HairParams memory hair,
@@ -68,14 +74,14 @@ contract BeanHeadsInvariantTest is Test {
             otherParams: other
         });
 
-        vm.startPrank(DEPLOYER);
-        royalty.setRoyaltyInfo(600);
+        vm.startPrank(deployerAddress);
+        royaltyContract.setRoyaltyInfo(600);
         beanHeads.authorizeBreeder(address(handler));
         vm.stopPrank();
 
         vm.deal(USER, 1000 ether);
         vm.deal(USER2, 1000 ether);
-        vm.deal(DEPLOYER, 1000 ether);
+        vm.deal(deployerAddress, 1000 ether);
 
         targetContract(address(handler));
 
@@ -278,7 +284,7 @@ contract BeanHeadsInvariantTest is Test {
         uint256 royalty = (salePrice * 600) / 10_000;
         uint256 sellerReceive = salePrice - royalty;
 
-        uint256 deployerBalanceBefore = DEPLOYER.balance;
+        uint256 deployerBalanceBefore = deployerAddress.balance;
         uint256 userBalanceBefore = USER.balance;
         uint256 buyerBalanceBefore = USER2.balance;
 
@@ -288,7 +294,7 @@ contract BeanHeadsInvariantTest is Test {
         assertEq(beanHeads.ownerOf(tokenId), USER2);
         assertEq(beanHeads.getTokenSalePrice(tokenId), 0);
 
-        assertEq(DEPLOYER.balance, deployerBalanceBefore + royalty);
+        assertEq(deployerAddress.balance, deployerBalanceBefore + royalty);
         assertEq(USER.balance, userBalanceBefore + sellerReceive);
         assertEq(USER2.balance, buyerBalanceBefore - salePrice);
     }
@@ -312,8 +318,8 @@ contract BeanHeadsInvariantTest is Test {
 
     function invariant_RoyaltyCalculation() public view {
         uint256 samplesalePrice = 1 ether;
-        (address receiver, uint256 amount) = royalty.royaltyInfo(0, samplesalePrice);
-        assertEq(receiver, DEPLOYER);
+        (address receiver, uint256 amount) = royaltyContract.royaltyInfo(0, samplesalePrice);
+        assertEq(receiver, deployerAddress);
         assertEq(amount, (samplesalePrice * 600) / 10_000);
     }
 

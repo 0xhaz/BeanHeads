@@ -2,16 +2,22 @@
 pragma solidity ^0.8.24;
 
 import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
+import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {Helpers} from "test/Helpers.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {CommonBase} from "forge-std/Base.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
+import {HelperConfig} from "script/HelperConfig.s.sol";
 
 contract Handler is CommonBase, Helpers {
     BeanHeads internal beanHeads;
-    address internal deployer;
-    address internal user;
+    HelperConfig internal helperConfig;
     Helpers internal helpers;
+    DeployBeanHeads internal deployBeanHeads;
+
+    // address internal deployer;
+    address internal user;
+    address internal deployerAddress;
 
     uint256 public ghost_totalMinted;
     uint256 public ghost_totalBurned;
@@ -21,7 +27,7 @@ contract Handler is CommonBase, Helpers {
 
     constructor(address _beanHeads, address _deployer, address _user) {
         beanHeads = BeanHeads(payable(_beanHeads));
-        deployer = _deployer;
+        deployerAddress = _deployer;
         user = _user;
         helpers = new Helpers();
 
