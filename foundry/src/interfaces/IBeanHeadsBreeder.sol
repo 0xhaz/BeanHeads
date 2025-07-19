@@ -11,6 +11,11 @@ interface IBeanHeadsBreeder {
     error IBeanHeadsBreeder__InvalidTokenId();
     error IBeanHeadsBreeder__NotOwner();
     error IBeanHeadsBreeder__TransferFailed();
+    error IBeanHeadsBreeder__InsufficientAllowance();
+    error IBeanHeadsBreeder__InsufficientBalance();
+    error IBeanHeadsBreeder__InvalidOraclePrice();
+    error IBeanHeadsBreeder__InvalidToken();
+    error IBeanHeadsBreeder__RequestAlreadyFulfilled();
 
     /**
      * @notice Enum representing the different breeding modes.
@@ -40,6 +45,8 @@ interface IBeanHeadsBreeder {
         uint256 parent2Id;
         BreedingMode mode;
     }
+
+    event BreedRequestRefunded(address indexed owner, address indexed paymentToken, uint256 paymentAmount);
 
     /**
      * @notice Emitted when a breed request is initiated.
@@ -75,6 +82,14 @@ interface IBeanHeadsBreeder {
      * @param tokenId The token ID of the BeanHead being withdrawn.
      */
     event BeanHeadsWithdrawn(address indexed owner, uint256 tokenId);
+
+    /**
+     * @notice Emitted when balance is withdrawn from the breeder contract.
+     * @param token The address of the token being withdrawn.
+     * @param amount The amount of tokens withdrawn.
+     * @dev This event is emitted when the owner withdraws funds from the breeder contract.
+     */
+    event FundsWithdrawn(address indexed token, uint256 amount);
 
     /**
      * @notice Emitted when a new BeanHead is bred without burning parents.
@@ -172,11 +187,12 @@ interface IBeanHeadsBreeder {
      * @notice Initiates breeding of two generation 1 BeanHeads.
      * @param parent1Id The token ID of the first parent BeanHead.
      * @param parent2Id The token ID of the second parent BeanHead.
+     * @param mode The breeding mode to use (NewBreed, Mutation, Fusion, Ascension).
+     * @param token The address of the ERC20 token used for payment.
      * returns The request ID for the breeding request.
      */
-    function requestBreed(uint256 parent1Id, uint256 parent2Id, BreedingMode mode)
+    function requestBreed(uint256 parent1Id, uint256 parent2Id, BreedingMode mode, address token)
         external
-        payable
         returns (uint256 requestId);
 
     /**

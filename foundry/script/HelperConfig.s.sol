@@ -9,8 +9,8 @@ import {MockLinkToken} from "chainlink-brownie-contracts/contracts/src/v0.8/mock
 import {BeanHeads} from "src/core/BeanHeads.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
-import {BeanHeadsBreeder} from "src/vrf/BeanHeadsBreeder.sol";
-import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
+// import {BeanHeadsBreeder} from "src/vrf/BeanHeadsBreeder.sol";
+// import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
 
 contract HelperConfig is Script {
     struct NetworkConfig {
@@ -84,7 +84,7 @@ contract HelperConfig is Script {
 
     function _setSepoliaConfig() public returns (NetworkConfig memory) {
         activeNetworkConfig = NetworkConfig({
-            routerClient: address(0),
+            routerClient: 0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59,
             remoteBridge: address(0),
             linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
             vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,

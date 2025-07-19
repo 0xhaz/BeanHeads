@@ -8,11 +8,13 @@ import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
 import {DeployBeanHeads, HelperConfig} from "script/DeployBeanHeads.s.sol";
 import {Helpers} from "test/Helpers.sol";
 import {Genesis} from "src/types/Genesis.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 contract BeanHeadsTest is Test, Helpers {
     BeanHeads beanHeads;
     BeanHeadsRoyalty royalty;
+    MockERC20 mockERC20;
     DeployBeanHeads deployBeanHeads;
     HelperConfig helperConfig;
 
@@ -21,7 +23,7 @@ contract BeanHeadsTest is Test, Helpers {
     address public USER = makeAddr("USER");
     address public USER2 = makeAddr("USER2");
 
-    uint256 public MINT_PRICE = 0.01 ether;
+    uint256 public constant MINT_PRICE = 0.01 ether;
 
     address deployerAddress;
 
@@ -34,20 +36,27 @@ contract BeanHeadsTest is Test, Helpers {
     function setUp() public {
         helpers = new Helpers();
         helperConfig = new HelperConfig();
+        mockERC20 = new MockERC20(1000000 ether); // Create a mock ERC20 token with 1 million supply
 
         // vm.startPrank(DEPLOYER);
         deployBeanHeads = new DeployBeanHeads();
-        (address beanHeadsAddress, address royaltyAddress) = deployBeanHeads.run();
+        (address beanHeadsAddress,) = deployBeanHeads.run();
         beanHeads = BeanHeads(payable(beanHeadsAddress));
+
+        mockERC20.approve(address(beanHeads), type(uint256).max); // Approve BeanHeads to spend mock ERC20 tokens
+        mockERC20.transfer(USER, 100 ether); // Transfer some mock ERC20 tokens to USER
 
         deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
         vm.startPrank(deployerAddress);
+        beanHeads.setAllowedToken(address(mockERC20), true); // Allow mock ERC20 token for minting
+        beanHeads.setMintPrice(0.01 ether); // Set mint price to 0.01 ether
+
         royalty = deployBeanHeads.royalty();
         royalty.setRoyaltyInfo(600); // Set royalty to 6%
         vm.stopPrank();
 
-        vm.deal(USER, 10 ether); // Give USER some ether to mint
-        vm.deal(USER2, 10 ether); // Give USER2 some ether to mint
+        vm.deal(USER, 10 ether);
+        vm.deal(USER2, 10 ether);
     }
 
     function test_InitialSetup() public view {
@@ -65,7 +74,7 @@ contract BeanHeadsTest is Test, Helpers {
     function test_mintGenesis_ReturnSVGParams() public {
         vm.startPrank(USER);
         vm.recordLogs();
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         assertEq(tokenId, 0);
         // assertTrue(tokenId > beanHeads._sequentialUpTo());
 
@@ -121,13 +130,13 @@ contract BeanHeadsTest is Test, Helpers {
         vm.stopPrank();
 
         vm.prank(USER2);
-        tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER2, params, 1);
+        tokenId = beanHeads.mintGenesis(USER2, params, 1, address(mockERC20));
         assertEq(tokenId, 1);
 
         vm.startPrank(deployerAddress);
         uint256 contractBalanceBefore = address(beanHeads).balance;
         assertEq(contractBalanceBefore, MINT_PRICE * 2);
-        beanHeads.withdraw();
+        beanHeads.withdraw(address(mockERC20));
         uint256 contractBalanceAfter = address(beanHeads).balance;
         assertEq(contractBalanceAfter, contractBalanceBefore - MINT_PRICE * 2);
         vm.stopPrank();
@@ -138,7 +147,7 @@ contract BeanHeadsTest is Test, Helpers {
         Genesis.SVGParams memory multiParams = params;
         uint256 amount = 3;
         uint256 totalPrice = MINT_PRICE * amount;
-        uint256 tokenId = beanHeads.mintGenesis{value: totalPrice}(USER, multiParams, amount);
+        uint256 tokenId = beanHeads.mintGenesis(USER, multiParams, amount, address(mockERC20));
         assertEq(tokenId, 0); // First token ID should be 0
         assertEq(beanHeads.balanceOf(USER), amount); // USER should own 3 tokens
         assertEq(beanHeads.getOwnerTokensCount(USER), amount); // USER should have 3 tokens in their collection
@@ -155,7 +164,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_tokenURI_ReturnsURI() public {
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         string memory uri = beanHeads.tokenURI(tokenId);
         console2.logString(uri);
 
@@ -164,14 +173,14 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_PrintAttributes() public {
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         string memory attributes = beanHeads.getAttributes(tokenId);
         console2.logString(attributes);
     }
 
     function test_getOwnerTokens_ReturnsTokens() public {
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
 
         uint256[] memory tokens = beanHeads.getOwnerTokens(USER);
         // console2.logUint(tokenId);
@@ -188,7 +197,7 @@ contract BeanHeadsTest is Test, Helpers {
         vm.startPrank(USER);
 
         for (uint256 i = 0; i < count; i++) {
-            uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+            uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
             assertEq(tokenId, i);
         }
         vm.stopPrank();
@@ -201,7 +210,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_SellTokens_Success() public {
         vm.startPrank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         uint256 price = 1 ether;
 
         vm.recordLogs();
@@ -217,7 +226,7 @@ contract BeanHeadsTest is Test, Helpers {
         uint256 expectedRoyalty = (salePrice * 600) / 10000;
 
         vm.recordLogs();
-        beanHeads.buyToken{value: salePrice}(tokenId, salePrice);
+        beanHeads.buyToken(tokenId, salePrice, address(mockERC20));
         _assertBuyLogs(tokenId, salePrice, expectedRoyalty);
 
         assertEq(beanHeads.getOwnerOf(tokenId), USER2);
@@ -234,7 +243,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_CancelTokenSale_Success() public {
         vm.startPrank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         uint256 price = 1 ether;
 
         vm.recordLogs();
@@ -341,7 +350,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_burnToken_Success() public {
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
 
         vm.prank(USER);
         beanHeads.burn(tokenId);
@@ -368,7 +377,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_sellToken_FailWithRevert() public {
         vm.startPrank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         uint256 price = 0;
 
         vm.expectRevert(IBeanHeads.IBeanHeads__PriceMustBeGreaterThanZero.selector);
@@ -387,8 +396,8 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_buyToken_FailWithRevert() public {
         vm.startPrank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
-        uint256 tokenId2 = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
+        uint256 tokenId2 = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         uint256 price = 1 ether;
 
         vm.recordLogs();
@@ -401,25 +410,25 @@ contract BeanHeadsTest is Test, Helpers {
         beanHeads.sellToken(tokenId + 2, price); // Trying to sell a token not owned by USER
 
         vm.expectRevert(IBeanHeads.IBeanHeads__InsufficientPayment.selector);
-        beanHeads.buyToken(tokenId, price); // USER2 trying to buy with insufficient funds
+        beanHeads.buyToken(tokenId, price, address(mockERC20)); // USER2 trying to buy with insufficient funds
         vm.stopPrank();
 
         vm.startPrank(USER2);
         vm.deal(USER2, 1 ether); // Enough ether now
         vm.expectRevert(IBeanHeads.IBeanHeads__TokenIsNotForSale.selector);
-        beanHeads.buyToken(tokenId2, price); // Trying to buy a token not on sale
+        beanHeads.buyToken(tokenId2, price, address(mockERC20)); // Trying to buy a token not on sale
         vm.stopPrank();
 
         vm.startPrank(USER2);
         vm.deal(USER2, 10 ether); // Enough ether now
         vm.expectRevert(IBeanHeads.IBeanHeads__PriceMismatch.selector);
-        beanHeads.buyToken(tokenId, price + 1 ether); // Price mismatch
+        beanHeads.buyToken(tokenId, price + 1 ether, address(mockERC20)); // Price mismatch
         vm.stopPrank();
     }
 
     function test_cancelTokenSale_FailWithRevert() public {
         vm.startPrank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         uint256 price = 1 ether;
 
         beanHeads.sellToken(tokenId, price);
@@ -439,20 +448,10 @@ contract BeanHeadsTest is Test, Helpers {
     function test_mintGenesis_FailedWithReverts() public {
         vm.startPrank(USER);
         vm.expectRevert(IBeanHeads.IBeanHeads__InvalidAmount.selector);
-        beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 0); // Invalid amount of 0
+        beanHeads.mintGenesis(USER, params, 0, address(mockERC20)); // Invalid amount of 0
 
         vm.expectRevert(IBeanHeads.IBeanHeads__InsufficientPayment.selector);
-        beanHeads.mintGenesis{value: MINT_PRICE / 2}(USER, params, 1); // Insufficient payment
-        vm.stopPrank();
-    }
-
-    function test_mintGenesis_ExcessPaymentRefund() public {
-        vm.startPrank(USER);
-        uint256 excessPayment = 0.005 ether;
-        uint256 userBalanceBefore = USER.balance;
-        beanHeads.mintGenesis{value: MINT_PRICE + excessPayment}(USER, params, 1);
-        uint256 userBalanceAfter = USER.balance;
-        assertEq(userBalanceBefore - userBalanceAfter, MINT_PRICE);
+        beanHeads.mintGenesis(USER, params, 1, address(mockERC20)); // Insufficient payment
         vm.stopPrank();
     }
 
@@ -465,7 +464,7 @@ contract BeanHeadsTest is Test, Helpers {
     function test_withdraw_ZeroBalance() public {
         vm.startPrank(deployerAddress);
         vm.expectRevert(IBeanHeads.IBeanHeads__WithdrawFailed.selector);
-        beanHeads.withdraw();
+        beanHeads.withdraw(address(mockERC20));
         vm.stopPrank();
     }
 
@@ -476,7 +475,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_getAttributesByOwner_WrongOwner() public {
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
 
         vm.expectRevert(IBeanHeads.IBeanHeads__NotOwner.selector);
         beanHeads.getAttributesByOwner(USER2, tokenId);

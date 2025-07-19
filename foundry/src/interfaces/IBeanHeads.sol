@@ -23,24 +23,45 @@ interface IBeanHeads {
     error IBeanHeads__InvalidRequestId();
     error IBeanHeads__UnauthorizedBreeders();
     error IBeanHeads__NotParentGeneration();
+    error IBeanHeads__TokenNotAllowed(address token);
+    error IBeanHeads__InvalidTokenAddress();
+    error IBeanHeads__InsufficientAllowance();
+    error IBeanHeads__InvalidTokenDecimals();
+    error IBeanHeads__InvalidOraclePrice();
 
+    /// @notice Emitted when a new Genesis NFT is minted
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
+
+    /// @notice Emitted when a token is withdrawn
     event TokenWithdrawn(address indexed owner, uint256 amount);
+
+    /// @notice Emitted when a seller sets a price for a token
     event SetTokenPrice(address indexed owner, uint256 indexed tokenId, uint256 price);
     event RoyaltyPaid(address indexed receiver, uint256 indexed tokenId, uint256 salePrice, uint256 royaltyAmount);
     event RoyaltyInfoUpdated(address indexed receiver, uint96 feeBps);
     event TokenSaleCancelled(address indexed owner, uint256 indexed tokenId);
     event TokenSold(address indexed buyer, address indexed seller, uint256 indexed tokenId, uint256 salePrice);
     event MintedNewBreed(address indexed owner, uint256 indexed tokenId);
+    event AllowedTokenUpdated(address indexed token, bool isAllowed);
+    event MintPriceUpdated(uint256 newPrice);
+
+    /// @notice Struct representing a token listing
+    /// @param seller The address of the seller.
+    /// @param price The price at which the token is listed for sale.
+    /// @param isActive Whether the listing is currently active.
+    struct Listing {
+        address seller;
+        uint256 price;
+        bool isActive;
+    }
 
     /**
      * @notice Mints a new Genesis NFT with the provided SVG parameters
      * @param params The struct containing SVG configuration parameters
      * @return tokenId The ID of the newly minted token
      */
-    function mintGenesis(address to, Genesis.SVGParams memory params, uint256 amount)
+    function mintGenesis(address to, Genesis.SVGParams memory params, uint256 amount, address token)
         external
-        payable
         returns (uint256);
 
     /**
@@ -94,10 +115,9 @@ interface IBeanHeads {
     /**
      * @notice Buys a token currently on sale.
      * @param tokenId The ID of the token to buy.
-     * @param price The agreed sale price.
      * @dev This function transfers the token to the buyer, pays the seller minus royalties, and emits relevant events.
      */
-    function buyToken(uint256 tokenId, uint256 price) external payable;
+    function buyToken(uint256 tokenId, address token) external;
 
     /**
      * @notice Cancels the sale of a token
@@ -110,7 +130,7 @@ interface IBeanHeads {
      * @notice Withdraws the contract's balance to the owner's address
      * @dev Only callable by the owner
      */
-    function withdraw() external;
+    function withdraw(address token) external;
 
     /**
      * @notice Get the current mint price for a Genesis NFT
@@ -163,6 +183,11 @@ interface IBeanHeads {
      */
     function approve(address to, uint256 tokenId) external payable;
 
+    /**
+     * @notice Sets or unsets an address as an authorized breeder
+     * @param breeder The address to authorize or unauthorize
+     * @dev This function allows the contract owner to manage which addresses can call breeder functions.
+     */
     function authorizeBreeder(address breeder) external;
 
     /**
@@ -184,4 +209,47 @@ interface IBeanHeads {
      * @return Metadata URI.
      */
     function tokenURI(uint256 tokenId) external view returns (string memory);
+
+    /**
+     * @notice Add or remove a token from the allow list
+     * @param token The address of the token to add or remove
+     * @param allowList Whether to add (true) or remove (false) the token
+     * @dev This function allows the contract owner to manage the allow list of tokens that can be used with the contract.
+     */
+    function setAllowedToken(address token, bool allowList) external;
+
+    /**
+     * @notice Sets the mint price for a Genesis NFT
+     * @param newPrice The new mint price in wei
+     * @dev Only callable by the contract owner
+     */
+    function setMintPrice(uint256 newPrice) external;
+
+    /**
+     * @notice Returns the sale price of a token.
+     * @param tokenId The ID of the token to query.
+     * @return The sale price of the token.
+     */
+    function getTokenSalePrice(uint256 tokenId) external view returns (uint256);
+
+    /**
+     * @notice Check if the token is allowed for minting
+     * @param token The address of the token to check
+     * @return isAllowed True if the token is allowed, false otherwise
+     */
+    function isTokenAllowed(address token) external view returns (bool);
+
+    /**
+     * @notice Check if the token is on sale
+     * @param tokenId The ID of the token to check
+     * @return isOnSale True if the token is on sale, false otherwise
+     */
+    function isTokenForSale(uint256 tokenId) external view returns (bool);
+
+    /**
+     * @notice Returns the price feed address for a token.
+     * @param token The address of the token to query.
+     * @return The price feed address for the token.
+     */
+    function getPriceFeed(address token) external view returns (address);
 }

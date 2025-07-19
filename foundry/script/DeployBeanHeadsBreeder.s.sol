@@ -37,10 +37,6 @@ contract DeployBeanHeadsBreeder is Script {
         // beanHeads.authorizeBreeder(address(beanHeadsBreeder));
         vm.stopBroadcast();
 
-        console.log("Deployer (msg.sender):", msg.sender);
-        console.log("Tx.origin:", tx.origin);
-        console.log("Owner in contract:", beanHeadsBreeder.owner());
-
         console.log("BeanHeadsBreeder deployed at:", address(beanHeadsBreeder));
         return address(beanHeadsBreeder);
     }

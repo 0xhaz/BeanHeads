@@ -6,8 +6,16 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {IERC20} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import {AggregatorV3Interface} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import {OracleLib} from "src/libraries/OracleLib.sol";
 import {RenderLib} from "src/libraries/RenderLib.sol";
 
 /**
@@ -17,14 +25,21 @@ import {RenderLib} from "src/libraries/RenderLib.sol";
  * @dev Uses Chainlink VRF for attributes randomness
  */
 contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+    using OracleLib for AggregatorV3Interface;
     /*//////////////////////////////////////////////////////////////
                               GLOBAL STATE
     //////////////////////////////////////////////////////////////*/
     /// @notice Royalty information
+
     IERC2981 public immutable i_royaltyContract;
 
     /// @notice Token mint price
-    uint256 public constant MINT_PRICE = 0.01 ether;
+    uint256 private s_mintPrice;
+
+    uint256 private constant PRECISION = 1e18; // Precision for price calculations
+
+    uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
 
     /*//////////////////////////////////////////////////////////////
                                 MAPPINGS
@@ -32,11 +47,8 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
     /// @notice Mapping tokenId to its SVG parameters
     mapping(uint256 => Genesis.SVGParams) private s_tokenIdToParams;
 
-    /// @notice Mapping tokenId to its sale price
-    mapping(uint256 tokenId => uint256 price) private s_tokenIdToSalePriceValue;
-
-    /// @notice Mapping tokenId to the contract owner (seller)
-    mapping(uint256 tokenId => address owner) private s_tokenIdToSeller;
+    /// @notice Mapping of Listing structs for each tokenId
+    mapping(uint256 => Listing) private s_tokenIdToListing;
 
     /// @notice Mapping tokenId to its generation number
     mapping(uint256 tokenId => uint256 generation) private s_tokenIdToGeneration;
@@ -46,6 +58,15 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
 
     /// @notice Mapping of total minted tokens owned by an address
     mapping(address tokenOwner => uint256[] tokenIds) private s_ownerTokens;
+
+    /// @notice Mapping of allowed tokens to be used for minting
+    mapping(address tokenAddress => bool isAllowed) private s_allowedTokens;
+
+    /// @notice Mapping to track token used for minting and transactions
+    mapping(uint256 tokenId => address tokenAddress) private s_tokenIdToPaymentToken;
+
+    /// @notice Mapping of token price feeds to get USD value
+    mapping(address tokenAddress => address priceFeed) private s_priceFeeds;
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -68,40 +89,48 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
      */
     constructor(address initialOwner, address royalty_) ERC721A("BeanHeads", "BEAN") Ownable(initialOwner) {
         i_royaltyContract = IERC2981(royalty_);
+        s_mintPrice = 0.01 ether; // Set default mint price
     }
 
     /*//////////////////////////////////////////////////////////////
                             PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    /// @notice Inherits from IBeanHeads interface
-    function mintGenesis(address to, Genesis.SVGParams memory params, uint256 amount)
+    /// @inheritdoc IBeanHeads
+    function mintGenesis(address to, Genesis.SVGParams calldata params, uint256 amount, address paymentToken)
         public
-        payable
         returns (uint256 tokenId)
     {
         if (amount == 0) revert IBeanHeads__InvalidAmount();
-        uint256 totalPrice = MINT_PRICE * amount;
-        if (msg.value < totalPrice) revert IBeanHeads__InsufficientPayment();
+        if (!s_allowedTokens[paymentToken]) revert IBeanHeads__TokenNotAllowed(paymentToken);
+
+        IERC20 token = IERC20(paymentToken);
+        uint256 rawPrice = s_mintPrice * amount;
+        uint256 adjustedPrice = _getTokenAmountFromUsd(paymentToken, rawPrice);
+
+        if (token.allowance(msg.sender, address(this)) < adjustedPrice) revert IBeanHeads__InsufficientAllowance();
+        if (token.balanceOf(msg.sender) < adjustedPrice) revert IBeanHeads__InsufficientPayment();
 
         tokenId = _nextTokenId();
         s_tokenIdToParams[tokenId] = params;
 
         _safeMint(to, amount);
-        s_tokenIdToSalePriceValue[tokenId] = 0; // Initialize sale price to 0
+        s_tokenIdToListing[tokenId] = Listing({
+            seller: msg.sender,
+            price: 0, // Initialize sale price to 0
+            isActive: false
+        });
         s_tokenIdToGeneration[tokenId] = 1;
         s_authorizedBreeders[to] = true; // Authorize the minter to breed new tokens
         s_ownerTokens[to].push(tokenId); // Add tokenId to owner's list
+        s_tokenIdToPaymentToken[tokenId] = paymentToken; // Store the payment token used for minting
+
+        // Transfer tokens from the minter to the contract
+        IERC20(paymentToken).safeTransferFrom(msg.sender, address(this), adjustedPrice);
 
         emit MintedGenesis(to, tokenId);
-
-        uint256 excess = msg.value - totalPrice;
-        if (excess > 0) {
-            (bool success,) = to.call{value: excess}("");
-            if (!success) revert IBeanHeads__WithdrawFailed();
-        }
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
     function sellToken(uint256 tokenId, uint256 price) public {
         if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
         if (msg.sender != ownerOf(tokenId)) revert IBeanHeads__NotOwner();
@@ -109,76 +138,74 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
 
         safeTransferFrom(msg.sender, address(this), tokenId);
 
-        s_tokenIdToSalePriceValue[tokenId] = price;
-        s_tokenIdToSeller[tokenId] = msg.sender; // Store the seller address
+        s_tokenIdToListing[tokenId] = Listing({seller: msg.sender, price: price, isActive: true});
 
         emit SetTokenPrice(msg.sender, tokenId, price);
     }
 
-    /// @notice Inherits from IBeanHeads interface
-    function buyToken(uint256 tokenId, uint256 price) public payable nonReentrant {
-        if (s_tokenIdToSalePriceValue[tokenId] == 0) {
-            revert IBeanHeads__TokenIsNotForSale();
-        }
+    /// @inheritdoc IBeanHeads
+    function buyToken(uint256 tokenId, address paymentToken) public nonReentrant {
         if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
-        if (s_tokenIdToSalePriceValue[tokenId] != price) {
-            revert IBeanHeads__PriceMismatch();
-        }
-        if (msg.value < price) revert IBeanHeads__InsufficientPayment();
 
-        address seller = s_tokenIdToSeller[tokenId];
+        uint256 price = s_tokenIdToListing[tokenId].price;
+        if (price == 0) revert IBeanHeads__TokenIsNotForSale();
+        if (!s_allowedTokens[paymentToken]) revert IBeanHeads__TokenNotAllowed(paymentToken);
+
+        IERC20 token = IERC20(paymentToken);
+        uint256 adjustedPrice = _getTokenAmountFromUsd(paymentToken, price);
+
+        if (token.allowance(msg.sender, address(this)) < adjustedPrice) revert IBeanHeads__InsufficientAllowance();
+        if (token.balanceOf(msg.sender) < adjustedPrice) revert IBeanHeads__InsufficientPayment();
+
+        address seller = s_tokenIdToListing[tokenId].seller;
 
         // Reset sale price
-        s_tokenIdToSalePriceValue[tokenId] = 0;
-        delete s_tokenIdToSeller[tokenId]; // Clear seller address
+        s_tokenIdToListing[tokenId].price = 0;
+        s_tokenIdToListing[tokenId].isActive = false; // Mark listing as inactive
+        delete s_tokenIdToListing[tokenId].seller; // Clear seller address
 
         // Pay royalties
-
-        (address royaltyReceiver, uint256 royaltyAmount) = _royaltyInfo(tokenId, price);
-        (bool success,) = royaltyReceiver.call{value: royaltyAmount}("");
-        if (!success) revert IBeanHeads__RoyaltyPaymentFailed(tokenId);
+        (address royaltyReceiver, uint256 royaltyAmountRaw) = _royaltyInfo(tokenId, price);
+        uint256 royaltyAmount = _getTokenAmountFromUsd(paymentToken, royaltyAmountRaw);
+        token.safeTransfer(royaltyReceiver, royaltyAmount);
 
         emit RoyaltyPaid(royaltyReceiver, tokenId, price, royaltyAmount);
 
         // Transfer remaining amount to seller
-        (success,) = seller.call{value: price - royaltyAmount}("");
-        if (!success) revert IBeanHeads__WithdrawFailed();
+        uint256 sellerAmount = adjustedPrice - royaltyAmount;
+        IERC20(paymentToken).safeTransfer(seller, sellerAmount);
 
-        uint256 overpayment = msg.value - price;
-        if (overpayment > 0) {
-            (bool refundSuccess,) = msg.sender.call{value: overpayment}("");
-            if (!refundSuccess) revert IBeanHeads__WithdrawFailed();
-        }
-
-        IERC721A(address(this)).transferFrom(address(this), msg.sender, tokenId);
+        s_tokenIdToPaymentToken[tokenId] = paymentToken; // Store the payment token used for the transaction
+        IERC721A(address(this)).safeTransferFrom(address(this), msg.sender, tokenId);
         s_ownerTokens[msg.sender].push(tokenId); // Add tokenId to buyer's list
         _removeTokenFromOwner(seller, tokenId); // Remove tokenId from seller's list
 
         emit TokenSold(msg.sender, seller, tokenId, price);
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
     function cancelTokenSale(uint256 tokenId) public override {
         if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
-        if (msg.sender != s_tokenIdToSeller[tokenId]) {
+        if (msg.sender != s_tokenIdToListing[tokenId].seller) {
             revert IBeanHeads__NotOwner();
         }
 
-        IERC721A(address(this)).transferFrom(address(this), msg.sender, tokenId);
+        IERC721A(address(this)).safeTransferFrom(address(this), msg.sender, tokenId);
 
         // Reset sale price
-        s_tokenIdToSalePriceValue[tokenId] = 0;
-        delete s_tokenIdToSeller[tokenId]; // Clear seller address
+        s_tokenIdToListing[tokenId].price = 0;
+        s_tokenIdToListing[tokenId].isActive = false; // Mark listing as inactive
+        delete s_tokenIdToListing[tokenId].seller; // Clear seller address
 
         emit TokenSaleCancelled(msg.sender, tokenId);
     }
 
-    // @notice Inherits from IERC721A and ERC721A
+    /// @inheritdoc IBeanHeads
     function approve(address to, uint256 tokenId) public payable override(ERC721A, IBeanHeads) {
         super.approve(to, tokenId);
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
     function tokenURI(uint256 tokenId) public view override(ERC721A, IBeanHeads) returns (string memory) {
         if (!_exists(tokenId)) {
             revert IBeanHeads__TokenDoesNotExist();
@@ -191,7 +218,7 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
         return RenderLib.buildMetadata(tokenId, params, s_tokenIdToGeneration[tokenId]);
     }
 
-    /// @notice Inherits from IERC721A and ERC721A
+    /// @inheritdoc IBeanHeads
     function safeTransferFrom(address from, address to, uint256 tokenId) public payable override(IBeanHeads, ERC721A) {
         super.safeTransferFrom(from, to, tokenId);
     }
@@ -199,15 +226,15 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
     /*//////////////////////////////////////////////////////////////
                            EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    /// @notice Inherits from IBeanHeads interface
-    function mintFromBreeders(address to, Genesis.SVGParams memory params, uint256 generation)
+    /// @inheritdoc IBeanHeads
+    function mintFromBreeders(address to, Genesis.SVGParams calldata params, uint256 generation)
         external
         onlyBreeder
         returns (uint256 tokenId)
     {
         tokenId = _nextTokenId();
         s_tokenIdToParams[tokenId] = params;
-        s_tokenIdToSalePriceValue[tokenId] = 0; // Initialize sale price to 0
+        s_tokenIdToListing[tokenId].price = 0; // Initialize sale price to 0
         s_tokenIdToGeneration[tokenId] = generation;
 
         _safeMint(to, 1);
@@ -217,31 +244,32 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
         emit MintedNewBreed(to, tokenId);
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
     function getNextTokenId() external view returns (uint256) {
         return _nextTokenId();
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
     function getOwnerTokensCount(address owner) external view returns (uint256) {
         return balanceOf(owner);
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
     function getOwnerOf(uint256 tokenId) external view returns (address) {
         return ownerOf(tokenId);
     }
 
+    /// @inheritdoc IBeanHeads
     function getOwnerTokens(address owner) external view override returns (uint256[] memory) {
         return s_ownerTokens[owner];
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
     function getAttributesByTokenId(uint256 tokenId) external view returns (Genesis.SVGParams memory params) {
         params = s_tokenIdToParams[tokenId];
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
     function getAttributesByOwner(address owner, uint256 tokenId)
         external
         view
@@ -251,28 +279,33 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
         params = s_tokenIdToParams[tokenId];
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
     function getAttributes(uint256 tokenId) external view returns (string memory) {
         return Genesis.buildAttributes(s_tokenIdToParams[tokenId], s_tokenIdToGeneration[tokenId]);
     }
 
-    /**
-     * @notice Returns the sale price of a token.
-     * @param tokenId The ID of the token to query.
-     * @return The sale price of the token.
-     */
+    /// @inheritdoc IBeanHeads
     function getTokenSalePrice(uint256 tokenId) external view returns (uint256) {
         if (!_exists(tokenId)) {
             revert IBeanHeads__TokenDoesNotExist();
         }
-        return s_tokenIdToSalePriceValue[tokenId];
+        return s_tokenIdToListing[tokenId].price;
     }
 
-    function getMintPrice() external pure returns (uint256) {
-        return MINT_PRICE;
+    /// @inheritdoc IBeanHeads
+    function setMintPrice(uint256 newPrice) external onlyOwner {
+        if (newPrice <= 0) revert IBeanHeads__PriceMustBeGreaterThanZero();
+        s_mintPrice = newPrice;
+
+        emit MintPriceUpdated(newPrice);
     }
 
-    /// @notice Inherits from IBeanHeads interface
+    /// @inheritdoc IBeanHeads
+    function getMintPrice() external view returns (uint256) {
+        return s_mintPrice;
+    }
+
+    /// @inheritdoc IBeanHeads
     function getGeneration(uint256 tokenId) external view returns (uint256) {
         if (!_exists(tokenId)) {
             revert IBeanHeads__TokenDoesNotExist();
@@ -280,20 +313,41 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
         return s_tokenIdToGeneration[tokenId];
     }
 
+    /// @inheritdoc IBeanHeads
     function getAuthorizedBreeders(address owner) external view returns (bool) {
         return s_authorizedBreeders[owner];
     }
 
-    /// @notice Inherits from IERC721A and ERC721A
+    /// @inheritdoc IBeanHeads
     function burn(uint256 tokenId) external {
         _burn(tokenId, true);
     }
 
-    receive() external payable {}
-
-    /// @notice Inherits from IERC721A and ERC721A
+    /// @inheritdoc IBeanHeads
     function exists(uint256 tokenId) external view returns (bool) {
         return _exists(tokenId);
+    }
+
+    /// @inheritdoc IBeanHeads
+    function setAllowedToken(address token, bool isAllowed) external onlyOwner {
+        if (token == address(0)) revert IBeanHeads__InvalidTokenAddress();
+        s_allowedTokens[token] = isAllowed;
+
+        emit AllowedTokenUpdated(token, isAllowed);
+    }
+
+    /// @inheritdoc IBeanHeads
+    function isTokenAllowed(address token) external view returns (bool) {
+        return s_allowedTokens[token];
+    }
+
+    function getPriceFeed(address token) external view returns (address) {
+        return s_priceFeeds[token];
+    }
+
+    function isTokenForSale(uint256 tokenId) external view returns (bool) {
+        if (!_exists(tokenId)) revert IBeanHeads__TokenDoesNotExist();
+        return s_tokenIdToListing[tokenId].isActive;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -330,16 +384,38 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
     }
 
     /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Converts a USD-denominated price (1e18) to token amount based on Chainlink price feed and token decimals
+     * @dev Assumes price feed returns 8 decimals, so adds 1e10 precision adjustment to make up to 1e18
+     * @param token The ERC20 token address used for payment
+     * @param usdAmount Amount in 18-decimal USD
+     * @return tokenAmount Equivalent amount of `token` based on its USD price
+     */
+    function _getTokenAmountFromUsd(address token, uint256 usdAmount) internal view returns (uint256 tokenAmount) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
+        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
+
+        if (price <= 0) revert IBeanHeads__InvalidOraclePrice(); // optional safety check
+
+        uint8 decimals = IERC20Metadata(token).decimals();
+        uint256 scale = 10 ** uint256(decimals);
+
+        tokenAmount = (usdAmount * scale * ADDITIONAL_FEED_PRECISION) / uint256(price);
+    }
+
+    /*//////////////////////////////////////////////////////////////
                             ADMIN FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Inherits from IBeanHeads interface
-    function withdraw() external onlyOwner nonReentrant {
-        uint256 amount = address(this).balance;
+    /// @inheritdoc IBeanHeads
+    function withdraw(address paymentToken) external onlyOwner nonReentrant {
+        uint256 amount = IERC20(paymentToken).balanceOf(address(this));
         if (amount == 0) revert IBeanHeads__WithdrawFailed();
 
-        (bool success,) = msg.sender.call{value: amount}("");
-        if (!success) revert IBeanHeads__WithdrawFailed();
+        IERC20(paymentToken).transfer(msg.sender, amount);
 
         emit TokenWithdrawn(msg.sender, amount);
     }

@@ -7,9 +7,18 @@ import {VRFCoordinatorV2_5} from "chainlink-brownie-contracts/contracts/src/v0.8
 import {VRFV2PlusClient} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 import {IERC721A} from "ERC721A/IERC721A.sol";
 import {ConfirmedOwner} from "chainlink-brownie-contracts/contracts/src/v0.8/shared/access/ConfirmedOwner.sol";
+import {IERC20} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
+import {AggregatorV3Interface} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {IBeanHeadsBreeder} from "src/interfaces/IBeanHeadsBreeder.sol";
 import {Genesis} from "src/types/Genesis.sol";
+import {OracleLib} from "src/libraries/OracleLib.sol";
 
 /**
  * @title BeanHeadsBreeder
@@ -18,9 +27,12 @@ import {Genesis} from "src/types/Genesis.sol";
  * Only user that has Gen1 BeanHeads can breed new BeanHeads.
  */
 contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
+    using SafeERC20 for IERC20;
+    using OracleLib for AggregatorV3Interface;
     /*//////////////////////////////////////////////////////////////
                               GLOBAL STATE
     //////////////////////////////////////////////////////////////*/
+
     IBeanHeads private immutable i_beanHeads;
     // Chainlink VRF parameters
     uint256 private immutable i_subscriptionId;
@@ -29,7 +41,7 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     uint16 private constant REQUEST_CONFIRMATIONS = 3; // Number of confirmations for the VRF request
     uint256 private BREED_COOL_DOWN = 50; // Cool down period for breeding requests
     uint256 private constant MAX_BREED_REQUESTS = 5; // Maximum number of breed requests per user
-    uint256 private constant MINT_PRICE = 0.01 ether; // Minting price for breeding
+    uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
 
     /*//////////////////////////////////////////////////////////////
                                 MAPPINGS
@@ -66,7 +78,7 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
                             PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     /// @notice Inherits from IBeanHeadsBreeder
-    function depositBeanHeads(uint256 tokenId) public override {
+    function depositBeanHeads(uint256 tokenId) public {
         // Ensure the token is a valid BeanHead
         if (!i_beanHeads.exists(tokenId)) {
             revert IBeanHeadsBreeder__InvalidTokenId();
@@ -87,7 +99,7 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     }
 
     /// @notice Inherits from IBeanHeadsBreeder
-    function withdrawBeanHeads(uint256 tokenId) public override {
+    function withdrawBeanHeads(uint256 tokenId) public {
         address owner = s_escrowedTokens[tokenId];
         if (owner != msg.sender) {
             revert IBeanHeadsBreeder__TokensNotEscrowedBySender();
@@ -103,10 +115,8 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     }
 
     /// @notice Inherits from IBeanHeadsBreeder
-    function requestBreed(uint256 parent1Id, uint256 parent2Id, BreedingMode mode)
+    function requestBreed(uint256 parent1Id, uint256 parent2Id, BreedingMode mode, address paymentToken)
         public
-        payable
-        override
         returns (uint256 requestId)
     {
         if (mode == BreedingMode.Ascension) {
@@ -120,9 +130,21 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
             }
         }
 
-        if (msg.value < MINT_PRICE) {
-            revert IBeanHeadsBreeder__InsufficientPayment();
+        if (!i_beanHeads.isTokenAllowed(paymentToken)) {
+            revert IBeanHeadsBreeder__InvalidToken();
         }
+
+        IERC20 token = IERC20(paymentToken);
+        uint256 price = i_beanHeads.getMintPrice();
+        uint256 tokenAmount = _getTokenAmountFromUsd(paymentToken, price);
+
+        uint256 allowance = token.allowance(msg.sender, address(this));
+        uint256 balance = token.balanceOf(msg.sender);
+
+        if (allowance < tokenAmount) revert IBeanHeadsBreeder__InsufficientAllowance();
+        if (balance < tokenAmount) revert IBeanHeadsBreeder__InsufficientBalance();
+
+        token.safeTransferFrom(msg.sender, address(this), tokenAmount);
 
         // Check if the pairing parents have already been used in breeding
         if (
@@ -190,16 +212,40 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         count = s_parentBreedingCount[tokenId];
     }
 
-    function withdrawFunds() external onlyOwner {
-        uint256 balance = address(this).balance;
-        if (balance > 0) {
-            (bool success,) = payable(msg.sender).call{value: balance}("");
-            if (!success) revert IBeanHeadsBreeder__TransferFailed();
-        }
+    function withdrawFunds(address token) external onlyOwner {
+        uint256 amount = IERC20(token).balanceOf(address(this));
+        if (amount > 0) IERC20(token).safeTransfer(msg.sender, amount);
+
+        emit FundsWithdrawn(token, amount);
     }
 
     receive() external payable {}
     fallback() external payable {}
+
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Converts a USD-denominated price (1e18) to token amount based on Chainlink price feed and token decimals
+     * @dev Assumes price feed returns 8 decimals, so adds 1e10 precision adjustment to make up to 1e18
+     * @param token The ERC20 token address used for payment
+     * @param usdAmount Amount in 18-decimal USD
+     * @return tokenAmount Equivalent amount of `token` based on its USD price
+     */
+    function _getTokenAmountFromUsd(address token, uint256 usdAmount) internal view returns (uint256 tokenAmount) {
+        address feedAddress = i_beanHeads.getPriceFeed(token);
+        if (feedAddress == address(0)) revert IBeanHeadsBreeder__InvalidToken();
+
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(feedAddress);
+        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
+        if (price <= 0) revert IBeanHeadsBreeder__InvalidOraclePrice(); // optional safety check
+
+        uint8 decimals = IERC20Metadata(token).decimals();
+        uint256 scale = 10 ** uint256(decimals);
+
+        tokenAmount = (usdAmount * scale * ADDITIONAL_FEED_PRECISION) / uint256(price);
+    }
 
     /*//////////////////////////////////////////////////////////////
                            CALLBACK FUNCTIONS

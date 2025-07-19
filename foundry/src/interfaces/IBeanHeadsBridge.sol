@@ -10,6 +10,12 @@ interface IBeanHeadsBridge {
     error IBeanHeadsBridge__UnauthorizedSender(address sender);
     error IBeanHeadsBridge__TokenNotDeposited(uint256 tokenId);
     error IBeanHeadsBridge__InsufficientPayment();
+    error IBeanHeadsBridge__InvalidTokenReceived();
+    error IBeanHeadsBridge__InvalidToken();
+    error IBeanHeadsBridge__InvalidOraclePrice();
+    error IBeanHeadsBridge__TokenNotAllowed(address token);
+    error IBeanHeadsBridge__TokenIsNotForSale();
+    error IBeanHeadsBridge__InsufficientAllowance();
 
     enum ActionType {
         MINT,
@@ -56,7 +62,7 @@ interface IBeanHeadsBridge {
     );
 
     /// @notice Emitted when a token is bought cross-chain.
-    event TokenBoughtCrossChain(address indexed buyer, uint256 tokenId, uint256 price);
+    event TokenBoughtCrossChain(address indexed buyer, uint256 tokenId);
 
     /// @notice Emitted when a token is minted cross-chain.
     event TokenMintedCrossChain(address indexed receiver, Genesis.SVGParams params, uint256 amount);
@@ -81,12 +87,17 @@ interface IBeanHeadsBridge {
      * @notice Initiates a cross-chain mint token request.
      * @param _destinationChainSelector The target chain selector for the mint request.
      * @param _receiver The address that will receive the minted token.
+     * @param _params The SVG parameters for the token to be minted.
+     * @param _amount The amount of tokens to be minted.
+     * @param _paymentToken The address of the payment token used for the minting.
+     * @return messageId The ID of the sent message.
      */
     function sendMintTokenRequest(
         uint64 _destinationChainSelector,
         address _receiver,
         Genesis.SVGParams calldata _params,
-        uint256 _amount
+        uint256 _amount,
+        address _paymentToken
     ) external payable returns (bytes32 messageId);
 
     /**
@@ -104,12 +115,10 @@ interface IBeanHeadsBridge {
      * @notice Send the buyToken request to the remote bridge.
      * @param _destinationChainSelector The target chain selector for the buy request.
      * @param _tokenId The ID of the token to be bought.
-     * @param _price The price of the token to be bought.
      * @return messageId The ID of the sent message.
      */
-    function sendBuyTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, uint256 _price)
+    function sendBuyTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, address _paymentToken)
         external
-        payable
         returns (bytes32 messageId);
 
     /**
@@ -129,9 +138,12 @@ interface IBeanHeadsBridge {
      * @param _receiver The address that will receive the transferred token.
      * @return messageId The ID of the sent message.
      */
-    function sendTransferTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, address _receiver)
-        external
-        returns (bytes32 messageId);
+    function sendTransferTokenRequest(
+        uint64 _destinationChainSelector,
+        uint256 _tokenId,
+        address _receiver,
+        address _paymentToken
+    ) external returns (bytes32 messageId);
 
     /**
      * @notice Deposit LINK tokens to the bridge contract.

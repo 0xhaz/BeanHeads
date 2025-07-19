@@ -11,6 +11,7 @@ import {Genesis} from "src/types/Genesis.sol";
 import {Handler} from "test/invariant/Handler.t.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
 
 contract BeanHeadsInvariantTest is StdInvariant, Test {
     BeanHeads internal beanHeads;
@@ -19,6 +20,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
     DeployBeanHeads internal deployBeanHeads;
     BeanHeadsRoyalty internal royaltyContract;
     HelperConfig internal helperConfig;
+    MockERC20 internal mockERC20;
 
     address internal USER = makeAddr("user");
     address internal USER2 = makeAddr("user2");
@@ -50,12 +52,17 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
     function setUp() public {
         helperConfig = new HelperConfig();
         deployBeanHeads = new DeployBeanHeads();
+        mockERC20 = new MockERC20(1000 ether);
+
         deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
         (address beanHeadsAddr,) = deployBeanHeads.run();
         beanHeads = BeanHeads(payable(beanHeadsAddr));
         royaltyContract = deployBeanHeads.royalty();
         helpers = new Helpers();
         handler = new Handler(address(beanHeads), deployerAddress, USER);
+
+        mockERC20.approve(address(beanHeads), type(uint256).max); // Approve BeanHeads to spend mock ERC20 tokens
+        mockERC20.transfer(USER, 100 ether); // Transfer some mock ERC20 tokens to USER
 
         (
             Genesis.HairParams memory hair,
@@ -97,7 +104,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         amount = bound(amount, 1, 100);
         vm.startPrank(USER);
         uint256 totalPrice = beanHeads.getMintPrice() * amount;
-        uint256 firstTokenId = beanHeads.mintGenesis{value: totalPrice}(USER, params, amount);
+        uint256 firstTokenId = beanHeads.mintGenesis(USER, params, amount, address(mockERC20));
         assertEq(beanHeads.balanceOf(USER), amount);
         for (uint256 i = 0; i < amount; i++) {
             assertEq(beanHeads.getOwnerOf(firstTokenId + i), USER);
@@ -109,7 +116,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         fparams.hairParams = _makeHairParams(hairStyle, hairColor);
 
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, fparams, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, fparams, 1, address(mockERC20));
         Genesis.SVGParams memory storedParams = beanHeads.getAttributesByTokenId(tokenId);
 
         assertEq(storedParams.hairParams.hairStyle, fparams.hairParams.hairStyle);
@@ -121,7 +128,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         fparams.accessoryParams = _makeAccessoryParams(accessoryId, hatStyle, hatColor);
 
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, fparams, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, fparams, 1, address(mockERC20));
         Genesis.SVGParams memory storedParams = beanHeads.getAttributesByTokenId(tokenId);
 
         assertEq(storedParams.accessoryParams.accessoryId, fparams.accessoryParams.accessoryId);
@@ -134,7 +141,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         fparams.bodyParams = _makeBodyParams(bodyType, skinColor);
 
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, fparams, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, fparams, 1, address(mockERC20));
         Genesis.SVGParams memory storedParams = beanHeads.getAttributesByTokenId(tokenId);
 
         assertEq(storedParams.bodyParams.bodyType, fparams.bodyParams.bodyType);
@@ -146,7 +153,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         fparams.clothingParams = _makeClothingParams(clothes, clothesColor, clothesGraphic);
 
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, fparams, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, fparams, 1, address(mockERC20));
         Genesis.SVGParams memory storedParams = beanHeads.getAttributesByTokenId(tokenId);
 
         assertEq(storedParams.clothingParams.clothes, fparams.clothingParams.clothes);
@@ -166,7 +173,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
             _makeFacialFeaturesParams(eyebrowShape, eyeShape, facialHairType, mouthStyle, lipColor);
 
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, fparams, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, fparams, 1, address(mockERC20));
         Genesis.SVGParams memory storedParams = beanHeads.getAttributesByTokenId(tokenId);
 
         assertEq(storedParams.facialFeaturesParams.eyebrowShape, fparams.facialFeaturesParams.eyebrowShape);
@@ -183,7 +190,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         fparams.otherParams = _makeOtherParams(shapeColor, faceMaskColor, faceMask, shapes, lashes);
 
         vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, fparams, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, fparams, 1, address(mockERC20));
         Genesis.SVGParams memory storedParams = beanHeads.getAttributesByTokenId(tokenId);
 
         assertEq(storedParams.otherParams.shapeColor, fparams.otherParams.shapeColor);
@@ -265,7 +272,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         price = bound(price, 1, 10 ether);
 
         vm.startPrank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         beanHeads.sellToken(tokenId, price);
         assertEq(beanHeads.getTokenSalePrice(tokenId), price);
         assertEq(beanHeads.ownerOf(tokenId), address(beanHeads));
@@ -277,7 +284,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         payment = bound(payment, salePrice, salePrice + 0.1 ether);
 
         vm.startPrank(USER);
-        uint256 tokenId = beanHeads.mintGenesis{value: MINT_PRICE}(USER, params, 1);
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         beanHeads.sellToken(tokenId, salePrice);
         vm.stopPrank();
 
@@ -289,7 +296,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         uint256 buyerBalanceBefore = USER2.balance;
 
         vm.prank(USER2);
-        beanHeads.buyToken{value: payment}(tokenId, salePrice);
+        beanHeads.buyToken(tokenId, salePrice, address(mockERC20));
 
         assertEq(beanHeads.ownerOf(tokenId), USER2);
         assertEq(beanHeads.getTokenSalePrice(tokenId), 0);

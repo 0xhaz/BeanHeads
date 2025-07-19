@@ -16,6 +16,7 @@ import {Genesis} from "src/types/Genesis.sol";
 import {Test, console} from "forge-std/Test.sol";
 import {Helpers} from "test/Helpers.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
 
 contract BeanHeadsBreederTest is Test, Helpers {
     BeanHeadsBreeder private beanHeadsBreeder;
@@ -23,6 +24,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
     Helpers helpers;
     HelperConfig private helperConfig;
     DeployBeanHeads private deployBeanHeads;
+    MockERC20 private mockERC20;
     address beanHeads;
 
     address public USER1 = makeAddr("user1");
@@ -47,6 +49,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
     function setUp() public {
         helperConfig = new HelperConfig();
         helpers = new Helpers();
+        mockERC20 = new MockERC20(1000 ether); // Create a mock ERC20 token with 1000 tokens
 
         (,, address linkToken, address vrfCoordinatorMock, uint256 subId, bytes32 keyHash,) =
             helperConfig.activeNetworkConfig();
@@ -73,8 +76,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
     modifier MintedBeanHeads() {
         vm.startPrank(USER1);
-        tokenId = IBeanHeads(address(beanHeads)).mintGenesis{value: MINT_PRICE}(USER1, params, 1);
-        tokenId2 = IBeanHeads(address(beanHeads)).mintGenesis{value: MINT_PRICE}(USER1, params, 1);
+        tokenId = IBeanHeads(address(beanHeads)).mintGenesis(USER1, params, 1, address(mockERC20));
+        tokenId2 = IBeanHeads(address(beanHeads)).mintGenesis(USER1, params, 1, address(mockERC20));
 
         vm.stopPrank();
         _;
@@ -528,8 +531,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__TokensNotEscrowedBySender.selector);
         beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed); // USER2 tries to breed USER1's tokens
 
-        uint256 t1 = IBeanHeads(address(beanHeads)).mintGenesis{value: MINT_PRICE}(USER2, params, 1);
-        uint256 t2 = IBeanHeads(address(beanHeads)).mintGenesis{value: MINT_PRICE}(USER2, params, 1);
+        uint256 t1 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));
+        uint256 t2 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));
 
         IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), t1);
         IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), t2);

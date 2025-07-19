@@ -8,7 +8,7 @@ import {BeanHeads} from "src/core/BeanHeads.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 
 contract DeployBeanHeadsBridge is Script {
-    function run() public returns (address) {
+    function run() public returns (address, address) {
         HelperConfig helperConfig = new HelperConfig();
         (address routerClient, address remoteBridge, address linkToken,,,, uint256 deployerKey) =
             helperConfig.activeNetworkConfig();
@@ -16,12 +16,14 @@ contract DeployBeanHeadsBridge is Script {
         DeployBeanHeads deployBeanHeads = new DeployBeanHeads();
         (address beanHeads,) = deployBeanHeads.run();
 
+        address deployerAddress = vm.addr(deployerKey);
+
         vm.startBroadcast(deployerKey);
         BeanHeadsBridge beanHeadsBridge =
-            new BeanHeadsBridge(routerClient, remoteBridge, msg.sender, linkToken, beanHeads);
+            new BeanHeadsBridge(routerClient, remoteBridge, deployerAddress, linkToken, beanHeads);
         vm.stopBroadcast();
 
         console.log("BeanHeadsBridge deployed at:", address(beanHeadsBridge));
-        return address(beanHeadsBridge);
+        return (address(beanHeadsBridge), beanHeads);
     }
 }

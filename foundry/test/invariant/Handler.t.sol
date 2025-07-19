@@ -8,12 +8,14 @@ import {Genesis} from "src/types/Genesis.sol";
 import {CommonBase} from "forge-std/Base.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
 
 contract Handler is CommonBase, Helpers {
     BeanHeads internal beanHeads;
     HelperConfig internal helperConfig;
     Helpers internal helpers;
     DeployBeanHeads internal deployBeanHeads;
+    MockERC20 internal mockERC20;
 
     // address internal deployer;
     address internal user;
@@ -55,7 +57,7 @@ contract Handler is CommonBase, Helpers {
         uint256 totalPrice = beanHeads.getMintPrice() * amount;
         vm.deal(user, totalPrice);
         vm.prank(user);
-        beanHeads.mintGenesis{value: totalPrice}(user, defaultParams, amount);
+        beanHeads.mintGenesis(user, defaultParams, amount, address(mockERC20));
         ghost_totalMinted += amount;
     }
 
@@ -84,7 +86,7 @@ contract Handler is CommonBase, Helpers {
         payment = bound(payment, salePrice, salePrice + 0.1 ether);
         vm.deal(user, payment);
         vm.prank(user);
-        beanHeads.buyToken{value: payment}(tokenId, salePrice);
+        beanHeads.buyToken(tokenId, salePrice, address(mockERC20));
         ghost_totalSold--;
     }
 
