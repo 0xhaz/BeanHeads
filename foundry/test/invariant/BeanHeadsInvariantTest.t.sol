@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import {Test, console2} from "forge-std/Test.sol";
 import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
+import {AggregatorV3Interface} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {BeanHeadsRoyalty} from "src/core/BeanHeadsRoyalty.sol";
 import {Helpers} from "test/Helpers.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
@@ -21,6 +23,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
     BeanHeadsRoyalty internal royaltyContract;
     HelperConfig internal helperConfig;
     MockERC20 internal mockERC20;
+    AggregatorV3Interface priceFeed;
 
     address internal USER = makeAddr("user");
     address internal USER2 = makeAddr("user2");
@@ -54,6 +57,9 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         deployBeanHeads = new DeployBeanHeads();
         mockERC20 = new MockERC20(1000 ether);
 
+        address usdcPriceFeed = helperConfig.getActiveNetworkConfig().usdPriceFeed;
+        priceFeed = AggregatorV3Interface(usdcPriceFeed);
+
         deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
         (address beanHeadsAddr,) = deployBeanHeads.run();
         beanHeads = BeanHeads(payable(beanHeadsAddr));
@@ -62,7 +68,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         handler = new Handler(address(beanHeads), deployerAddress, USER);
 
         mockERC20.approve(address(beanHeads), type(uint256).max); // Approve BeanHeads to spend mock ERC20 tokens
-        mockERC20.transfer(USER, 100 ether); // Transfer some mock ERC20 tokens to USER
+        mockERC20.approve(address(handler), type(uint256).max); // Approve Handler to spend mock ERC20 tokens
 
         (
             Genesis.HairParams memory hair,
@@ -84,11 +90,16 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         vm.startPrank(deployerAddress);
         royaltyContract.setRoyaltyInfo(600);
         beanHeads.authorizeBreeder(address(handler));
+
+        beanHeads.setAllowedToken(address(mockERC20), true); // Allow mock ERC20 token for minting
+        beanHeads.setMintPrice(1 * 1e18); // Set mint price to 0.01 ether
+        beanHeads.addPriceFeed(address(mockERC20), usdcPriceFeed); // Add mock ERC20 price feed
         vm.stopPrank();
 
-        vm.deal(USER, 1000 ether);
-        vm.deal(USER2, 1000 ether);
-        vm.deal(deployerAddress, 1000 ether);
+        vm.startPrank(USER);
+        mockERC20.mint(100 ether);
+        mockERC20.approve(address(beanHeads), type(uint256).max);
+        vm.stopPrank();
 
         targetContract(address(handler));
 
@@ -280,30 +291,51 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
     }
 
     function test_fuzzBuyPayment(uint256 salePrice, uint256 payment) public {
+        // Bound inputs to reasonable ranges
         salePrice = bound(salePrice, 1, 10 ether);
         payment = bound(payment, salePrice, salePrice + 0.1 ether);
 
+        // Mint token and list it for sale
         vm.startPrank(USER);
         uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         beanHeads.sellToken(tokenId, salePrice);
         vm.stopPrank();
 
-        uint256 royalty = (salePrice * 600) / 10_000;
-        uint256 sellerReceive = salePrice - royalty;
+        // Compute royalty in USD terms
+        uint256 royaltyUsd = (salePrice * 600) / 10_000;
+        uint256 sellerReceiveUsd = salePrice - royaltyUsd;
 
-        uint256 deployerBalanceBefore = deployerAddress.balance;
-        uint256 userBalanceBefore = USER.balance;
-        uint256 buyerBalanceBefore = USER2.balance;
+        // Record balances before purchase
+        uint256 deployerBalanceBefore = mockERC20.balanceOf(deployerAddress);
+        uint256 userBalanceBefore = mockERC20.balanceOf(USER);
 
-        vm.prank(USER2);
-        beanHeads.buyToken(tokenId, salePrice, address(mockERC20));
+        // USER2 buys token
+        vm.startPrank(USER2);
+        mockERC20.mint(100 ether);
+        uint256 buyerBalanceBefore = mockERC20.balanceOf(USER2);
+        mockERC20.approve(address(beanHeads), type(uint256).max);
+        beanHeads.buyToken(tokenId, address(mockERC20));
+        vm.stopPrank();
 
+        // Post-conditions: ownership and sale cleared
         assertEq(beanHeads.ownerOf(tokenId), USER2);
         assertEq(beanHeads.getTokenSalePrice(tokenId), 0);
 
-        assertEq(deployerAddress.balance, deployerBalanceBefore + royalty);
-        assertEq(USER.balance, userBalanceBefore + sellerReceive);
-        assertEq(USER2.balance, buyerBalanceBefore - salePrice);
+        // Fetch token decimals and price feed
+        uint8 tokenDecimals = mockERC20.decimals();
+        address priceFeedAddress = address(priceFeed);
+
+        // Calculate actual amount paid in tokens
+        uint256 adjustedTotal = _getAdjustedTokenAmount(priceFeedAddress, salePrice, tokenDecimals);
+        uint256 adjustedRoyalty = _getAdjustedTokenAmount(priceFeedAddress, royaltyUsd, tokenDecimals);
+        uint256 adjustedSellerReceive = adjustedTotal - adjustedRoyalty;
+
+        // Assert balance deltas
+        assertEq(mockERC20.balanceOf(deployerAddress), deployerBalanceBefore + adjustedRoyalty);
+
+        assertEq(mockERC20.balanceOf(USER), userBalanceBefore + adjustedSellerReceive);
+
+        assertEq(mockERC20.balanceOf(USER2), buyerBalanceBefore - adjustedTotal);
     }
 
     function invariant_TotalSupplyMatchesMinted() public view {
@@ -336,6 +368,28 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
             if (beanHeads.exists(tokenId)) {
                 assertNotEq(beanHeads.ownerOf(tokenId), address(0));
             }
+        }
+    }
+
+    function _getAdjustedTokenAmount(address priceFeedAddress, uint256 usdAmount, uint8 tokenDecimals)
+        internal
+        view
+        returns (uint256 tokenAmount)
+    {
+        (, int256 answer,,,) = AggregatorV3Interface(priceFeedAddress).latestRoundData();
+        require(answer > 0, "Invalid oracle price");
+
+        uint256 price = uint256(answer) * 1e10; // Normalize to 1e18 (from 8 decimals)
+
+        // Calculate base 18-decimal token amount from USD
+        uint256 tokenAmountIn18 = (usdAmount * 1e18) / price;
+
+        if (tokenDecimals < 18) {
+            return tokenAmountIn18 / (10 ** (18 - tokenDecimals));
+        } else if (tokenDecimals > 18) {
+            return tokenAmountIn18 * (10 ** (tokenDecimals - 18));
+        } else {
+            return tokenAmountIn18;
         }
     }
 }

@@ -44,6 +44,7 @@ interface IBeanHeads {
     event MintedNewBreed(address indexed owner, uint256 indexed tokenId);
     event AllowedTokenUpdated(address indexed token, bool isAllowed);
     event MintPriceUpdated(uint256 newPrice);
+    event PriceFeedAdded(address indexed token, address indexed priceFeed);
 
     /// @notice Struct representing a token listing
     /// @param seller The address of the seller.
@@ -252,4 +253,11 @@ interface IBeanHeads {
      * @return The price feed address for the token.
      */
     function getPriceFeed(address token) external view returns (address);
+
+    /**
+     * @notice Adds a price feed for a token.
+     * @param token The address of the token to add the price feed for.
+     * @param priceFeed The address of the price feed contract.
+     */
+    function addPriceFeed(address token, address priceFeed) external;
 }

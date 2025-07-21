@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {IERC2981, IERC165} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import {AggregatorV3Interface} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {BeanHeadsRoyalty} from "src/core/BeanHeadsRoyalty.sol";
 import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
 import {DeployBeanHeads, HelperConfig} from "script/DeployBeanHeads.s.sol";
@@ -23,8 +25,9 @@ contract BeanHeadsTest is Test, Helpers {
     address public USER = makeAddr("USER");
     address public USER2 = makeAddr("USER2");
 
-    uint256 public constant MINT_PRICE = 0.01 ether;
-
+    uint256 public MINT_PRICE;
+    AggregatorV3Interface priceFeed;
+    uint8 tokenDecimals;
     address deployerAddress;
 
     string public expectedTokenURI =
@@ -36,7 +39,11 @@ contract BeanHeadsTest is Test, Helpers {
     function setUp() public {
         helpers = new Helpers();
         helperConfig = new HelperConfig();
-        mockERC20 = new MockERC20(1000000 ether); // Create a mock ERC20 token with 1 million supply
+        mockERC20 = new MockERC20(1000000 ether);
+
+        address usdcPriceFeed = helperConfig.getActiveNetworkConfig().usdPriceFeed;
+        priceFeed = AggregatorV3Interface(usdcPriceFeed);
+        tokenDecimals = mockERC20.decimals();
 
         // vm.startPrank(DEPLOYER);
         deployBeanHeads = new DeployBeanHeads();
@@ -44,19 +51,31 @@ contract BeanHeadsTest is Test, Helpers {
         beanHeads = BeanHeads(payable(beanHeadsAddress));
 
         mockERC20.approve(address(beanHeads), type(uint256).max); // Approve BeanHeads to spend mock ERC20 tokens
-        mockERC20.transfer(USER, 100 ether); // Transfer some mock ERC20 tokens to USER
 
         deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
         vm.startPrank(deployerAddress);
         beanHeads.setAllowedToken(address(mockERC20), true); // Allow mock ERC20 token for minting
-        beanHeads.setMintPrice(0.01 ether); // Set mint price to 0.01 ether
+        beanHeads.setMintPrice(1 * 1e18); // Set mint price to 0.01 ether
+        beanHeads.addPriceFeed(address(mockERC20), usdcPriceFeed); // Add mock ERC20 price feed
 
         royalty = deployBeanHeads.royalty();
         royalty.setRoyaltyInfo(600); // Set royalty to 6%
         vm.stopPrank();
 
+        MINT_PRICE = beanHeads.getMintPrice();
+
+        vm.startPrank(USER);
+        mockERC20.mint(100 ether);
+        mockERC20.approve(address(beanHeads), type(uint256).max);
+        vm.stopPrank();
+
+        // vm.startPrank(USER2);
+        // mockERC20.mint(100 ether);
+        // mockERC20.approve(address(beanHeads), type(uint256).max);
+        // vm.stopPrank();
+
         vm.deal(USER, 10 ether);
-        vm.deal(USER2, 10 ether);
+        // vm.deal(USER2, 10 ether);
     }
 
     function test_InitialSetup() public view {
@@ -73,77 +92,119 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_mintGenesis_ReturnSVGParams() public {
         vm.startPrank(USER);
+
+        // Record logs before minting
         vm.recordLogs();
+
+        // Execute mint
         uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         assertEq(tokenId, 0);
-        // assertTrue(tokenId > beanHeads._sequentialUpTo());
 
-        uint256 contractBalance = address(beanHeads).balance;
-        assertEq(contractBalance, MINT_PRICE);
+        // Compute expected token amount in ERC20 based on USD price
+        uint256 expectedAmount = getAdjustedTokenAmount(priceFeed, MINT_PRICE, tokenDecimals);
 
+        // Assert contract balance
+        uint256 actualBalance = mockERC20.balanceOf(address(beanHeads));
+        assertEq(actualBalance, expectedAmount);
+
+        // Decode logs
         Vm.Log[] memory entries = vm.getRecordedLogs();
-        assertEq(entries.length, 2);
+        assertEq(entries.length, 4);
 
-        // Decode the Transfer event
-        assertEq(entries[0].topics[0], keccak256("Transfer(address,address,uint256)"));
-        address from = address(uint160(uint256(entries[0].topics[1])));
-        address to = address(uint160(uint256(entries[0].topics[2])));
-        uint256 tid = uint256(entries[0].topics[3]);
-        assertEq(from, address(0)); // Minting from zero address
-        assertEq(to, USER); // Minting to USER
-        assertEq(tid, tokenId);
+        bytes32 TRANSFER_SIG = keccak256("Transfer(address,address,uint256)");
+        bytes32 APPROVAL_SIG = keccak256("Approval(address,address,uint256)");
+        bytes32 MINTED_GENESIS_SIG = keccak256("MintedGenesis(address,uint256)");
 
-        // Decode the MintedGenesis event
-        assertEq(entries[1].topics[0], keccak256("MintedGenesis(address,uint256)"));
-        address owner = address(uint160(uint256(entries[1].topics[1])));
-        uint256 mintedTokenId = uint256(entries[1].topics[2]);
-        assertEq(owner, USER); // Minted to USER
-        assertEq(mintedTokenId, tokenId);
+        bool foundERC20Transfer;
+        bool foundERC721Transfer;
+        bool foundApproval;
+        bool foundMintedEvent;
 
+        for (uint256 i = 0; i < entries.length; i++) {
+            Vm.Log memory log = entries[i];
+
+            if (log.topics[0] == TRANSFER_SIG && log.emitter == address(mockERC20)) {
+                // ERC20 Transfer
+                address from = address(uint160(uint256(log.topics[1])));
+                address to = address(uint160(uint256(log.topics[2])));
+                uint256 amount = abi.decode(log.data, (uint256));
+
+                assertEq(from, USER);
+                assertEq(to, address(beanHeads));
+                assertEq(amount, expectedAmount);
+                foundERC20Transfer = true;
+            }
+
+            if (log.topics[0] == TRANSFER_SIG && log.emitter == address(beanHeads)) {
+                // ERC721 Transfer (mint)
+                address from = address(uint160(uint256(log.topics[1])));
+                address to = address(uint160(uint256(log.topics[2])));
+                uint256 mintedTokenId = uint256(log.topics[3]);
+
+                assertEq(from, address(0));
+                assertEq(to, USER);
+                assertEq(mintedTokenId, tokenId);
+                foundERC721Transfer = true;
+            }
+
+            if (log.topics[0] == APPROVAL_SIG && log.emitter == address(mockERC20)) {
+                address owner = address(uint160(uint256(log.topics[1])));
+                address spender = address(uint160(uint256(log.topics[2])));
+                uint256 value = abi.decode(log.data, (uint256));
+
+                assertEq(owner, USER);
+                assertEq(spender, address(beanHeads));
+                assertTrue(value > expectedAmount); // could be type(uint256).max
+                foundApproval = true;
+            }
+
+            if (log.topics[0] == MINTED_GENESIS_SIG && log.emitter == address(beanHeads)) {
+                address owner = address(uint160(uint256(log.topics[1])));
+                uint256 eventTokenId = uint256(log.topics[2]);
+
+                assertEq(owner, USER);
+                assertEq(eventTokenId, tokenId);
+                foundMintedEvent = true;
+            }
+        }
+
+        assertTrue(foundERC20Transfer, "ERC20 Transfer not found");
+        assertTrue(foundERC721Transfer, "ERC721 Transfer not found");
+        assertTrue(foundApproval, "Approval not found");
+        assertTrue(foundMintedEvent, "MintedGenesis event not found");
+
+        // SVG param validation
         Genesis.SVGParams memory svgParams = beanHeads.getAttributesByTokenId(tokenId);
-        string memory svgParamsStr = helpers.getParams(svgParams);
-        // console2.logString(svgParamsStr);
+        string memory svgStr = helpers.getParams(svgParams);
+        assertEq(svgStr, "11312352113003113falsefalsetrue");
 
-        string memory expected = "11312352113003113falsefalsetrue";
-        assertEq(svgParamsStr, expected);
-        assertEq(accessoryParams.accessoryId, 1);
-        assertEq(bodyParams.bodyType, 1);
-        assertEq(clothingParams.clothes, 3);
-        assertEq(hairParams.hairStyle, 1);
-        assertEq(clothingParams.clothesGraphic, 2);
-        assertEq(facialFeaturesParams.eyebrowShape, 3);
-        assertEq(facialFeaturesParams.eyeShape, 5);
-        assertEq(facialFeaturesParams.facialHairType, 2);
-        assertEq(accessoryParams.hatStyle, 1);
-        assertEq(facialFeaturesParams.mouthStyle, 1);
-        assertEq(bodyParams.skinColor, 3);
-        assertEq(clothingParams.clothingColor, 0);
-        assertEq(hairParams.hairColor, 0);
-        assertEq(accessoryParams.hatColor, 3);
-        assertEq(otherParams.shapeColor, 1);
-        assertEq(facialFeaturesParams.lipColor, 1);
-        assertEq(otherParams.faceMaskColor, 3);
-        assertEq(otherParams.faceMask, false);
-        assertEq(otherParams.shapes, false);
-        assertEq(otherParams.lashes, true);
+        assertEq(svgParams.accessoryParams.accessoryId, 1);
+        assertEq(svgParams.bodyParams.bodyType, 1);
+        assertEq(svgParams.clothingParams.clothes, 3);
+        assertEq(svgParams.hairParams.hairStyle, 1);
+        assertEq(svgParams.clothingParams.clothesGraphic, 2);
+        assertEq(svgParams.facialFeaturesParams.eyebrowShape, 3);
+        assertEq(svgParams.facialFeaturesParams.eyeShape, 5);
+        assertEq(svgParams.facialFeaturesParams.facialHairType, 2);
+        assertEq(svgParams.accessoryParams.hatStyle, 1);
+        assertEq(svgParams.facialFeaturesParams.mouthStyle, 1);
+        assertEq(svgParams.bodyParams.skinColor, 3);
+        assertEq(svgParams.clothingParams.clothingColor, 0);
+        assertEq(svgParams.hairParams.hairColor, 0);
+        assertEq(svgParams.accessoryParams.hatColor, 3);
+        assertEq(svgParams.otherParams.shapeColor, 1);
+        assertEq(svgParams.facialFeaturesParams.lipColor, 1);
+        assertEq(svgParams.otherParams.faceMaskColor, 3);
+        assertEq(svgParams.otherParams.faceMask, false);
+        assertEq(svgParams.otherParams.shapes, false);
+        assertEq(svgParams.otherParams.lashes, true);
 
-        vm.stopPrank();
-
-        vm.prank(USER2);
-        tokenId = beanHeads.mintGenesis(USER2, params, 1, address(mockERC20));
-        assertEq(tokenId, 1);
-
-        vm.startPrank(deployerAddress);
-        uint256 contractBalanceBefore = address(beanHeads).balance;
-        assertEq(contractBalanceBefore, MINT_PRICE * 2);
-        beanHeads.withdraw(address(mockERC20));
-        uint256 contractBalanceAfter = address(beanHeads).balance;
-        assertEq(contractBalanceAfter, contractBalanceBefore - MINT_PRICE * 2);
         vm.stopPrank();
     }
 
     function test_mintGenesis_MultipleAmount() public {
         vm.startPrank(USER);
+
         Genesis.SVGParams memory multiParams = params;
         uint256 amount = 3;
         uint256 totalPrice = MINT_PRICE * amount;
@@ -164,6 +225,7 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_tokenURI_ReturnsURI() public {
         vm.prank(USER);
+
         uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         string memory uri = beanHeads.tokenURI(tokenId);
         console2.logString(uri);
@@ -209,34 +271,111 @@ contract BeanHeadsTest is Test, Helpers {
     }
 
     function test_SellTokens_Success() public {
+        // USER mints a token
         vm.startPrank(USER);
         uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
-        uint256 price = 1 ether;
+        uint256 salePrice = 1 ether;
 
+        // List token for sale
         vm.recordLogs();
-        beanHeads.sellToken(tokenId, price);
-        // assertTrue(beanHeads.getTokenOnSale(tokenId, price));
-        assertEq(beanHeads.getTokenSalePrice(tokenId), price);
-        _assertSellLogs(tokenId, price);
+        beanHeads.sellToken(tokenId, salePrice);
+        assertEq(beanHeads.getTokenSalePrice(tokenId), salePrice);
         vm.stopPrank();
 
+        // USER2 prepares to buy token
         vm.deal(USER2, 10 ether);
         vm.startPrank(USER2);
-        uint256 salePrice = 1 ether;
-        uint256 expectedRoyalty = (salePrice * 600) / 10000;
+        mockERC20.approve(address(beanHeads), type(uint256).max); // Approve BeanHeads to spend USER2's tokens
+        mockERC20.mint(100 ether); // Mint some tokens for USER2
+
+        uint256 expectedRoyalty = (salePrice * 600) / 10_000;
 
         vm.recordLogs();
-        beanHeads.buyToken(tokenId, salePrice, address(mockERC20));
-        _assertBuyLogs(tokenId, salePrice, expectedRoyalty);
-
-        assertEq(beanHeads.getOwnerOf(tokenId), USER2);
-        // assertFalse(beanHeads.getTokenOnSale(tokenId, salePrice));
-        assertEq(beanHeads.getTokenSalePrice(tokenId), 0);
-
+        beanHeads.buyToken(tokenId, address(mockERC20));
         vm.stopPrank();
+
+        // Decode logs
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        // Event selectors
+        bytes32 TRANSFER_SIG = keccak256("Transfer(address,address,uint256)");
+        bytes32 ROYALTY_PAID_SIG = keccak256("RoyaltyPaid(address,uint256,uint256,uint256)");
+        bytes32 TOKEN_SOLD_SIG = keccak256("TokenSold(address,address,uint256,uint256)");
+
+        bool erc20Transferred;
+        bool erc721Transferred;
+        bool royaltyPaid;
+        bool tokenSold;
+
+        for (uint256 i = 0; i < logs.length; i++) {
+            Vm.Log memory log = logs[i];
+
+            // ERC20 Transfer (BeanHeads -> Seller)
+            if (log.topics[0] == TRANSFER_SIG && log.emitter == address(mockERC20)) {
+                address from = address(uint160(uint256(log.topics[1])));
+                address to = address(uint160(uint256(log.topics[2])));
+                uint256 amount = abi.decode(log.data, (uint256));
+
+                if (to == USER) {
+                    assertEq(from, address(beanHeads));
+                    assertEq(amount, salePrice - expectedRoyalty);
+                    erc20Transferred = true;
+                }
+            }
+
+            // ERC721 Transfer (BeanHeads -> Buyer)
+            if (log.topics[0] == TRANSFER_SIG && log.emitter == address(beanHeads)) {
+                address from = address(uint160(uint256(log.topics[1])));
+                address to = address(uint160(uint256(log.topics[2])));
+                uint256 tid = uint256(log.topics[3]);
+
+                assertEq(from, address(beanHeads));
+                assertEq(to, USER2);
+                assertEq(tid, tokenId);
+                erc721Transferred = true;
+            }
+
+            // RoyaltyPaid Event
+            if (log.topics[0] == ROYALTY_PAID_SIG && log.emitter == address(beanHeads)) {
+                address receiver = address(uint160(uint256(log.topics[1])));
+                uint256 tokenId1 = uint256(log.topics[2]);
+                (uint256 salePrice1, uint256 royaltyAmount) = abi.decode(log.data, (uint256, uint256));
+
+                assertEq(receiver, deployerAddress);
+                assertEq(tokenId1, tokenId);
+                assertEq(salePrice1, salePrice);
+                assertEq(royaltyAmount, expectedRoyalty);
+                royaltyPaid = true;
+            }
+
+            // TokenSold Event
+            if (log.topics[0] == TOKEN_SOLD_SIG && log.emitter == address(beanHeads)) {
+                address buyer = address(uint160(uint256(log.topics[1])));
+                address seller = address(uint160(uint256(log.topics[2])));
+                uint256 tid = uint256(log.topics[3]);
+                uint256 decodedPrice = abi.decode(log.data, (uint256));
+
+                assertEq(buyer, USER2);
+                assertEq(seller, USER);
+                assertEq(tid, tokenId);
+                assertEq(decodedPrice, salePrice);
+                tokenSold = true;
+            }
+        }
+
+        // Final assertions
+        assertTrue(erc20Transferred, "ERC20 Transfer (to seller) not found");
+        assertTrue(erc721Transferred, "ERC721 Transfer (to buyer) not found");
+        assertTrue(royaltyPaid, "RoyaltyPaid event not found");
+        assertTrue(tokenSold, "TokenSold event not found");
+
+        // Confirm new ownership and cleared sale state
+        assertEq(beanHeads.getOwnerOf(tokenId), USER2);
+        assertEq(beanHeads.getTokenSalePrice(tokenId), 0);
 
         _assertAttributes(tokenId);
 
+        // Confirm royalty logic
         vm.prank(deployerAddress);
         _assertRoyalty(tokenId, salePrice, expectedRoyalty);
     }
@@ -406,23 +545,21 @@ contract BeanHeadsTest is Test, Helpers {
 
         vm.startPrank(USER2);
         vm.deal(USER2, 0.5 ether); // Not enough ether to buy
+
         vm.expectRevert(IBeanHeads.IBeanHeads__TokenDoesNotExist.selector);
         beanHeads.sellToken(tokenId + 2, price); // Trying to sell a token not owned by USER
 
+        mockERC20.approve(address(beanHeads), type(uint256).max);
         vm.expectRevert(IBeanHeads.IBeanHeads__InsufficientPayment.selector);
-        beanHeads.buyToken(tokenId, price, address(mockERC20)); // USER2 trying to buy with insufficient funds
+        beanHeads.buyToken(tokenId, address(mockERC20)); // USER2 trying to buy with insufficient funds
         vm.stopPrank();
 
         vm.startPrank(USER2);
         vm.deal(USER2, 1 ether); // Enough ether now
+        mockERC20.approve(address(beanHeads), type(uint256).max);
+        mockERC20.mint(10 ether); // Mint some mock ERC20 tokens for USER2
         vm.expectRevert(IBeanHeads.IBeanHeads__TokenIsNotForSale.selector);
-        beanHeads.buyToken(tokenId2, price, address(mockERC20)); // Trying to buy a token not on sale
-        vm.stopPrank();
-
-        vm.startPrank(USER2);
-        vm.deal(USER2, 10 ether); // Enough ether now
-        vm.expectRevert(IBeanHeads.IBeanHeads__PriceMismatch.selector);
-        beanHeads.buyToken(tokenId, price + 1 ether, address(mockERC20)); // Price mismatch
+        beanHeads.buyToken(tokenId2, address(mockERC20)); // Trying to buy a token not on sale
         vm.stopPrank();
     }
 
@@ -446,12 +583,14 @@ contract BeanHeadsTest is Test, Helpers {
     }
 
     function test_mintGenesis_FailedWithReverts() public {
-        vm.startPrank(USER);
+        vm.startPrank(USER2);
+        mockERC20.mint(0.5 ether); // Mint some tokens for USER2
+        mockERC20.approve(address(beanHeads), type(uint256).max);
         vm.expectRevert(IBeanHeads.IBeanHeads__InvalidAmount.selector);
-        beanHeads.mintGenesis(USER, params, 0, address(mockERC20)); // Invalid amount of 0
+        beanHeads.mintGenesis(USER2, params, 0, address(mockERC20)); // Invalid amount of 0
 
         vm.expectRevert(IBeanHeads.IBeanHeads__InsufficientPayment.selector);
-        beanHeads.mintGenesis(USER, params, 1, address(mockERC20)); // Insufficient payment
+        beanHeads.mintGenesis(USER2, params, 1, address(mockERC20)); // Insufficient payment
         vm.stopPrank();
     }
 
@@ -556,5 +695,24 @@ contract BeanHeadsTest is Test, Helpers {
         (address receiver, uint256 royaltyAmount) = royalty.royaltyInfo(tokenId, salePrice);
         assertEq(receiver, deployerAddress);
         assertEq(royaltyAmount, expectedRoyalty);
+    }
+
+    // helper function to convert the getMintPrice to an USD equivalent
+    function getAdjustedTokenAmount(AggregatorV3Interface feed, uint256 usdAmount, uint8 tokenDecimals_)
+        public
+        view
+        returns (uint256)
+    {
+        (, int256 answer,,,) = feed.latestRoundData();
+        uint256 price = uint256(answer) * 1e10;
+        uint256 tokenAmountIn18 = (usdAmount * 1e18) / price;
+
+        if (tokenDecimals_ < 18) {
+            return tokenAmountIn18 / (10 ** (18 - tokenDecimals_));
+        } else if (tokenDecimals_ > 18) {
+            return tokenAmountIn18 * (10 ** (tokenDecimals_ - 18));
+        } else {
+            return tokenAmountIn18;
+        }
     }
 }

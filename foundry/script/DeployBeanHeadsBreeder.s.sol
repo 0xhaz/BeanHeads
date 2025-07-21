@@ -9,9 +9,9 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
 
 contract DeployBeanHeadsBreeder is Script {
-    function run() public returns (address) {
+    function run() public returns (address, address) {
         HelperConfig helperConfig = new HelperConfig();
-        (,,, address vrfCoordinator, uint256 subscriptionId, bytes32 keyHash, uint256 deployerKey) =
+        (,,,, address vrfCoordinator, uint256 subscriptionId, bytes32 keyHash, uint256 deployerKey) =
             helperConfig.activeNetworkConfig();
 
         HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
@@ -27,8 +27,10 @@ contract DeployBeanHeadsBreeder is Script {
             beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
         } else if (block.chainid == helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID()) {
             beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
-        } else {
+        } else if (block.chainid == helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID()) {
             beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
+        } else {
+            revert("Unsupported network");
         }
 
         vm.startBroadcast(deployerKey);
@@ -38,6 +40,6 @@ contract DeployBeanHeadsBreeder is Script {
         vm.stopBroadcast();
 
         console.log("BeanHeadsBreeder deployed at:", address(beanHeadsBreeder));
-        return address(beanHeadsBreeder);
+        return (address(beanHeadsBreeder), beanHeads);
     }
 }

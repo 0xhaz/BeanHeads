@@ -4,6 +4,8 @@ pragma solidity ^0.8.19;
 import {VRFCoordinatorV2_5Mock} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {MockLinkToken} from "chainlink-brownie-contracts/contracts/src/v0.8/mocks/MockLinkToken.sol";
+import {AggregatorV3Interface} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
@@ -33,7 +35,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
     uint256 public MINT_PRICE = 0.01 ether;
     uint256 public constant BREEDING_COOLDOWN = 50;
     uint256 public constant MAX_BREED_REQUESTS = 5;
-
+    AggregatorV3Interface public priceFeed;
+    uint8 tokenDecimals;
     uint256 tokenId;
     uint256 tokenId2;
 
@@ -51,23 +54,38 @@ contract BeanHeadsBreederTest is Test, Helpers {
         helpers = new Helpers();
         mockERC20 = new MockERC20(1000 ether); // Create a mock ERC20 token with 1000 tokens
 
-        (,, address linkToken, address vrfCoordinatorMock, uint256 subId, bytes32 keyHash,) =
+        (,, address linkToken, address usdPriceFeed, address vrfCoordinatorMock, uint256 subId, bytes32 keyHash,) =
             helperConfig.activeNetworkConfig();
+
+        priceFeed = AggregatorV3Interface(usdPriceFeed);
+        tokenDecimals = mockERC20.decimals();
 
         deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
         deployBeanHeads = new DeployBeanHeads();
-        (address beanHeadsAddress,) = deployBeanHeads.run();
-        beanHeads = beanHeadsAddress; // Get the address of the BeanHeads contract
+        (address beanHeadsContract,) = deployBeanHeads.run();
+        beanHeads = beanHeadsContract;
         beanHeadsBreeder = new BeanHeadsBreeder(deployerAddress, address(beanHeads), vrfCoordinatorMock, subId, keyHash);
 
         vm.startPrank(deployerAddress); // Deployer address
         beanHeadsBreeder.acceptOwnership(); // Accept ownership of the breeder contract
+
+        IBeanHeads(beanHeads).setAllowedToken(address(mockERC20), true);
+        IBeanHeads(beanHeads).addPriceFeed(address(mockERC20), address(priceFeed));
+        IBeanHeads(beanHeads).setMintPrice(1 ether);
 
         MockLinkToken(linkToken).setBalance(deployerAddress, 1000 ether); // Fund the deployer with LINK tokens
         MockLinkToken(linkToken).transfer(address(beanHeadsBreeder), 100 ether); // Fund the breeder contract with LINK tokens
         VRFCoordinatorV2_5Mock(vrfCoordinatorMock).fundSubscription(subId, 100 ether); // Fund the subscription with LINK tokens
         VRFCoordinatorV2_5Mock(vrfCoordinatorMock).addConsumer(subId, address(beanHeadsBreeder));
         IBeanHeads(beanHeads).authorizeBreeder(address(beanHeadsBreeder));
+
+        IBeanHeads(beanHeads).setAllowedToken(address(mockERC20), true); // Allow the mock ERC20 token in BeanHeads
+        vm.stopPrank();
+
+        vm.startPrank(USER1);
+        mockERC20.mint(100 ether);
+        mockERC20.approve(address(beanHeads), type(uint256).max);
+        mockERC20.approve(address(beanHeadsBreeder), type(uint256).max);
         vm.stopPrank();
 
         vm.deal(USER1, 100 ether);
@@ -76,8 +94,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
     modifier MintedBeanHeads() {
         vm.startPrank(USER1);
-        tokenId = IBeanHeads(address(beanHeads)).mintGenesis(USER1, params, 1, address(mockERC20));
-        tokenId2 = IBeanHeads(address(beanHeads)).mintGenesis(USER1, params, 1, address(mockERC20));
+        tokenId = IBeanHeads(beanHeads).mintGenesis(USER1, params, 1, address(mockERC20));
+        tokenId2 = IBeanHeads(beanHeads).mintGenesis(USER1, params, 1, address(mockERC20));
 
         vm.stopPrank();
         _;
@@ -103,8 +121,9 @@ contract BeanHeadsBreederTest is Test, Helpers {
         assertEq(tokenBalanceAfter, 0); // Tokens should be in the breeder contract
 
         vm.recordLogs();
-        uint256 requestId =
-            beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed);
+        uint256 requestId = beanHeadsBreeder.requestBreed(
+            tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20)
+        );
 
         Vm.Log[] memory requestIdLogs = _filterLogsForBeanHeadsBreeder();
         assertEq(requestIdLogs.length, 1);
@@ -149,8 +168,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 blockConfirmations2 = block.number + BREEDING_COOLDOWN + 1;
         vm.roll(blockConfirmations2);
 
-        uint256 requestId2 = beanHeadsBreeder.requestBreed{value: MINT_PRICE}(
-            tokenId, mintedTokenId, IBeanHeadsBreeder.BreedingMode.NewBreed
+        uint256 requestId2 = beanHeadsBreeder.requestBreed(
+            tokenId, mintedTokenId, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20)
         );
 
         // Check if the breed request is stored correctly
@@ -216,8 +235,9 @@ contract BeanHeadsBreederTest is Test, Helpers {
         assertEq(tokenBalanceAfter, 0); // Tokens should be in the breeder contract
 
         vm.recordLogs();
-        uint256 requestId =
-            beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.Mutation);
+        uint256 requestId = beanHeadsBreeder.requestBreed(
+            tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.Mutation, address(mockERC20)
+        );
 
         Vm.Log[] memory requestIdLogs = _filterLogsForBeanHeadsBreeder();
         assertEq(requestIdLogs.length, 1);
@@ -258,8 +278,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 blockConfirmations2 = block.number + BREEDING_COOLDOWN + 1;
         vm.roll(blockConfirmations2);
 
-        uint256 requestId2 = beanHeadsBreeder.requestBreed{value: MINT_PRICE}(
-            tokenId2, mintedTokenId, IBeanHeadsBreeder.BreedingMode.Mutation
+        uint256 requestId2 = beanHeadsBreeder.requestBreed(
+            tokenId2, mintedTokenId, IBeanHeadsBreeder.BreedingMode.Mutation, address(mockERC20)
         );
 
         // Check if the breed request is stored correctly
@@ -324,7 +344,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         vm.recordLogs();
         uint256 requestId =
-            beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.Fusion);
+            beanHeadsBreeder.requestBreed(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.Fusion, address(mockERC20));
 
         Vm.Log[] memory requestIdLogs = _filterLogsForBeanHeadsBreeder();
         assertEq(requestIdLogs.length, 1);
@@ -390,7 +410,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         vm.recordLogs();
         uint256 requestId =
-            beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId2, 0, IBeanHeadsBreeder.BreedingMode.Ascension);
+            beanHeadsBreeder.requestBreed(tokenId2, 0, IBeanHeadsBreeder.BreedingMode.Ascension, address(mockERC20));
 
         Vm.Log[] memory requestIdLogs = _filterLogsForBeanHeadsBreeder();
         assertEq(requestIdLogs.length, 1);
@@ -520,16 +540,19 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         // Attempt to request breed with a Ascension mode without a second token
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__InvalidRequestId.selector);
-        beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.Ascension);
+        beanHeadsBreeder.requestBreed(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.Ascension, address(mockERC20));
 
         // Attempt to request breed with the same token
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__CannotBreedSameBeanHead.selector);
-        beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId, tokenId, IBeanHeadsBreeder.BreedingMode.NewBreed);
+        beanHeadsBreeder.requestBreed(tokenId, tokenId, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
         vm.stopPrank();
         vm.startPrank(USER2);
-        vm.deal(USER2, 1 ether); // Ensure USER2 has enough ether for the mint price
+        mockERC20.mint(2 ether); // Mint some mock ERC20 tokens for USER2
+        mockERC20.approve(address(beanHeadsBreeder), type(uint256).max);
+        mockERC20.approve(address(beanHeads), type(uint256).max);
+
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__TokensNotEscrowedBySender.selector);
-        beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed); // USER2 tries to breed USER1's tokens
+        beanHeadsBreeder.requestBreed(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20)); // USER2 tries to breed USER1's tokens
 
         uint256 t1 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));
         uint256 t2 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));
@@ -544,14 +567,25 @@ contract BeanHeadsBreederTest is Test, Helpers {
         assertEq(beanHeadsBreeder.getEscrowedTokenOwner(t1), USER2);
         assertEq(beanHeadsBreeder.getEscrowedTokenOwner(t2), USER2);
 
+        uint256 lastBlock = block.number;
+        vm.roll(lastBlock + BREEDING_COOLDOWN + 1);
         // Attempt to request breed with insufficient ether
-        vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__InsufficientPayment.selector);
-        beanHeadsBreeder.requestBreed{value: MINT_PRICE - 1}(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed);
+        vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__InsufficientBalance.selector);
+        beanHeadsBreeder.requestBreed(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
+        vm.stopPrank();
 
+        vm.startPrank(USER2);
+
+        mockERC20.approve(address(beanHeadsBreeder), type(uint256).max);
+        mockERC20.approve(address(beanHeads), type(uint256).max);
+        mockERC20.mint(100 ether); // Mint some mock ERC20 tokens for USER2
+
+        beanHeadsBreeder.requestBreed(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
         // Attempt to request breed with prior block.number
-        vm.roll(block.number - 1); // Roll back to the previous block
+        vm.roll(lastBlock + BREEDING_COOLDOWN - 1); // Roll back to the block before the cooldown period
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__CoolDownNotPassed.selector);
-        beanHeadsBreeder.requestBreed{value: MINT_PRICE}(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed);
+        beanHeadsBreeder.requestBreed(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
+        vm.stopPrank();
     }
 
     function testRequestBreed_FailedWithReverts_BreedMaxLimit() public MintedBeanHeads {
@@ -572,8 +606,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
             lastBlock = lastBlock + BREEDING_COOLDOWN + 1000;
             vm.roll(lastBlock);
 
-            reqId = beanHeadsBreeder.requestBreed{value: MINT_PRICE}(
-                tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed
+            reqId = beanHeadsBreeder.requestBreed(
+                tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20)
             );
 
             VRFCoordinatorV2_5Mock(vrfCoordinatorMock).fulfillRandomWords(reqId, address(beanHeadsBreeder));
@@ -583,13 +617,13 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         // Attempt to request breed with max breeding count
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__BreedLimitReached.selector);
-        beanHeadsBreeder.requestBreed{value: MINT_PRICE}(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed);
+        beanHeadsBreeder.requestBreed(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
         vm.stopPrank();
 
         vm.startPrank(deployerAddress);
         // Withdraw balance from the breeder contract
         uint256 breederBalance = address(beanHeadsBreeder).balance;
-        beanHeadsBreeder.withdrawFunds();
+        beanHeadsBreeder.withdrawFunds(address(mockERC20));
         uint256 userBalanceAfter = address(deployerAddress).balance;
         assertEq(userBalanceAfter, breederBalance);
         assertEq(address(beanHeadsBreeder).balance, 0); // Ensure the breeder contract balance is zero after withdrawal

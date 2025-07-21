@@ -10,7 +10,7 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 contract DeployBeanHeadsBridge is Script {
     function run() public returns (address, address) {
         HelperConfig helperConfig = new HelperConfig();
-        (address routerClient, address remoteBridge, address linkToken,,,, uint256 deployerKey) =
+        (address routerClient, address remoteBridge, address linkToken,,,,, uint256 deployerKey) =
             helperConfig.activeNetworkConfig();
 
         DeployBeanHeads deployBeanHeads = new DeployBeanHeads();

@@ -17,6 +17,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import {OracleLib} from "src/libraries/OracleLib.sol";
 import {RenderLib} from "src/libraries/RenderLib.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title BeanHeads
@@ -35,11 +36,15 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
     IERC2981 public immutable i_royaltyContract;
 
     /// @notice Token mint price
-    uint256 private s_mintPrice;
+    uint256 private s_mintPriceUsd;
 
     uint256 private constant PRECISION = 1e18; // Precision for price calculations
 
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
+
+    AggregatorV3Interface private immutable i_priceFeed;
+
+    address[] private s_privateFeedsAddresses;
 
     /*//////////////////////////////////////////////////////////////
                                 MAPPINGS
@@ -87,9 +92,13 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
      * @dev Initializes the contract with default royalty settings
      * @param initialOwner The address to own the contract
      */
-    constructor(address initialOwner, address royalty_) ERC721A("BeanHeads", "BEAN") Ownable(initialOwner) {
+    constructor(address initialOwner, address royalty_, address priceFeed)
+        ERC721A("BeanHeads", "BEAN")
+        Ownable(initialOwner)
+    {
         i_royaltyContract = IERC2981(royalty_);
-        s_mintPrice = 0.01 ether; // Set default mint price
+        s_mintPriceUsd = 0.01e18; // 0.01 USD in 18 decimals
+        i_priceFeed = AggregatorV3Interface(priceFeed);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -104,7 +113,7 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
         if (!s_allowedTokens[paymentToken]) revert IBeanHeads__TokenNotAllowed(paymentToken);
 
         IERC20 token = IERC20(paymentToken);
-        uint256 rawPrice = s_mintPrice * amount;
+        uint256 rawPrice = s_mintPriceUsd * amount;
         uint256 adjustedPrice = _getTokenAmountFromUsd(paymentToken, rawPrice);
 
         if (token.allowance(msg.sender, address(this)) < adjustedPrice) revert IBeanHeads__InsufficientAllowance();
@@ -112,6 +121,9 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
 
         tokenId = _nextTokenId();
         s_tokenIdToParams[tokenId] = params;
+
+        // Transfer tokens from the minter to the contract
+        IERC20(paymentToken).safeTransferFrom(msg.sender, address(this), adjustedPrice);
 
         _safeMint(to, amount);
         s_tokenIdToListing[tokenId] = Listing({
@@ -123,9 +135,6 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
         s_authorizedBreeders[to] = true; // Authorize the minter to breed new tokens
         s_ownerTokens[to].push(tokenId); // Add tokenId to owner's list
         s_tokenIdToPaymentToken[tokenId] = paymentToken; // Store the payment token used for minting
-
-        // Transfer tokens from the minter to the contract
-        IERC20(paymentToken).safeTransferFrom(msg.sender, address(this), adjustedPrice);
 
         emit MintedGenesis(to, tokenId);
     }
@@ -295,14 +304,14 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
     /// @inheritdoc IBeanHeads
     function setMintPrice(uint256 newPrice) external onlyOwner {
         if (newPrice <= 0) revert IBeanHeads__PriceMustBeGreaterThanZero();
-        s_mintPrice = newPrice;
+        s_mintPriceUsd = newPrice;
 
         emit MintPriceUpdated(newPrice);
     }
 
     /// @inheritdoc IBeanHeads
     function getMintPrice() external view returns (uint256) {
-        return s_mintPrice;
+        return s_mintPriceUsd;
     }
 
     /// @inheritdoc IBeanHeads
@@ -350,6 +359,14 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
         return s_tokenIdToListing[tokenId].isActive;
     }
 
+    function addPriceFeed(address token, address priceFeed) external onlyOwner {
+        if (token == address(0) || priceFeed == address(0)) revert IBeanHeads__InvalidTokenAddress();
+        s_priceFeeds[token] = priceFeed;
+        s_privateFeedsAddresses.push(priceFeed);
+
+        emit PriceFeedAdded(token, priceFeed);
+    }
+
     /*//////////////////////////////////////////////////////////////
                             ROYALTY FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -394,16 +411,25 @@ contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
      * @param usdAmount Amount in 18-decimal USD
      * @return tokenAmount Equivalent amount of `token` based on its USD price
      */
-    function _getTokenAmountFromUsd(address token, uint256 usdAmount) internal view returns (uint256 tokenAmount) {
+    function _getTokenAmountFromUsd(address token, uint256 usdAmount) internal view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
-        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
+        (, int256 answer,,,) = priceFeed.latestRoundData();
 
-        if (price <= 0) revert IBeanHeads__InvalidOraclePrice(); // optional safety check
+        if (answer <= 0) revert IBeanHeads__InvalidOraclePrice();
 
-        uint8 decimals = IERC20Metadata(token).decimals();
-        uint256 scale = 10 ** uint256(decimals);
+        uint256 price = uint256(answer) * ADDITIONAL_FEED_PRECISION;
+        uint8 tokenDecimals = IERC20Metadata(token).decimals();
 
-        tokenAmount = (usdAmount * scale * ADDITIONAL_FEED_PRECISION) / uint256(price);
+        // Required token amount = usdAmount / tokenPrice
+        uint256 tokenAmountIn18 = (usdAmount * PRECISION) / price;
+
+        if (tokenDecimals < 18) {
+            return tokenAmountIn18 / (10 ** (18 - tokenDecimals));
+        } else if (tokenDecimals > 18) {
+            return tokenAmountIn18 * (10 ** (tokenDecimals - 18));
+        } else {
+            return tokenAmountIn18;
+        }
     }
 
     /*//////////////////////////////////////////////////////////////

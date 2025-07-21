@@ -17,21 +17,15 @@ contract DeployBeanHeads is Script {
         HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
 
         address deployerAddress = vm.addr(config.deployerKey);
+        address priceFeed = config.usdPriceFeed;
 
         vm.startBroadcast(config.deployerKey);
         royalty = new BeanHeadsRoyalty(deployerAddress, ROYALTY_FEE_BPS);
-        beanHeads = new BeanHeads(deployerAddress, address(royalty));
+        beanHeads = new BeanHeads(deployerAddress, address(royalty), priceFeed);
         vm.stopBroadcast();
 
         console.log("BeanHeads deployed at:", address(beanHeads));
         console.log("BeanHeadsRoyalty deployed at:", address(royalty));
         return (address(beanHeads), address(royalty));
     }
-
-    // function svgToImageURI(string memory svg) public pure returns (string memory) {
-    //     string memory baseURL = "data:image/svg+xml;base64,";
-    //     string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(svg))));
-
-    //     return string(abi.encodePacked(baseURL, svgBase64Encoded));
-    // }
 }

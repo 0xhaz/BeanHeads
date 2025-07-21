@@ -14,6 +14,7 @@ import {SafeERC20} from
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {console} from "forge-std/console.sol";
 
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {IBeanHeadsBreeder} from "src/interfaces/IBeanHeadsBreeder.sol";
@@ -42,6 +43,7 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     uint256 private BREED_COOL_DOWN = 50; // Cool down period for breeding requests
     uint256 private constant MAX_BREED_REQUESTS = 5; // Maximum number of breed requests per user
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
+    uint256 private constant PRECISION = 1e18;
 
     /*//////////////////////////////////////////////////////////////
                                 MAPPINGS
@@ -233,18 +235,28 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
      * @param usdAmount Amount in 18-decimal USD
      * @return tokenAmount Equivalent amount of `token` based on its USD price
      */
-    function _getTokenAmountFromUsd(address token, uint256 usdAmount) internal view returns (uint256 tokenAmount) {
+    function _getTokenAmountFromUsd(address token, uint256 usdAmount) internal view returns (uint256) {
         address feedAddress = i_beanHeads.getPriceFeed(token);
         if (feedAddress == address(0)) revert IBeanHeadsBreeder__InvalidToken();
 
         AggregatorV3Interface priceFeed = AggregatorV3Interface(feedAddress);
-        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
-        if (price <= 0) revert IBeanHeadsBreeder__InvalidOraclePrice(); // optional safety check
+        (, int256 answer,,,) = priceFeed.latestRoundData();
 
-        uint8 decimals = IERC20Metadata(token).decimals();
-        uint256 scale = 10 ** uint256(decimals);
+        if (answer <= 0) revert IBeanHeadsBreeder__InvalidOraclePrice();
 
-        tokenAmount = (usdAmount * scale * ADDITIONAL_FEED_PRECISION) / uint256(price);
+        uint256 price = uint256(answer) * ADDITIONAL_FEED_PRECISION;
+        uint8 tokenDecimals = IERC20Metadata(token).decimals();
+
+        // Required token amount = usdAmount / tokenPrice
+        uint256 tokenAmountIn18 = (usdAmount * PRECISION) / price;
+
+        if (tokenDecimals < 18) {
+            return tokenAmountIn18 / (10 ** (18 - tokenDecimals));
+        } else if (tokenDecimals > 18) {
+            return tokenAmountIn18 * (10 ** (tokenDecimals - 18));
+        } else {
+            return tokenAmountIn18;
+        }
     }
 
     /*//////////////////////////////////////////////////////////////

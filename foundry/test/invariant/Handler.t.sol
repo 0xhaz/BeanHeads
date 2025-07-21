@@ -86,7 +86,7 @@ contract Handler is CommonBase, Helpers {
         payment = bound(payment, salePrice, salePrice + 0.1 ether);
         vm.deal(user, payment);
         vm.prank(user);
-        beanHeads.buyToken(tokenId, salePrice, address(mockERC20));
+        beanHeads.buyToken(tokenId, address(mockERC20));
         ghost_totalSold--;
     }
 
