@@ -83,6 +83,13 @@ contract Handler is CommonBase, Helpers {
         uint256 salePrice = beanHeads.getTokenSalePrice(tokenId);
         if (salePrice == 0) return;
 
+        uint256 adjustedPrice = salePrice;
+
+        vm.startPrank(user);
+        mockERC20.mint(adjustedPrice);
+        mockERC20.approve(address(beanHeads), adjustedPrice);
+        vm.stopPrank();
+
         payment = bound(payment, salePrice, salePrice + 0.1 ether);
         vm.deal(user, payment);
         vm.prank(user);
