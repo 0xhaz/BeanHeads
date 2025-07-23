@@ -11,9 +11,13 @@ contract DeployBeanHeads is Script {
     uint96 public ROYALTY_FEE_BPS = 500; // 5% royalty fee in basis points
     BeanHeadsRoyalty public royalty;
     BeanHeads public beanHeads;
+    HelperConfig public helperConfig;
+
+    constructor(HelperConfig _helperConfig) {
+        helperConfig = _helperConfig;
+    }
 
     function run() public returns (address, address) {
-        HelperConfig helperConfig = new HelperConfig();
         HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
 
         address deployerAddress = vm.addr(config.deployerKey);

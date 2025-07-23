@@ -61,7 +61,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         tokenDecimals = mockERC20.decimals();
 
         deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
-        deployBeanHeads = new DeployBeanHeads();
+        deployBeanHeads = new DeployBeanHeads(helperConfig);
         (address beanHeadsContract,) = deployBeanHeads.run();
         beanHeads = beanHeadsContract;
         beanHeadsBreeder = new BeanHeadsBreeder(deployerAddress, address(beanHeads), vrfCoordinatorMock, subId, keyHash);

@@ -1,148 +1,196 @@
-// // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-// pragma solidity ^0.8.24;
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity ^0.8.24;
 
-// import {Client} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/libraries/Client.sol";
-// import {CCIPReceiver} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/applications/CCIPReceiver.sol";
-// import {CCIPLocalSimulatorFork, Register} from "chainlink-local/ccip/CCIPLocalSimulatorFork.sol";
-// import {IRouterClient} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/interfaces/IRouterClient.sol";
-// import {RegistryModuleOwnerCustom} from
-//     "chainlink-brownie-contracts/contracts/src/v0.8/ccip/tokenAdminRegistry/RegistryModuleOwnerCustom.sol";
-// import {TokenPool, IERC20} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/pools/TokenPool.sol";
-// import {RateLimiter} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/libraries/RateLimiter.sol";
-// import {TokenAdminRegistry} from
-//     "chainlink-brownie-contracts/contracts/src/v0.8/ccip/tokenAdminRegistry/TokenAdminRegistry.sol";
-// import {Test, console} from "forge-std/Test.sol";
-// import {Ownable as OwnableOZ} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Client} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/libraries/Client.sol";
+import {CCIPReceiver} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/applications/CCIPReceiver.sol";
+import {CCIPLocalSimulatorFork, Register} from "chainlink-local/ccip/CCIPLocalSimulatorFork.sol";
+import {IRouterClient} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/interfaces/IRouterClient.sol";
+import {RegistryModuleOwnerCustom} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/ccip/tokenAdminRegistry/RegistryModuleOwnerCustom.sol";
+import {TokenPool, IERC20} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/pools/TokenPool.sol";
+import {RateLimiter} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/libraries/RateLimiter.sol";
+import {TokenAdminRegistry} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/ccip/tokenAdminRegistry/TokenAdminRegistry.sol";
+import {Test, console} from "forge-std/Test.sol";
+import {Ownable as OwnableOZ} from "@openzeppelin/contracts/access/Ownable.sol";
+import {AggregatorV3Interface} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
-// import {MockTokenPool} from "src/mocks/MockTokenPool.sol";
-// import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
-// import {IBeanHeadsBridge} from "src/interfaces/IBeanHeadsBridge.sol";
-// import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
-// import {DeployBeanHeadsBridge} from "script/DeployBeanHeadsBridge.s.sol";
-// import {BeanHeads} from "src/core/BeanHeads.sol";
-// import {HelperConfig} from "script/HelperConfig.s.sol";
-// import {Genesis} from "src/types/Genesis.sol";
-// import {Helpers} from "test/Helpers.sol";
+import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
+import {MockTokenPool} from "src/mocks/MockTokenPool.sol";
+import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
+import {IBeanHeadsBridge} from "src/interfaces/IBeanHeadsBridge.sol";
+import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
+import {DeployBeanHeadsBridge} from "script/DeployBeanHeadsBridge.s.sol";
+import {BeanHeads} from "src/core/BeanHeads.sol";
+import {HelperConfig} from "script/HelperConfig.s.sol";
+import {Genesis} from "src/types/Genesis.sol";
+import {Helpers} from "test/Helpers.sol";
+import {MockERC20} from "src/mocks/MockERC20.sol";
 
-// contract BeanHeadsBridgeTest is Test, Helpers {
-//     BeanHeadsBridge public sepoliaBeanHeadsBridge;
-//     BeanHeadsBridge public baseBeanHeadsBridge;
+contract BeanHeadsBridgeTest is Test, Helpers {
+    BeanHeadsBridge public sepoliaBeanHeadsBridge;
+    BeanHeadsBridge public arbBeanHeadsBridge;
 
-//     HelperConfig public helperConfigSepolia;
-//     HelperConfig public helperConfigBase;
+    HelperConfig public sharedHelperConfig;
 
-//     Helpers public sepoliaHelpers;
-//     Helpers public baseHelpers;
+    Helpers public sepoliaHelpers;
+    Helpers public arbHelpers;
 
-//     BeanHeads public sepoliaBeanHeads;
-//     BeanHeads public baseBeanHeads;
+    BeanHeads public sepoliaBeanHeads;
+    BeanHeads public arbBeanHeads;
 
-//     CCIPLocalSimulatorFork public ccipSimulatorSepolia;
-//     CCIPLocalSimulatorFork public ccipSimulatorBase;
+    CCIPLocalSimulatorFork public ccipSimulatorSepolia;
+    CCIPLocalSimulatorFork public ccipSimulatorArbitrum;
 
-//     Register.NetworkDetails public sepoliaNetworkDetails;
-//     Register.NetworkDetails public baseNetworkDetails;
+    Register.NetworkDetails public sepoliaNetworkDetails;
+    Register.NetworkDetails public arbNetworkDetails;
 
-//     MockTokenPool public sepoliaTokenPool;
-//     MockTokenPool public baseTokenPool;
+    MockTokenPool public sepoliaTokenPool;
+    MockTokenPool public arbTokenPool;
 
-//     uint64 public constant SEPOLIA_CHAIN_SELECTOR = 16015286601757825753;
-//     uint64 public constant BASE_CHAIN_SELECTOR = 10344971235874465080;
+    MockERC20 public mockSepoliaToken;
+    MockERC20 public mockArbToken;
 
-//     uint256 public constant MINT_PRICE = 0.01 ether;
-//     address public constant NATIVE_TOKEN = address(0);
+    uint64 public constant SEPOLIA_CHAIN_SELECTOR = 16015286601757825753;
+    uint64 public constant BASE_CHAIN_SELECTOR = 10344971235874465080;
 
-//     address public USER = makeAddr("user");
+    uint256 public constant MINT_PRICE = 1 ether;
+    address public constant NATIVE_TOKEN = address(0);
 
-//     uint256 sepoliaFork;
-//     uint256 baseFork;
+    address public USER = makeAddr("user");
+    address public USER2 = makeAddr("user2");
 
-//     address public owner;
-//     address[] public allowList;
+    uint256 sepoliaFork;
+    uint256 arbFork;
 
-//     function setUp() public {
-//         // create fork
-//         sepoliaFork = vm.createSelectFork("sepolia-eth");
-//         baseFork = vm.createSelectFork("base-sepolia");
+    address public owner;
+    address[] public allowList;
 
-//         // Deploy on Sepolia
-//         vm.selectFork(sepoliaFork);
-//         ccipSimulatorSepolia = new CCIPLocalSimulatorFork();
-//         vm.makePersistent(address(ccipSimulatorSepolia));
+    AggregatorV3Interface public priceFeedSepolia;
+    AggregatorV3Interface public priceFeedArbitrum;
 
-//         sepoliaNetworkDetails = ccipSimulatorSepolia.getNetworkDetails(block.chainid);
-//         console.log("Sepolia Network Details: ", block.chainid);
+    function setUp() public {
+        sharedHelperConfig = new HelperConfig();
+        // HelperConfig helperConfigSepolia = sharedHelperConfig;
+        // HelperConfig helperConfigArbitrum = sharedHelperConfig;
+        // create fork
+        sepoliaFork = vm.createSelectFork("sepolia-eth");
+        arbFork = vm.createSelectFork("arb-sepolia");
 
-//         helperConfigSepolia = new HelperConfig();
-//         sepoliaHelpers = new Helpers();
-//         address deployerSepoliaAddress = vm.addr(helperConfigSepolia.getActiveNetworkConfig().deployerKey);
-//         owner = deployerSepoliaAddress;
-//         DeployBeanHeadsBridge deploySepoliaBeanHeadsBridge = new DeployBeanHeadsBridge();
-//         (address sepoliaBeanHeadsBridgeAddr, address sepoliaBeanHeadsAddress) = deploySepoliaBeanHeadsBridge.run();
-//         sepoliaBeanHeadsBridge = BeanHeadsBridge(payable(sepoliaBeanHeadsBridgeAddr));
-//         sepoliaBeanHeads = BeanHeads(payable(sepoliaBeanHeadsAddress));
+        // Deploy on Sepolia
+        vm.selectFork(sepoliaFork);
+        ccipSimulatorSepolia = new CCIPLocalSimulatorFork();
+        vm.makePersistent(address(ccipSimulatorSepolia));
 
-//         // Deploy on Base
-//         vm.selectFork(baseFork);
-//         ccipSimulatorBase = new CCIPLocalSimulatorFork();
-//         vm.makePersistent(address(ccipSimulatorBase));
+        sepoliaNetworkDetails = ccipSimulatorSepolia.getNetworkDetails(block.chainid);
+        console.log("Sepolia Network Details: ", block.chainid);
 
-//         baseNetworkDetails = ccipSimulatorBase.getNetworkDetails(block.chainid);
-//         console.log("Base Network Details: ", block.chainid);
+        address usdPriceFeedSepolia = sharedHelperConfig.getActiveNetworkConfig().usdPriceFeed;
+        priceFeedSepolia = AggregatorV3Interface(usdPriceFeedSepolia);
 
-//         helperConfigBase = new HelperConfig();
-//         baseHelpers = new Helpers();
-//         address deployerBaseAddress = vm.addr(helperConfigBase.getActiveNetworkConfig().deployerKey);
-//         owner = deployerBaseAddress;
-//         DeployBeanHeadsBridge deployBaseBeanHeadsBridge = new DeployBeanHeadsBridge();
-//         (address baseBeanHeadsBridgeAddr, address baseBeanHeadsAddress) = deployBaseBeanHeadsBridge.run();
-//         baseBeanHeadsBridge = BeanHeadsBridge(payable(baseBeanHeadsBridgeAddr));
-//         baseBeanHeads = BeanHeads(payable(baseBeanHeadsAddress));
+        sepoliaHelpers = new Helpers();
+        address deployerSepoliaAddress = vm.addr(sharedHelperConfig.getActiveNetworkConfig().deployerKey);
+        DeployBeanHeadsBridge deploySepoliaBeanHeadsBridge = new DeployBeanHeadsBridge(sharedHelperConfig);
+        (address sepoliaBeanHeadsBridgeAddr, address sepoliaBeanHeadsAddress) = deploySepoliaBeanHeadsBridge.run();
+        sepoliaBeanHeadsBridge = BeanHeadsBridge(payable(sepoliaBeanHeadsBridgeAddr));
+        sepoliaBeanHeads = BeanHeads(payable(sepoliaBeanHeadsAddress));
+        owner = deployerSepoliaAddress;
+        assertEq(sepoliaBeanHeadsBridge.owner(), owner);
+        assertEq(sepoliaBeanHeads.owner(), owner);
 
-//         vm.selectFork(sepoliaFork);
-//         vm.startPrank(owner);
-//         vm.deal(USER, 100 ether);
-//         sepoliaBeanHeadsBridge.setRemoteBridge(address(baseBeanHeadsBridge));
-//         ccipSimulatorSepolia.requestLinkFromFaucet(address(sepoliaBeanHeadsBridge), 100 ether);
-//         assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(baseBeanHeadsBridge)), true);
-//         vm.stopPrank();
+        // Deploy on Arbitrum
+        vm.selectFork(arbFork);
+        ccipSimulatorArbitrum = new CCIPLocalSimulatorFork();
+        vm.makePersistent(address(ccipSimulatorArbitrum));
 
-//         vm.selectFork(baseFork);
-//         vm.startPrank(owner);
-//         vm.deal(USER, 100 ether);
-//         baseBeanHeadsBridge.setRemoteBridge(address(sepoliaBeanHeadsBridge));
-//         ccipSimulatorBase.requestLinkFromFaucet(address(baseBeanHeadsBridge), 100 ether);
-//         assertEq(baseBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
-//         vm.stopPrank();
-//     }
+        arbNetworkDetails = ccipSimulatorArbitrum.getNetworkDetails(block.chainid);
+        console.log("Arb Network Details: ", block.chainid);
 
-//     function test_sendMintTokenRequest() public {
-//         vm.selectFork(baseFork);
-//         vm.startPrank(USER);
-//         uint256 tokenAmount = 1;
-//         uint256 mintPayment = MINT_PRICE * tokenAmount;
+        address usdPriceFeedArbitrum = sharedHelperConfig.getActiveNetworkConfig().usdPriceFeed;
+        priceFeedArbitrum = AggregatorV3Interface(usdPriceFeedArbitrum);
 
-//         bytes32 messageId = baseBeanHeadsBridge.sendMintTokenRequest{value: mintPayment}(
-//             SEPOLIA_CHAIN_SELECTOR, USER, params, tokenAmount
-//         );
+        arbHelpers = new Helpers();
+        address deployerArbitrumAddress = vm.addr(sharedHelperConfig.getActiveNetworkConfig().deployerKey);
+        DeployBeanHeadsBridge deployArbBeanHeadsBridge = new DeployBeanHeadsBridge(sharedHelperConfig);
+        (address arbBeanHeadsBridgeAddr, address arbBeanHeadsAddress) = deployArbBeanHeadsBridge.run();
+        arbBeanHeadsBridge = BeanHeadsBridge(payable(arbBeanHeadsBridgeAddr));
+        arbBeanHeads = BeanHeads(payable(arbBeanHeadsAddress));
+        owner = deployerArbitrumAddress;
+        assertEq(arbBeanHeadsBridge.owner(), owner);
+        assertEq(arbBeanHeads.owner(), owner);
 
-//         vm.stopPrank();
+        vm.selectFork(sepoliaFork);
+        vm.startPrank(owner);
+        console.log("Setting up Sepolia BeanHeadsBridge...");
+        mockSepoliaToken = new MockERC20(10_000 ether);
+        sepoliaBeanHeadsBridge.setRemoteBridge(address(arbBeanHeadsBridge));
+        ccipSimulatorSepolia.requestLinkFromFaucet(address(sepoliaBeanHeadsBridge), 100 ether);
+        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
 
-//         vm.selectFork(sepoliaFork);
+        sepoliaBeanHeads.setAllowedToken(address(mockSepoliaToken), true);
+        sepoliaBeanHeads.addPriceFeed(address(mockSepoliaToken), address(priceFeedSepolia));
+        sepoliaBeanHeads.setMintPrice(MINT_PRICE);
+        vm.stopPrank();
 
-//         Client.Any2EVMMessage memory receivedMessage = Client.Any2EVMMessage({
-//             messageId: messageId,
-//             sourceChainSelector: BASE_CHAIN_SELECTOR,
-//             sender: abi.encode(address(baseBeanHeadsBridge)),
-//             data: abi.encode(IBeanHeadsBridge.ActionType.MINT, USER, params, tokenAmount),
-//             destTokenAmounts: new Client.EVMTokenAmount[](1)
-//         });
-//         receivedMessage.destTokenAmounts[0] = Client.EVMTokenAmount({token: address(0), amount: mintPayment});
+        vm.selectFork(arbFork);
+        vm.startPrank(owner);
+        console.log("Setting up Arbitrum BeanHeadsBridge...");
+        mockArbToken = new MockERC20(10_000 ether);
+        arbBeanHeadsBridge.setRemoteBridge(address(sepoliaBeanHeadsBridge));
+        ccipSimulatorArbitrum.requestLinkFromFaucet(address(arbBeanHeadsBridge), 100 ether);
+        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
 
-//         vm.prank(sepoliaNetworkDetails.routerAddress);
-//         sepoliaBeanHeadsBridge.ccipReceive(receivedMessage);
+        arbBeanHeads.setAllowedToken(address(mockArbToken), true);
+        arbBeanHeads.addPriceFeed(address(mockArbToken), address(priceFeedArbitrum));
+        arbBeanHeads.setMintPrice(MINT_PRICE);
+        vm.stopPrank();
 
-//         uint256 userTokenBalance = sepoliaBeanHeads.balanceOf(USER);
-//         assertEq(userTokenBalance, tokenAmount);
-//     }
-// }
+        vm.selectFork(sepoliaFork);
+        vm.startPrank(USER);
+        vm.deal(USER, 1 ether);
+        mockSepoliaToken.mint(100 ether);
+        mockSepoliaToken.approve(address(sepoliaBeanHeadsBridge), type(uint256).max);
+        mockSepoliaToken.approve(address(sepoliaBeanHeads), type(uint256).max);
+        vm.stopPrank();
+
+        vm.selectFork(arbFork);
+        vm.startPrank(USER);
+        vm.deal(USER, 1 ether);
+        mockArbToken.mint(100 ether);
+        mockArbToken.approve(address(arbBeanHeadsBridge), type(uint256).max);
+        mockArbToken.approve(address(arbBeanHeads), type(uint256).max);
+        vm.stopPrank();
+    }
+
+    function test_sendMintTokenRequest() public {
+        vm.selectFork(arbFork);
+        vm.startPrank(USER);
+        uint256 tokenAmount = 1;
+        uint256 mintPayment = MINT_PRICE * tokenAmount;
+
+        bytes32 messageId = arbBeanHeadsBridge.sendMintTokenRequest(
+            SEPOLIA_CHAIN_SELECTOR, USER, params, tokenAmount, address(mockArbToken)
+        );
+
+        vm.stopPrank();
+
+        vm.selectFork(sepoliaFork);
+
+        Client.Any2EVMMessage memory receivedMessage = Client.Any2EVMMessage({
+            messageId: messageId,
+            sourceChainSelector: BASE_CHAIN_SELECTOR,
+            sender: abi.encode(address(arbBeanHeadsBridge)),
+            data: abi.encode(IBeanHeadsBridge.ActionType.MINT, USER, params, tokenAmount),
+            destTokenAmounts: new Client.EVMTokenAmount[](1)
+        });
+        receivedMessage.destTokenAmounts[0] =
+            Client.EVMTokenAmount({token: address(mockSepoliaToken), amount: mintPayment});
+
+        vm.prank(sepoliaNetworkDetails.routerAddress);
+        sepoliaBeanHeadsBridge.ccipReceive(receivedMessage);
+
+        uint256 userTokenBalance = sepoliaBeanHeads.balanceOf(USER);
+        assertEq(userTokenBalance, tokenAmount);
+    }
+}

@@ -49,19 +49,15 @@ contract HelperConfig is Script {
     mapping(uint256 => NetworkConfig) public chainIdToNetworkConfig;
 
     constructor() {
-        if (block.chainid == LOCAL_CHAIN_ID) {
-            _setAnvilConfig();
-        } else if (block.chainid == ETH_SEPOLIA_CHAIN_ID) {
-            _setSepoliaConfig();
-        } else if (block.chainid == OPTIMISM_SEPOLIA_CHAIN_ID) {
-            _setOpSepoliaConfig();
-        } else if (block.chainid == ARBITRUM_SEPOLIA_CHAIN_ID) {
-            _setArbitrumSepoliaConfig();
-        } else {
-            revert("Unsupported chain ID");
-        }
-        chainIdToNetworkConfig[block.chainid] = activeNetworkConfig;
-        console.log("Active network config set for chain ID:", block.chainid);
+        chainIdToNetworkConfig[LOCAL_CHAIN_ID] = _setAnvilConfig();
+        chainIdToNetworkConfig[ETH_SEPOLIA_CHAIN_ID] = _setSepoliaConfig();
+        chainIdToNetworkConfig[OPTIMISM_SEPOLIA_CHAIN_ID] = _setOpSepoliaConfig();
+        chainIdToNetworkConfig[ARBITRUM_SEPOLIA_CHAIN_ID] = _setArbitrumSepoliaConfig();
+
+        uint256 current = block.chainid;
+        activeNetworkConfig = chainIdToNetworkConfig[current];
+
+        console.log("Active network config set for chain ID:", current);
     }
 
     function _setAnvilConfig() public returns (NetworkConfig memory) {
@@ -100,7 +96,7 @@ contract HelperConfig is Script {
             vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
             subscriptionId: 5283,
             keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-            deployerKey: vm.envUint("SEPOLIA_DEPLOYER_KEY")
+            deployerKey: vm.envUint("PRIVATE_KEY")
         });
         return activeNetworkConfig;
     }
@@ -114,7 +110,7 @@ contract HelperConfig is Script {
             vrfCoordinator: 0x02667f44a6a44E4BDddCF80e724512Ad3426B17d,
             subscriptionId: 258,
             keyHash: 0xc3d5bc4d5600fa71f7a50b9ad841f14f24f9ca4236fd00bdb5fda56b052b28a4,
-            deployerKey: vm.envUint("OP_SEPOLIA_DEPLOYER_KEY")
+            deployerKey: vm.envUint("PRIVATE_KEY")
         });
         return activeNetworkConfig;
     }
@@ -128,12 +124,22 @@ contract HelperConfig is Script {
             vrfCoordinator: 0x5CE8D5A2BC84beb22a398CCA51996F7930313D61,
             subscriptionId: 403,
             keyHash: 0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be,
-            deployerKey: vm.envUint("ARBITRUM_SEPOLIA_DEPLOYER_KEY")
+            deployerKey: vm.envUint("PRIVATE_KEY")
         });
         return activeNetworkConfig;
     }
 
     function getActiveNetworkConfig() public view returns (NetworkConfig memory) {
-        return activeNetworkConfig;
+        if (block.chainid == LOCAL_CHAIN_ID) {
+            return chainIdToNetworkConfig[LOCAL_CHAIN_ID];
+        } else if (block.chainid == ETH_SEPOLIA_CHAIN_ID) {
+            return chainIdToNetworkConfig[ETH_SEPOLIA_CHAIN_ID];
+        } else if (block.chainid == OPTIMISM_SEPOLIA_CHAIN_ID) {
+            return chainIdToNetworkConfig[OPTIMISM_SEPOLIA_CHAIN_ID];
+        } else if (block.chainid == ARBITRUM_SEPOLIA_CHAIN_ID) {
+            return chainIdToNetworkConfig[ARBITRUM_SEPOLIA_CHAIN_ID];
+        } else {
+            revert("Unsupported chain ID");
+        }
     }
 }

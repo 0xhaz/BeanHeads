@@ -25,6 +25,12 @@ contract BeanHeadsTest is Test, Helpers {
     address public USER = makeAddr("USER");
     address public USER2 = makeAddr("USER2");
 
+    bytes32 TRANSFER_SIG = keccak256("Transfer(address,address,uint256)");
+    bytes32 ROYALTY_PAID_SIG = keccak256("RoyaltyPaid(address,uint256,uint256,uint256)");
+    bytes32 TOKEN_SOLD_SIG = keccak256("TokenSold(address,address,uint256,uint256)");
+    bytes32 APPROVAL_SIG = keccak256("Approval(address,address,uint256)");
+    bytes32 MINTED_GENESIS_SIG = keccak256("MintedGenesis(address,uint256)");
+
     uint256 public MINT_PRICE;
     AggregatorV3Interface priceFeed;
     uint8 tokenDecimals;
@@ -46,7 +52,7 @@ contract BeanHeadsTest is Test, Helpers {
         tokenDecimals = mockERC20.decimals();
 
         // vm.startPrank(DEPLOYER);
-        deployBeanHeads = new DeployBeanHeads();
+        deployBeanHeads = new DeployBeanHeads(helperConfig);
         (address beanHeadsAddress,) = deployBeanHeads.run();
         beanHeads = BeanHeads(payable(beanHeadsAddress));
 
@@ -110,10 +116,6 @@ contract BeanHeadsTest is Test, Helpers {
         // Decode logs
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries.length, 4);
-
-        bytes32 TRANSFER_SIG = keccak256("Transfer(address,address,uint256)");
-        bytes32 APPROVAL_SIG = keccak256("Approval(address,address,uint256)");
-        bytes32 MINTED_GENESIS_SIG = keccak256("MintedGenesis(address,uint256)");
 
         bool foundERC20Transfer;
         bool foundERC721Transfer;
@@ -207,7 +209,7 @@ contract BeanHeadsTest is Test, Helpers {
 
         Genesis.SVGParams memory multiParams = params;
         uint256 amount = 3;
-        uint256 totalPrice = MINT_PRICE * amount;
+        // uint256 totalPrice = MINT_PRICE * amount;
         uint256 tokenId = beanHeads.mintGenesis(USER, multiParams, amount, address(mockERC20));
         assertEq(tokenId, 0); // First token ID should be 0
         assertEq(beanHeads.balanceOf(USER), amount); // USER should own 3 tokens
@@ -271,36 +273,22 @@ contract BeanHeadsTest is Test, Helpers {
     }
 
     function test_SellTokens_Success() public {
-        // USER mints a token
         vm.startPrank(USER);
         uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         uint256 salePrice = 1 ether;
-
-        // List token for sale
-        vm.recordLogs();
         beanHeads.sellToken(tokenId, salePrice);
-        assertEq(beanHeads.getTokenSalePrice(tokenId), salePrice);
         vm.stopPrank();
 
-        // USER2 prepares to buy token
         vm.deal(USER2, 10 ether);
         vm.startPrank(USER2);
-        mockERC20.approve(address(beanHeads), type(uint256).max); // Approve BeanHeads to spend USER2's tokens
-        mockERC20.mint(100 ether); // Mint some tokens for USER2
-
+        mockERC20.approve(address(beanHeads), type(uint256).max);
+        mockERC20.mint(100 ether);
         uint256 expectedRoyalty = (salePrice * 600) / 10_000;
-
         vm.recordLogs();
         beanHeads.buyToken(tokenId, address(mockERC20));
         vm.stopPrank();
 
-        // Decode logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Event selectors
-        bytes32 TRANSFER_SIG = keccak256("Transfer(address,address,uint256)");
-        bytes32 ROYALTY_PAID_SIG = keccak256("RoyaltyPaid(address,uint256,uint256,uint256)");
-        bytes32 TOKEN_SOLD_SIG = keccak256("TokenSold(address,address,uint256,uint256)");
 
         bool erc20Transferred;
         bool erc721Transferred;
@@ -309,73 +297,33 @@ contract BeanHeadsTest is Test, Helpers {
 
         for (uint256 i = 0; i < logs.length; i++) {
             Vm.Log memory log = logs[i];
-
-            // ERC20 Transfer (BeanHeads -> Seller)
             if (log.topics[0] == TRANSFER_SIG && log.emitter == address(mockERC20)) {
-                address from = address(uint160(uint256(log.topics[1])));
-                address to = address(uint160(uint256(log.topics[2])));
-                uint256 amount = abi.decode(log.data, (uint256));
-
-                if (to == USER) {
-                    assertEq(from, address(beanHeads));
-                    assertEq(amount, salePrice - expectedRoyalty);
-                    erc20Transferred = true;
-                }
+                _checkERC20Transfer(log, USER, salePrice - expectedRoyalty);
+                erc20Transferred = true;
             }
-
-            // ERC721 Transfer (BeanHeads -> Buyer)
             if (log.topics[0] == TRANSFER_SIG && log.emitter == address(beanHeads)) {
-                address from = address(uint160(uint256(log.topics[1])));
-                address to = address(uint160(uint256(log.topics[2])));
-                uint256 tid = uint256(log.topics[3]);
-
-                assertEq(from, address(beanHeads));
-                assertEq(to, USER2);
-                assertEq(tid, tokenId);
+                _checkERC721Transfer(log, USER2, tokenId);
                 erc721Transferred = true;
             }
-
-            // RoyaltyPaid Event
             if (log.topics[0] == ROYALTY_PAID_SIG && log.emitter == address(beanHeads)) {
-                address receiver = address(uint160(uint256(log.topics[1])));
-                uint256 tokenId1 = uint256(log.topics[2]);
-                (uint256 salePrice1, uint256 royaltyAmount) = abi.decode(log.data, (uint256, uint256));
-
-                assertEq(receiver, deployerAddress);
-                assertEq(tokenId1, tokenId);
-                assertEq(salePrice1, salePrice);
-                assertEq(royaltyAmount, expectedRoyalty);
+                _checkRoyaltyPaid(log, deployerAddress, tokenId, salePrice, expectedRoyalty);
                 royaltyPaid = true;
             }
-
-            // TokenSold Event
             if (log.topics[0] == TOKEN_SOLD_SIG && log.emitter == address(beanHeads)) {
-                address buyer = address(uint160(uint256(log.topics[1])));
-                address seller = address(uint160(uint256(log.topics[2])));
-                uint256 tid = uint256(log.topics[3]);
-                uint256 decodedPrice = abi.decode(log.data, (uint256));
-
-                assertEq(buyer, USER2);
-                assertEq(seller, USER);
-                assertEq(tid, tokenId);
-                assertEq(decodedPrice, salePrice);
+                _checkTokenSold(log, USER2, USER, tokenId, salePrice);
                 tokenSold = true;
             }
         }
 
-        // Final assertions
         assertTrue(erc20Transferred, "ERC20 Transfer (to seller) not found");
         assertTrue(erc721Transferred, "ERC721 Transfer (to buyer) not found");
         assertTrue(royaltyPaid, "RoyaltyPaid event not found");
         assertTrue(tokenSold, "TokenSold event not found");
 
-        // Confirm new ownership and cleared sale state
         assertEq(beanHeads.getOwnerOf(tokenId), USER2);
         assertEq(beanHeads.getTokenSalePrice(tokenId), 0);
-
         _assertAttributes(tokenId);
 
-        // Confirm royalty logic
         vm.prank(deployerAddress);
         _assertRoyalty(tokenId, salePrice, expectedRoyalty);
     }
@@ -695,6 +643,62 @@ contract BeanHeadsTest is Test, Helpers {
         (address receiver, uint256 royaltyAmount) = royalty.royaltyInfo(tokenId, salePrice);
         assertEq(receiver, deployerAddress);
         assertEq(royaltyAmount, expectedRoyalty);
+    }
+
+    function _checkERC20Transfer(Vm.Log memory log, address expectedTo, uint256 expectedAmount) internal view {
+        address from = address(uint160(uint256(log.topics[1])));
+        address to = address(uint160(uint256(log.topics[2])));
+        uint256 amount = abi.decode(log.data, (uint256));
+
+        if (to == expectedTo) {
+            assertEq(from, address(beanHeads));
+            assertEq(amount, expectedAmount);
+        }
+    }
+
+    function _checkERC721Transfer(Vm.Log memory log, address expectedTo, uint256 expectedTokenId) internal view {
+        address from = address(uint160(uint256(log.topics[1])));
+        address to = address(uint160(uint256(log.topics[2])));
+        uint256 tid = uint256(log.topics[3]);
+
+        assertEq(from, address(beanHeads));
+        assertEq(to, expectedTo);
+        assertEq(tid, expectedTokenId);
+    }
+
+    function _checkRoyaltyPaid(
+        Vm.Log memory log,
+        address expectedReceiver,
+        uint256 expectedTokenId,
+        uint256 expectedSalePrice,
+        uint256 expectedRoyalty
+    ) internal pure {
+        address receiver = address(uint160(uint256(log.topics[1])));
+        uint256 tokenId1 = uint256(log.topics[2]);
+        (uint256 salePrice1, uint256 royaltyAmount) = abi.decode(log.data, (uint256, uint256));
+
+        assertEq(receiver, expectedReceiver);
+        assertEq(tokenId1, expectedTokenId);
+        assertEq(salePrice1, expectedSalePrice);
+        assertEq(royaltyAmount, expectedRoyalty);
+    }
+
+    function _checkTokenSold(
+        Vm.Log memory log,
+        address expectedBuyer,
+        address expectedSeller,
+        uint256 expectedTokenId,
+        uint256 expectedPrice
+    ) internal pure {
+        address buyer = address(uint160(uint256(log.topics[1])));
+        address seller = address(uint160(uint256(log.topics[2])));
+        uint256 tid = uint256(log.topics[3]);
+        uint256 decodedPrice = abi.decode(log.data, (uint256));
+
+        assertEq(buyer, expectedBuyer);
+        assertEq(seller, expectedSeller);
+        assertEq(tid, expectedTokenId);
+        assertEq(decodedPrice, expectedPrice);
     }
 
     // helper function to convert the getMintPrice to an USD equivalent

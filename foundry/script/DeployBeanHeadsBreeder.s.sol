@@ -9,8 +9,13 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
 
 contract DeployBeanHeadsBreeder is Script {
+    HelperConfig helperConfig = new HelperConfig();
+
+    constructor(HelperConfig _helperConfig) {
+        helperConfig = _helperConfig;
+    }
+
     function run() public returns (address, address) {
-        HelperConfig helperConfig = new HelperConfig();
         (,,,, address vrfCoordinator, uint256 subscriptionId, bytes32 keyHash, uint256 deployerKey) =
             helperConfig.activeNetworkConfig();
 
@@ -21,7 +26,7 @@ contract DeployBeanHeadsBreeder is Script {
         address beanHeads;
 
         if (block.chainid == helperConfig.LOCAL_CHAIN_ID()) {
-            DeployBeanHeads deployBeanHeads = new DeployBeanHeads();
+            DeployBeanHeads deployBeanHeads = new DeployBeanHeads(helperConfig);
             (beanHeads,) = deployBeanHeads.run();
         } else if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
             beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
