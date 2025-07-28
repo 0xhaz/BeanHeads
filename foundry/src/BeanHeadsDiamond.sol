@@ -5,3 +5,5 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {BeanHeads} from "src/core/BeanHeads.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
+
+contract BeanHeadsProxy {}

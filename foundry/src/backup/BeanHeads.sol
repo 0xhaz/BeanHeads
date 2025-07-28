@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.24;
 
-import {ERC721AUpgradeable} from "ERC721A-Upgradeable/ERC721AUpgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
+import {ERC721A, IERC721A, ERC721AQueryable} from "ERC721A/extensions/ERC721AQueryable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from
@@ -27,13 +25,7 @@ import {console} from "forge-std/console.sol";
  * @dev Uses breeding concept to create new avatars similar to Cryptokitties
  * @dev Uses Chainlink VRF for attributes randomness
  */
-contract BeanHeads is
-    ERC721AUpgradeable,
-    IBeanHeads,
-    OwnableUpgradeable,
-    UUPSUpgradeable,
-    ReentrancyGuardUpgradeable
-{
+contract BeanHeads is ERC721A, Ownable, IBeanHeads, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using OracleLib for AggregatorV3Interface;
     /*//////////////////////////////////////////////////////////////
@@ -41,7 +33,7 @@ contract BeanHeads is
     //////////////////////////////////////////////////////////////*/
     /// @notice Royalty information
 
-    IERC2981 public s_royaltyContract;
+    IERC2981 public immutable i_royaltyContract;
 
     /// @notice Token mint price
     uint256 private s_mintPriceUsd;
@@ -50,7 +42,7 @@ contract BeanHeads is
 
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
 
-    AggregatorV3Interface private s_priceFeed;
+    AggregatorV3Interface private immutable i_priceFeed;
 
     address[] private s_privateFeedsAddresses;
 
@@ -58,10 +50,10 @@ contract BeanHeads is
                                 MAPPINGS
     //////////////////////////////////////////////////////////////*/
     /// @notice Mapping tokenId to its SVG parameters
-    mapping(uint256 tokenId => Genesis.SVGParams params) private s_tokenIdToParams;
+    mapping(uint256 => Genesis.SVGParams) private s_tokenIdToParams;
 
     /// @notice Mapping of Listing structs for each tokenId
-    mapping(uint256 tokenId => Listing) private s_tokenIdToListing;
+    mapping(uint256 => Listing) private s_tokenIdToListing;
 
     /// @notice Mapping tokenId to its generation number
     mapping(uint256 tokenId => uint256 generation) private s_tokenIdToGeneration;
@@ -105,30 +97,16 @@ contract BeanHeads is
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
     /**
-     * @custom:oz-upgrades-unsafe-allow constructor
+     * @dev Initializes the contract with default royalty settings
+     * @param initialOwner The address to own the contract
      */
-    constructor() {
-        _disableInitializers(); // Disable initializers to prevent accidental initialization
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            INITIALIZER
-    //////////////////////////////////////////////////////////////*/
-    /**
-     * @notice Initializes proxy storage and sets initial values
-     * @param owner The owner of the contract
-     * @param royalty The contract that handles royalty information
-     * @param feed The Chainlink price feed for USD conversion
-     */
-    function initialize(address owner, address royalty, address feed) external initializer initializerERC721A {
-        __ERC721A_init("BEANS", "BeanHeads");
-        __Ownable_init(owner);
-        __UUPSUpgradeable_init();
-        __ReentrancyGuard_init();
-
-        s_royaltyContract = IERC2981(royalty);
-        s_priceFeed = AggregatorV3Interface(feed);
-        s_mintPriceUsd = 1e18; // Initial mint price set to 1 USD
+    constructor(address initialOwner, address royalty_, address priceFeed)
+        ERC721A("BeanHeads", "BEAN")
+        Ownable(initialOwner)
+    {
+        i_royaltyContract = IERC2981(royalty_);
+        s_mintPriceUsd = 0.01e18; // 0.01 USD in 18 decimals
+        i_priceFeed = AggregatorV3Interface(priceFeed);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -140,9 +118,7 @@ contract BeanHeads is
         returns (uint256 tokenId)
     {
         if (amount == 0) revert IBeanHeads__InvalidAmount();
-        if (!s_allowedTokens[paymentToken]) {
-            revert IBeanHeads__TokenNotAllowed(paymentToken);
-        }
+        if (!s_allowedTokens[paymentToken]) revert IBeanHeads__TokenNotAllowed(paymentToken);
 
         IERC20 token = IERC20(paymentToken);
         uint256 rawPrice = s_mintPriceUsd * amount;
@@ -189,9 +165,7 @@ contract BeanHeads is
         uint256 price = listing.price;
 
         if (price == 0) revert IBeanHeads__TokenIsNotForSale();
-        if (!s_allowedTokens[paymentToken]) {
-            revert IBeanHeads__TokenNotAllowed(paymentToken);
-        }
+        if (!s_allowedTokens[paymentToken]) revert IBeanHeads__TokenNotAllowed(paymentToken);
 
         IERC20 token = IERC20(paymentToken);
         uint256 adjustedPrice = _getTokenAmountFromUsd(paymentToken, price);
@@ -219,7 +193,7 @@ contract BeanHeads is
         token.safeTransfer(seller, sellerAmount);
 
         s_tokenIdToPaymentToken[tokenId] = paymentToken; // Store the payment token used for the transaction
-        safeTransferFrom(address(this), msg.sender, tokenId);
+        IERC721A(address(this)).safeTransferFrom(address(this), msg.sender, tokenId);
         s_ownerTokens[msg.sender].push(tokenId); // Add tokenId to buyer's list
         _removeTokenFromOwner(seller, tokenId); // Remove tokenId from seller's list
 
@@ -232,7 +206,7 @@ contract BeanHeads is
             revert IBeanHeads__NotOwner();
         }
 
-        safeTransferFrom(address(this), msg.sender, tokenId);
+        IERC721A(address(this)).safeTransferFrom(address(this), msg.sender, tokenId);
 
         // Reset sale price
         s_tokenIdToListing[tokenId].price = 0;
@@ -243,7 +217,7 @@ contract BeanHeads is
     }
 
     /// @inheritdoc IBeanHeads
-    function approve(address to, uint256 tokenId) public payable override(ERC721AUpgradeable, IBeanHeads) {
+    function approve(address to, uint256 tokenId) public payable override(ERC721A, IBeanHeads) {
         super.approve(to, tokenId);
     }
 
@@ -251,7 +225,7 @@ contract BeanHeads is
     function tokenURI(uint256 tokenId)
         public
         view
-        override(ERC721AUpgradeable, IBeanHeads)
+        override(ERC721A, IBeanHeads)
         tokenExists(tokenId)
         returns (string memory)
     {
@@ -263,11 +237,7 @@ contract BeanHeads is
     }
 
     /// @inheritdoc IBeanHeads
-    function safeTransferFrom(address from, address to, uint256 tokenId)
-        public
-        payable
-        override(IBeanHeads, ERC721AUpgradeable)
-    {
+    function safeTransferFrom(address from, address to, uint256 tokenId) public payable override(IBeanHeads, ERC721A) {
         super.safeTransferFrom(from, to, tokenId);
     }
 
@@ -395,9 +365,7 @@ contract BeanHeads is
 
     /// @inheritdoc IBeanHeads
     function addPriceFeed(address token, address priceFeed) external onlyOwner {
-        if (token == address(0) || priceFeed == address(0)) {
-            revert IBeanHeads__InvalidTokenAddress();
-        }
+        if (token == address(0) || priceFeed == address(0)) revert IBeanHeads__InvalidTokenAddress();
         s_priceFeeds[token] = priceFeed;
         s_privateFeedsAddresses.push(priceFeed);
 
@@ -418,7 +386,7 @@ contract BeanHeads is
         view
         returns (address receiver, uint256 royaltyAmount)
     {
-        return s_royaltyContract.royaltyInfo(tokenId, salePrice);
+        return i_royaltyContract.royaltyInfo(tokenId, salePrice);
     }
 
     /**
@@ -475,12 +443,8 @@ contract BeanHeads is
      * @param amount The amount to check against the user's balance and allowance
      */
     function _checkPaymentTokenAllowanceAndBalance(IERC20 token, uint256 amount) internal view {
-        if (token.allowance(msg.sender, address(this)) < amount) {
-            revert IBeanHeads__InsufficientAllowance();
-        }
-        if (token.balanceOf(msg.sender) < amount) {
-            revert IBeanHeads__InsufficientPayment();
-        }
+        if (token.allowance(msg.sender, address(this)) < amount) revert IBeanHeads__InsufficientAllowance();
+        if (token.balanceOf(msg.sender) < amount) revert IBeanHeads__InsufficientPayment();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -514,7 +478,7 @@ contract BeanHeads is
      * @param interfaceId The interface identifier.
      * @return True if supported.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721AUpgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A) returns (bool) {
         return interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId);
     }
 
@@ -522,9 +486,4 @@ contract BeanHeads is
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector; // Return the selector for ERC721Received
     }
-
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
-
-    /// @notice upgrade-safe layout padding
-    uint256[50] private __gap; // Padding to prevent storage collisions in future upgrades
 }

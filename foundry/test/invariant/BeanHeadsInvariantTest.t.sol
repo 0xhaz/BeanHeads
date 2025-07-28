@@ -54,7 +54,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
 
     function setUp() public {
         helperConfig = new HelperConfig();
-        deployBeanHeads = new DeployBeanHeads(helperConfig);
+        deployBeanHeads = new DeployBeanHeads();
         mockERC20 = new MockERC20(1000 ether);
 
         address usdcPriceFeed = helperConfig.getActiveNetworkConfig().usdPriceFeed;

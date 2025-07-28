@@ -26,7 +26,7 @@ contract DeployBeanHeadsBreeder is Script {
         address beanHeads;
 
         if (block.chainid == helperConfig.LOCAL_CHAIN_ID()) {
-            DeployBeanHeads deployBeanHeads = new DeployBeanHeads(helperConfig);
+            DeployBeanHeads deployBeanHeads = new DeployBeanHeads();
             (beanHeads,) = deployBeanHeads.run();
         } else if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
             beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);

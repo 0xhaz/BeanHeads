@@ -3,6 +3,7 @@
 @chainlink/local/src/=lib/chainlink-local/src/
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+ERC721A-Upgradeable/=lib/ERC721A-Upgradeable/contracts/
 ERC721A/=lib/ERC721A/contracts/
 chainlink-brownie-contracts/=lib/chainlink-brownie-contracts/
 chainlink-ccip/=lib/chainlink-local/lib/chainlink-ccip/

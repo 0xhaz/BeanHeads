@@ -52,7 +52,7 @@ contract BeanHeadsTest is Test, Helpers {
         tokenDecimals = mockERC20.decimals();
 
         // vm.startPrank(DEPLOYER);
-        deployBeanHeads = new DeployBeanHeads(helperConfig);
+        deployBeanHeads = new DeployBeanHeads();
         (address beanHeadsAddress,) = deployBeanHeads.run();
         beanHeads = BeanHeads(payable(beanHeadsAddress));
 

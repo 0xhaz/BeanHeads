@@ -15,7 +15,7 @@ ffi = true
 via_ir = true
 optimizer = true
 #optimizer-runs = 2000
-optimizer-runs = 20000
+optimizer-runs = 1000000
 fs_permissions = [
     {access = "read", path = "./images/"}, 
     { access = "write", path = "./output/"}, 
