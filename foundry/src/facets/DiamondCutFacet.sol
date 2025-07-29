@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity ^0.8.24;
+
+/**
+ * \
+ * Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+ * EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
+ * /*****************************************************************************
+ */
+import {IDiamondCut} from "src/interfaces/IDiamondCut.sol";
+import {BHStorage} from "src/libraries/BHStorage.sol";
+
+// Remember to add the loupe functions from DiamondLoupeFacet to the diamond
+// The loupe functoins are required by the EIP-2535 standard
+
+contract DiamondCutFacet is IDiamondCut {
+    /// @notice Add/replace/remove any number of functions and optionally execute
+    ///         a function with delegatecall
+    /// @param _diamondCut Contains the facet addresses and function selectors
+    /// @param _init The address of the contract or facet to execute _calldata
+    /// @param _calldata A function call, including function selector and arguments
+    ///                  _calldata is executed with delegatecall on _init
+    function diamondCut(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external override {
+        BHStorage.enforceContractOwner();
+        BHStorage.diamondCut(_diamondCut, _init, _calldata);
+    }
+}

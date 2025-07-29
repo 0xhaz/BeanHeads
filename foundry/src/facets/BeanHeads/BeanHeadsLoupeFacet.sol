@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.24;
 
-import {BHDLib} from "src/libraries/BHDLib.sol";
+import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IDiamondLoupe} from "src/interfaces/IDiamondLoupe.sol";
 import {IERC165} from "src/interfaces/IERC165.sol";
 
 contract BeanHeadsLoupeFacet is IDiamondLoupe, IERC165 {
     function facets() external view override returns (Facet[] memory facets_) {
-        BHDLib.BeanHeadsStorage storage ds = BHDLib.diamondStorage();
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         uint256 selectorCount = ds.selectors.length;
 
         // create an array for counting the number of selectors per facet
@@ -69,7 +69,7 @@ contract BeanHeadsLoupeFacet is IDiamondLoupe, IERC165 {
         override
         returns (bytes4[] memory _facetFunctionSelectors)
     {
-        BHDLib.BeanHeadsStorage storage ds = BHDLib.diamondStorage();
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         uint256 selectorCount = ds.selectors.length;
         uint256 numSelectors;
         _facetFunctionSelectors = new bytes4[](selectorCount);
@@ -90,7 +90,7 @@ contract BeanHeadsLoupeFacet is IDiamondLoupe, IERC165 {
     /// @notice Get all the facet addresses used by a diamond
     /// @return facetAddresses_ The facet addresses
     function facetAddresses() external view override returns (address[] memory facetAddresses_) {
-        BHDLib.BeanHeadsStorage storage ds = BHDLib.diamondStorage();
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         uint256 selectorCount = ds.selectors.length;
         // create an array to the maximum size possible
         facetAddresses_ = new address[](selectorCount);
@@ -131,7 +131,7 @@ contract BeanHeadsLoupeFacet is IDiamondLoupe, IERC165 {
     /// @param _functionSelector The function selector
     /// @return facetAddress_ The facet address that supports the selector
     function facetAddress(bytes4 _functionSelector) external view override returns (address facetAddress_) {
-        BHDLib.BeanHeadsStorage storage ds = BHDLib.diamondStorage();
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         facetAddress_ = ds.selectorToFacetPosition[_functionSelector].facetAddress;
     }
 
@@ -141,7 +141,7 @@ contract BeanHeadsLoupeFacet is IDiamondLoupe, IERC165 {
     /// @param _interfaceId The interface identifier, as specified in ERC-165
     /// @return bool True if the contract supports the interface, false otherwise
     function supportsInterface(bytes4 _interfaceId) external view override returns (bool) {
-        BHDLib.BeanHeadsStorage storage ds = BHDLib.diamondStorage();
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
 
         return ds.supportedInterfaces[_interfaceId] == true;
     }

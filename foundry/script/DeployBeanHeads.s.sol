@@ -2,7 +2,10 @@
 pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {BeanHeads} from "src/core/BeanHeads.sol";
+import {BeanHeadsDiamond} from "src/BeanHeadsDiamond.sol";
+import {DiamondInit} from "src/updateInitializers/DiamondInit.sol";
+import {DiamondCutFacet} from "src/facets/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "src/facets/DiamondLoupeFacet.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {BeanHeadsRoyalty} from "src/core/BeanHeadsRoyalty.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";

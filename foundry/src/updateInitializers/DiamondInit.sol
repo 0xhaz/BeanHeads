@@ -9,11 +9,17 @@ pragma solidity ^0.8.24;
 /**
  *
  */
-import {BHDLib} from "src/libraries/BHDLib.sol";
+import {AggregatorV3Interface} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IDiamondCut} from "src/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "src/interfaces/IDiamondLoupe.sol";
 import {IERC165} from "src/interfaces/IERC165.sol";
 import {IERC173} from "src/interfaces/IERC173.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import {IERC721AUpgradeable} from "src/interfaces/IERC721AUpgradeable.sol";
+import {ERC721AStorage} from "src/libraries/ERC721A/ERC721AStorage.sol";
 
 // It is expected that this contract is customized if you want to deploy your diamond
 // with data from a deployment script. Use the init function to initialize state variables
@@ -27,13 +33,27 @@ contract DiamondInit {
     // You can add parameters to this function in order to pass in
     // data to set your own state variables
 
-    function init() external {
+    function init(address _royalty, address _priceFeed) external {
         // adding ERC165 data
-        BHDLib.BeanHeadsStorage storage ds = BHDLib.diamondStorage();
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC20Metadata).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC2981).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC721AUpgradeable).interfaceId] = true;
+
+        // Initialize ERC721A state variables
+        ERC721AStorage.Layout storage erc721AStorage = ERC721AStorage.layout();
+        erc721AStorage._name = "BeanHeads";
+        erc721AStorage._symbol = "BEANS";
+
+        // Initialize the BeanHeads storage
+        ds.owner = msg.sender; // Set the contract owner
+        ds.mintPriceUsd = 0.01 ether; // Set a default mint price, can be overridden in the deployment script
+        ds.royaltyContract = _royalty;
+        ds.priceFeed = AggregatorV3Interface(_priceFeed);
 
         // add your own state variables
         // EIP-2535 specifies that the `diamondCut` function takes two optional
