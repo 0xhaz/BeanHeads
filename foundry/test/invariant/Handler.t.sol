@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.24;
 
-import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
+import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {Helpers} from "test/Helpers.sol";
 import {Genesis} from "src/types/Genesis.sol";
@@ -11,7 +11,7 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 import {MockERC20} from "src/mocks/MockERC20.sol";
 
 contract Handler is CommonBase, Helpers {
-    BeanHeads internal beanHeads;
+    IBeanHeads internal beanHeads;
     HelperConfig internal helperConfig;
     Helpers internal helpers;
     DeployBeanHeads internal deployBeanHeads;
@@ -28,7 +28,7 @@ contract Handler is CommonBase, Helpers {
     Genesis.SVGParams internal defaultParams;
 
     constructor(address _beanHeads, address _deployer, address _user) {
-        beanHeads = BeanHeads(payable(_beanHeads));
+        beanHeads = IBeanHeads(payable(_beanHeads));
         deployerAddress = _deployer;
         user = _user;
         helpers = new Helpers();
@@ -66,7 +66,7 @@ contract Handler is CommonBase, Helpers {
         if (nextId == 0) return;
         tokenId = bound(tokenId, 0, nextId - 1);
         if (!beanHeads.exists(tokenId)) return;
-        if (beanHeads.ownerOf(tokenId) != user) return;
+        if (beanHeads.getOwnerOf(tokenId) != user) return;
 
         price = bound(price, 1, 1 ether);
         vm.prank(user);
@@ -114,7 +114,7 @@ contract Handler is CommonBase, Helpers {
         if (nextId == 0) return;
         tokenId = bound(tokenId, 0, nextId - 1);
         if (!beanHeads.exists(tokenId)) return;
-        if (beanHeads.ownerOf(tokenId) != user) return;
+        if (beanHeads.getOwnerOf(tokenId) != user) return;
 
         vm.prank(user);
         beanHeads.burn(tokenId);

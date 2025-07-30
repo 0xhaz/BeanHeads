@@ -12,7 +12,7 @@ import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
-
+import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsMarketplace} from "src/interfaces/IBeanHeadsMarketplace.sol";
 
@@ -62,30 +62,29 @@ contract BeanHeadsMarketplaceFacet is ERC721AUpgradeable, ReentrancyGuard, IBean
 
         _checkPaymentTokenAllowanceAndBalance(token, adjustedPrice);
 
-        // Transfer tokens from buyer to seller
-        token.safeTransferFrom(msg.sender, listing.seller, adjustedPrice);
+        // Transfer tokens from buyer to contract
+        token.safeTransferFrom(msg.sender, address(this), adjustedPrice);
 
-        ds.tokenIdToListing[_tokenId] = BHStorage.Listing({seller: address(0), price: 0, isActive: false});
-
-        // pay royalties
+        // calculate royalty and transfer it
         (address royaltyReceiver, uint256 royaltyAmountRaw) = _royaltyInfo(_tokenId, adjustedPrice);
         uint256 royaltyAmount = _getTokenAmountFromUsd(_paymentToken, royaltyAmountRaw);
-        token.safeTransfer(royaltyReceiver, royaltyAmount);
+        uint256 sellerAmount = adjustedPrice - royaltyAmount;
 
-        emit RoyaltyPaid(royaltyReceiver, _tokenId, price, royaltyAmount);
+        if (royaltyAmount > 0) {
+            token.safeTransfer(royaltyReceiver, royaltyAmount);
+            emit RoyaltyPaid(royaltyReceiver, _tokenId, price, royaltyAmount);
+        }
 
         // Transfer remaining amount to the seller
-        uint256 sellerAmount = adjustedPrice - royaltyAmount;
         token.safeTransfer(listing.seller, sellerAmount);
-
-        ds.tokenIdToPaymentToken[_tokenId] = _paymentToken;
-        safeTransferFrom(address(this), msg.sender, _tokenId);
         ds.ownerTokens[msg.sender].push(_tokenId);
 
-        // Update the listing
-        listing.isActive = false;
+        ds.tokenIdToPaymentToken[_tokenId] = _paymentToken;
+        _safeTransfer(address(this), msg.sender, _tokenId, "");
 
         emit TokenSold(msg.sender, listing.seller, _tokenId, adjustedPrice);
+
+        ds.tokenIdToListing[_tokenId] = BHStorage.Listing({seller: address(0), price: 0, isActive: false});
     }
 
     /// @inheritdoc IBeanHeadsMarketplace
@@ -97,7 +96,8 @@ contract BeanHeadsMarketplaceFacet is ERC721AUpgradeable, ReentrancyGuard, IBean
         if (!listing.isActive) _revert(IBeanHeadsMarketplace__TokenNotForSale.selector);
 
         // Transfer the token back to the seller
-        safeTransferFrom(address(this), msg.sender, _tokenId);
+        _safeTransfer(address(this), msg.sender, _tokenId, "");
+        ds.ownerTokens[msg.sender].push(_tokenId);
 
         // Reset the listing
         listing.isActive = false;
@@ -105,6 +105,30 @@ contract BeanHeadsMarketplaceFacet is ERC721AUpgradeable, ReentrancyGuard, IBean
         listing.seller = address(0);
 
         emit TokenSaleCancelled(msg.sender, _tokenId);
+    }
+
+    /// @inheritdoc IBeanHeadsMarketplace
+    function getTokenSalePrice(uint256 _tokenId) external view tokenExists(_tokenId) returns (uint256) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        BHStorage.Listing storage listing = ds.tokenIdToListing[_tokenId];
+
+        if (!listing.isActive) {
+            _revert(IBeanHeadsMarketplace__TokenNotForSale.selector);
+        }
+
+        return listing.price;
+    }
+
+    /// @inheritdoc IBeanHeadsMarketplace
+    function isTokenForSale(uint256 _tokenId) external view tokenExists(_tokenId) returns (bool) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.tokenIdToListing[_tokenId].isActive;
+    }
+
+    /// @inheritdoc IBeanHeadsMarketplace
+    function isTokenAllowed(address _token) external view returns (bool) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.allowedTokens[_token];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -186,5 +210,10 @@ contract BeanHeadsMarketplaceFacet is ERC721AUpgradeable, ReentrancyGuard, IBean
                 break;
             }
         }
+    }
+
+    /// @notice Inherits from IERC721Receiver interface
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector; // Return the selector for ERC721Received
     }
 }

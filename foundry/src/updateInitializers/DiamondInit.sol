@@ -20,6 +20,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721AUpgradeable} from "src/interfaces/IERC721AUpgradeable.sol";
 import {ERC721AStorage} from "src/libraries/ERC721A/ERC721AStorage.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 
 // It is expected that this contract is customized if you want to deploy your diamond
 // with data from a deployment script. Use the init function to initialize state variables
@@ -34,7 +35,7 @@ contract DiamondInit {
     // data to set your own state variables
 
     function init(address _royalty, address _priceFeed) external {
-        // adding ERC165 data
+        // add interface IDs to the storage
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
@@ -43,6 +44,7 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IERC20Metadata).interfaceId] = true;
         ds.supportedInterfaces[type(IERC2981).interfaceId] = true;
         ds.supportedInterfaces[type(IERC721AUpgradeable).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC721Receiver).interfaceId] = true;
 
         // Initialize ERC721A state variables
         ERC721AStorage.Layout storage erc721AStorage = ERC721AStorage.layout();

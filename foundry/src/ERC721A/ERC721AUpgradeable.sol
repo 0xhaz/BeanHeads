@@ -236,7 +236,7 @@ contract ERC721AUpgradeable is ERC721AUpgradeableInternal {
     /**
      * @dev Equivalent to `safeTransferFrom(from, to, tokenId, '')`.
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId) public payable {
+    function safeTransferFrom(address from, address to, uint256 tokenId) public payable virtual {
         safeTransferFrom(from, to, tokenId, "");
     }
 
@@ -255,7 +255,7 @@ contract ERC721AUpgradeable is ERC721AUpgradeableInternal {
      *
      * Emits a {Transfer} event.
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public payable {
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public payable virtual {
         transferFrom(from, to, tokenId);
         if (to.code.length != 0) {
             if (!_checkContractOnERC721Received(from, to, tokenId, _data)) {

@@ -176,6 +176,8 @@ interface IBeanHeads {
      */
     function safeTransferFrom(address from, address to, uint256 tokenId) external payable;
 
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external payable;
+
     /**
      * @notice Approves another address to transfer the specified token ID
      * @param to The address to approve
@@ -260,4 +262,11 @@ interface IBeanHeads {
      * @param priceFeed The address of the price feed contract.
      */
     function addPriceFeed(address token, address priceFeed) external;
+
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
+
+    function balanceOf(address owner) external view returns (uint256);
+
+    function getTotalSupply() external view returns (uint256);
 }

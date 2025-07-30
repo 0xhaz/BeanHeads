@@ -106,33 +106,36 @@ library BHStorage {
 
     function diamondCut(IDiamondCut.FacetCut[] memory _diamondCut, address _init, bytes memory _calldata) internal {
         for (uint256 facetIndex; facetIndex < _diamondCut.length; facetIndex++) {
-            bytes4[] memory functionSelectors = _diamondCut[facetIndex].functionSelectors;
-            address facetAddress = _diamondCut[facetIndex].facetAddress;
+            IDiamondCut.FacetCut memory facet = _diamondCut[facetIndex];
 
-            if (functionSelectors.length == 0) revert BHDLib__NotSelectorsProvided(facetAddress);
-
-            IDiamondCut.FacetCutAction action = _diamondCut[facetIndex].action;
-            if (action == IDiamondCut.FacetCutAction.Add) {
-                addFunctions(facetAddress, functionSelectors);
+            if (facet.functionSelectors.length == 0) {
+                revert BHDLib__NotSelectorsProvided(facet.facetAddress);
             }
 
-            if (action == IDiamondCut.FacetCutAction.Replace) {
-                replaceFunctions(facetAddress, functionSelectors);
+            if (
+                (facet.action == IDiamondCut.FacetCutAction.Add || facet.action == IDiamondCut.FacetCutAction.Replace)
+                    && facet.facetAddress == address(0)
+            ) {
+                revert BHDLib__CannotAddZeroSelector(facet.functionSelectors);
             }
 
-            if (action == IDiamondCut.FacetCutAction.Remove) {
-                removeFunctions(facetAddress, functionSelectors);
+            if (facet.action == IDiamondCut.FacetCutAction.Add) {
+                addFunctions(facet.facetAddress, facet.functionSelectors);
+            } else if (facet.action == IDiamondCut.FacetCutAction.Replace) {
+                replaceFunctions(facet.facetAddress, facet.functionSelectors);
+            } else if (facet.action == IDiamondCut.FacetCutAction.Remove) {
+                removeFunctions(facet.facetAddress, facet.functionSelectors);
             } else {
-                revert BHDLib__IncorrectFacetCutAction(uint8(action));
+                revert BHDLib__IncorrectFacetCutAction(uint8(facet.action));
             }
-
-            emit DiamondCut(_diamondCut, _init, _calldata);
-            initializeDiamondCut(_init, _calldata);
         }
+
+        emit DiamondCut(_diamondCut, _init, _calldata);
+        initializeDiamondCut(_init, _calldata);
     }
 
     function addFunctions(address _facetAddress, bytes4[] memory _functionSelectors) internal {
-        require(_functionSelectors.length > 0, "BHStorage: No selectors provided");
+        // require(_functionSelectors.length > 0, "BHStorage: No selectors provided");
 
         BeanHeadsStorage storage ds = diamondStorage();
 

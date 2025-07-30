@@ -48,38 +48,27 @@ contract BeanHeadsMintFacet is ERC721AUpgradeable, IBeanHeadsMint {
         _checkPaymentTokenAllowanceAndBalance(token, adjustedPrice);
 
         _tokenId = _nextTokenId();
-        ds.tokenIdToParams[_tokenId] = _params;
 
         // Transfer tokens from the minter to the contract
         token.safeTransferFrom(msg.sender, address(this), adjustedPrice);
 
         _safeMint(_to, _amount);
-        ds.tokenIdToListing[_tokenId] = BHStorage.Listing({seller: address(0), price: 0, isActive: false});
-        ds.tokenIdToPaymentToken[_tokenId] = _paymentToken;
-        ds.tokenIdToGeneration[_tokenId] = 1; // Set generation to 1 for Genesis
-        ds.ownerTokens[_to].push(_tokenId);
-        ds.authorizedBreeders[_to] = true;
+        for (uint256 i; i < _amount; i++) {
+            uint256 currentTokenId = _tokenId + i;
+
+            // Store the token parameters
+            ds.tokenIdToParams[currentTokenId] = _params;
+            // Initialize the token's listing and payment token
+            ds.tokenIdToListing[currentTokenId] = BHStorage.Listing({seller: address(0), price: 0, isActive: false});
+            // Set the payment token and generation
+            ds.tokenIdToPaymentToken[currentTokenId] = _paymentToken;
+            ds.tokenIdToGeneration[currentTokenId] = 1;
+
+            // Add the token to the owner's list
+            ds.ownerTokens[_to].push(currentTokenId);
+        }
 
         emit MintedGenesis(_to, _tokenId);
-    }
-
-    /// @inheritdoc ERC721AUpgradeable
-    function burn(uint256 tokenId) external tokenExists(tokenId) {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        if (msg.sender != ownerOf(tokenId)) {
-            _revert(IBeanHeadsMint__NotOwner.selector);
-        }
-        _burn(tokenId, true);
-
-        // Remove token from owner's list
-        uint256[] storage ownerTokens = ds.ownerTokens[msg.sender];
-        for (uint256 i = 0; i < ownerTokens.length; i++) {
-            if (ownerTokens[i] == tokenId) {
-                ownerTokens[i] = ownerTokens[ownerTokens.length - 1];
-                ownerTokens.pop();
-                break;
-            }
-        }
     }
 
     /// @inheritdoc ERC721AUpgradeable
@@ -96,12 +85,39 @@ contract BeanHeadsMintFacet is ERC721AUpgradeable, IBeanHeadsMint {
     }
 
     /// @inheritdoc ERC721AUpgradeable
-    function approve(address to, uint256 tokenId) public payable override {
+    function safeTransferFrom(address from, address to, uint256 tokenId) public payable override {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        if (msg.sender != from && !isApprovedForAll(from, msg.sender) && getApproved(tokenId) != msg.sender) {
+            _revert(IBeanHeadsMint__NotOwnerOrApproved.selector);
+        }
+        super.safeTransferFrom(from, to, tokenId);
+
+        // Update owner's tokens
+        ds.ownerTokens[to].push(tokenId);
+        ds.tokenIdToListing[tokenId].isActive = false; // Deactivate listing on transfer
+    }
+
+    /// @inheritdoc ERC721AUpgradeable
+    function approve(address to, uint256 tokenId) public payable override {
         if (msg.sender != ownerOf(tokenId)) {
             _revert(IBeanHeadsMint__NotOwner.selector);
         }
         super.approve(to, tokenId);
+    }
+
+    /// @inheritdoc ERC721AUpgradeable
+    function name() public view override returns (string memory) {
+        return ERC721AUpgradeable.name();
+    }
+
+    /// @inheritdoc ERC721AUpgradeable
+    function symbol() public view override returns (string memory) {
+        return ERC721AUpgradeable.symbol();
+    }
+
+    /// @inheritdoc ERC721AUpgradeable
+    function balanceOf(address owner) public view override returns (uint256) {
+        return ERC721AUpgradeable.balanceOf(owner);
     }
 
     /*//////////////////////////////////////////////////////////////

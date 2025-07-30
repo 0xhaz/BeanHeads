@@ -61,7 +61,7 @@ contract BeanHeadsAdminFacet is ERC721AUpgradeable, IBeanHeadsAdmin, ReentrancyG
         if (!ds.allowedTokens[_paymentToken]) _revert(IBeanHeadsAdmin__InvalidTokenAddress.selector);
 
         uint256 balance = IERC20(_paymentToken).balanceOf(address(this));
-        if (balance == 0) return;
+        if (balance == 0) _revert(IBeanHeadsAdmin__WithdrawFailed.selector);
 
         IERC20(_paymentToken).safeTransfer(msg.sender, balance);
     }

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 /**
- * @author beachcrypto.eth
  * @author 0xhaz
  * @title BeanHeads Diamond NFTs
  *
@@ -801,6 +800,93 @@ contract ERC721AUpgradeableInternal is IERC721AUpgradeable {
             str := sub(str, 0x20)
             // Store the length.
             mstore(str, length)
+        }
+    }
+
+    /**
+     * @dev Transfers `tokenId` token from `from` to `to`.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     *
+     * Emits a {Transfer} event.
+     */
+    function _transfer(address from, address to, uint256 tokenId) internal virtual {
+        uint256 prevOwnershipPacked = _packedOwnershipOf(tokenId);
+
+        // Mask `from` to the lower 160 bits, in case the upper bits somehow aren't clean.
+        from = address(uint160(uint256(uint160(from)) & _BITMASK_ADDRESS));
+
+        // Verify that the current owner matches `from`.
+        if (address(uint160(prevOwnershipPacked)) != from) _revert(TransferFromIncorrectOwner.selector);
+
+        (uint256 approvedAddressSlot, address approvedAddress) = _getApprovedSlotAndAddress(tokenId);
+
+        _beforeTokenTransfers(from, to, tokenId, 1);
+
+        assembly {
+            if approvedAddress {
+                // This is equivalent to `delete _tokenApprovals[tokenId]`.
+                sstore(approvedAddressSlot, 0)
+            }
+        }
+
+        unchecked {
+            --ERC721AStorage.layout()._packedAddressData[from];
+            ++ERC721AStorage.layout()._packedAddressData[to];
+
+            ERC721AStorage.layout()._packedOwnerships[tokenId] =
+                _packOwnershipData(to, _BITMASK_NEXT_INITIALIZED | _nextExtraData(from, to, prevOwnershipPacked));
+
+            if (prevOwnershipPacked & _BITMASK_NEXT_INITIALIZED == 0) {
+                uint256 nextTokenId = tokenId + 1;
+                if (ERC721AStorage.layout()._packedOwnerships[nextTokenId] == 0) {
+                    if (nextTokenId != ERC721AStorage.layout()._currentIndex) {
+                        ERC721AStorage.layout()._packedOwnerships[nextTokenId] = prevOwnershipPacked;
+                    }
+                }
+            }
+        }
+
+        uint256 toMasked = uint256(uint160(to)) & _BITMASK_ADDRESS;
+        assembly {
+            log4(
+                0, // Start of data (0, since no data).
+                0, // End of data (0, since no data).
+                _TRANSFER_EVENT_SIGNATURE, // Signature.
+                from, // `from`.
+                toMasked, // `to`.
+                tokenId // `tokenId`.
+            )
+        }
+        if (toMasked == 0) _revert(TransferToZeroAddress.selector);
+
+        _afterTokenTransfers(from, to, tokenId, 1);
+    }
+
+    /**
+     * @dev Safely transfers `tokenId` token from `from` to `to`.
+     *
+     * Requirements:
+     *
+     * - If `to` refers to a smart contract, it must implement
+     * {IERC721Receiver-onERC721Received}, which is called for each safe transfer.
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     *
+     * Emits a {Transfer} event.
+     */
+    function _safeTransfer(address from, address to, uint256 tokenId, bytes memory _data) internal {
+        _transfer(from, to, tokenId);
+
+        if (to.code.length != 0) {
+            if (!_checkContractOnERC721Received(from, to, tokenId, _data)) {
+                _revert(TransferToNonERC721ReceiverImplementer.selector);
+            }
         }
     }
 

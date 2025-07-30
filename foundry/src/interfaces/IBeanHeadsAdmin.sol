@@ -9,6 +9,8 @@ interface IBeanHeadsAdmin {
     /// @notice Error thrown when an invalid address is provided
     error IBeanHeadsAdmin__InvalidAddress();
 
+    error IBeanHeadsAdmin__WithdrawFailed();
+
     /// @notice Event emitted when the mint price is updated
     event MintPriceUpdated(uint256 newPrice);
     /// @notice Event emitted when a token is added or removed from the allow list

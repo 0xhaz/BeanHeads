@@ -48,4 +48,25 @@ interface IBeanHeadsMarketplace {
      * @dev Resets the sale price and seller address
      */
     function cancelTokenSale(uint256 tokenId) external;
+
+    /**
+     * @notice Check if the token is on sale
+     * @param _tokenId The ID of the token to check
+     * @return isOnSale True if the token is on sale, false otherwise
+     */
+    function isTokenForSale(uint256 _tokenId) external view returns (bool);
+
+    /**
+     * @notice Check if the token is allowed for minting
+     * @param _token The address of the token to check
+     * @return isAllowed True if the token is allowed, false otherwise
+     */
+    function isTokenAllowed(address _token) external view returns (bool);
+
+    /**
+     * @notice Returns the sale price of a token.
+     * @param _tokenId The ID of the token to query.
+     * @return The sale price of the token.
+     */
+    function getTokenSalePrice(uint256 _tokenId) external view returns (uint256);
 }

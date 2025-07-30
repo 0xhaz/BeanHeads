@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {BeanHeads, IBeanHeads} from "src/core/BeanHeads.sol";
+import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
@@ -16,7 +16,7 @@ import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {MockERC20} from "src/mocks/MockERC20.sol";
 
 contract BeanHeadsInvariantTest is StdInvariant, Test {
-    BeanHeads internal beanHeads;
+    IBeanHeads internal beanHeads;
     Handler internal handler;
     Helpers internal helpers;
     DeployBeanHeads internal deployBeanHeads;
@@ -62,7 +62,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
 
         deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
         (address beanHeadsAddr,) = deployBeanHeads.run();
-        beanHeads = BeanHeads(payable(beanHeadsAddr));
+        beanHeads = IBeanHeads(payable(beanHeadsAddr));
         royaltyContract = deployBeanHeads.royalty();
         helpers = new Helpers();
         handler = new Handler(address(beanHeads), deployerAddress, USER);
@@ -286,7 +286,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
         beanHeads.sellToken(tokenId, price);
         assertEq(beanHeads.getTokenSalePrice(tokenId), price);
-        assertEq(beanHeads.ownerOf(tokenId), address(beanHeads));
+        assertEq(beanHeads.getOwnerOf(tokenId), address(beanHeads));
         vm.stopPrank();
     }
 
@@ -318,8 +318,8 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         vm.stopPrank();
 
         // Post-conditions: ownership and sale cleared
-        assertEq(beanHeads.ownerOf(tokenId), USER2);
-        assertEq(beanHeads.getTokenSalePrice(tokenId), 0);
+        assertEq(beanHeads.getOwnerOf(tokenId), USER2);
+        assertEq(beanHeads.isTokenForSale(tokenId), false);
 
         // Fetch token decimals and price feed
         uint8 tokenDecimals = mockERC20.decimals();
@@ -339,7 +339,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
     }
 
     function invariant_TotalSupplyMatchesMinted() public view {
-        assertEq(beanHeads.totalSupply(), handler.ghost_totalMinted() - handler.ghost_totalBurned());
+        assertEq(beanHeads.getTotalSupply(), handler.ghost_totalMinted() - handler.ghost_totalBurned());
     }
 
     function invariant_TokensOnSaleOwnedByContract() public view {
@@ -347,9 +347,9 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         for (uint256 tokenId = 0; tokenId < nextId; tokenId++) {
             if (beanHeads.exists(tokenId)) {
                 if (beanHeads.getTokenSalePrice(tokenId) > 0) {
-                    assertEq(beanHeads.ownerOf(tokenId), address(beanHeads));
+                    assertEq(beanHeads.getOwnerOf(tokenId), address(beanHeads));
                 } else {
-                    assertNotEq(beanHeads.ownerOf(tokenId), address(beanHeads));
+                    assertNotEq(beanHeads.getOwnerOf(tokenId), address(beanHeads));
                 }
             }
         }
@@ -366,7 +366,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         uint256 nextId = beanHeads.getNextTokenId();
         for (uint256 tokenId = 0; tokenId < nextId; tokenId++) {
             if (beanHeads.exists(tokenId)) {
-                assertNotEq(beanHeads.ownerOf(tokenId), address(0));
+                assertNotEq(beanHeads.getOwnerOf(tokenId), address(0));
             }
         }
     }

@@ -33,11 +33,4 @@ interface IBeanHeadsMint {
     function mintGenesis(address to, Genesis.SVGParams memory params, uint256 amount, address token)
         external
         returns (uint256);
-
-    /**
-     * @notice Burns a token, removing it from circulation
-     * @param tokenId The ID of the token to burn
-     * @dev This function can only be called by the owner of the token or an authorized breeder.
-     */
-    function burn(uint256 tokenId) external;
 }

@@ -4,16 +4,22 @@ pragma solidity ^0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {BeanHeadsDiamond} from "src/BeanHeadsDiamond.sol";
 import {DiamondInit} from "src/updateInitializers/DiamondInit.sol";
-import {DiamondCutFacet} from "src/facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "src/facets/DiamondLoupeFacet.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {DiamondCutFacet, IDiamondCut} from "src/facets/DiamondCutFacet.sol";
+import {DiamondLoupeFacet, IDiamondLoupe} from "src/facets/DiamondLoupeFacet.sol";
+import {BeanHeadsMintFacet} from "src/facets/BeanHeads/BeanHeadsMintFacet.sol";
+import {BeanHeadsViewFacet} from "src/facets/BeanHeads/BeanHeadsViewFacet.sol";
+import {BeanHeadsBreedingFacet} from "src/facets/BeanHeads/BeanHeadsBreedingFacet.sol";
+import {BeanHeadsMarketplaceFacet} from "src/facets/BeanHeads/BeanHeadsMarketplaceFacet.sol";
+import {BeanHeadsAdminFacet} from "src/facets/BeanHeads/BeanHeadsAdminFacet.sol";
+import {OwnershipFacet, IERC173} from "src/facets/OwnershipFacet.sol";
+import {IERC165} from "src/interfaces/IERC165.sol";
+
 import {BeanHeadsRoyalty} from "src/core/BeanHeadsRoyalty.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 
 contract DeployBeanHeads is Script {
     uint96 public ROYALTY_FEE_BPS = 500; // 5% royalty fee in basis points
     BeanHeadsRoyalty public royalty;
-    BeanHeads public beanHeads;
 
     function run() public returns (address, address) {
         HelperConfig helperConfig = new HelperConfig();
@@ -26,19 +32,119 @@ contract DeployBeanHeads is Script {
 
         vm.startBroadcast(config.deployerKey);
         royalty = new BeanHeadsRoyalty(deployerAddress, ROYALTY_FEE_BPS);
-        BeanHeads implementation = new BeanHeads();
 
-        bytes memory initData =
-            abi.encodeWithSelector(BeanHeads.initialize.selector, deployerAddress, address(royalty), priceFeed);
+        //    Deploy the DiamondCutFacet
+        DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
 
-        ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);
+        // Deploy base Diamond with the DiamondCutFacet
+        BeanHeadsDiamond diamond = new BeanHeadsDiamond(deployerAddress, address(diamondCutFacet));
+
+        // Prepare the facets to be added
+        IDiamondCut.FacetCut[] memory diamondCut = new IDiamondCut.FacetCut[](7);
+        uint256 i = 0;
+        // ---------------------- Admin Facet ----------------------
+        {
+            BeanHeadsAdminFacet facet = new BeanHeadsAdminFacet();
+            bytes4[] memory selectors = new bytes4[](5);
+            selectors[0] = facet.setAllowedToken.selector;
+            selectors[1] = facet.addPriceFeed.selector;
+            selectors[2] = facet.withdraw.selector;
+            selectors[3] = facet.authorizeBreeder.selector;
+            selectors[4] = facet.setContractOwner.selector;
+            diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
+        }
+        // ---------------------- Breeding Facet ----------------------
+        {
+            BeanHeadsBreedingFacet facet = new BeanHeadsBreedingFacet();
+            bytes4[] memory selectors = new bytes4[](4);
+            selectors[0] = facet.mintFromBreeders.selector;
+            selectors[1] = facet.getAuthorizedBreeders.selector;
+            selectors[2] = facet.getMintPrice.selector;
+            selectors[3] = facet.burn.selector;
+            diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
+        }
+        // ---------------------- Marketplace Facet ----------------------
+        {
+            BeanHeadsMarketplaceFacet facet = new BeanHeadsMarketplaceFacet();
+            bytes4[] memory selectors = new bytes4[](7);
+            selectors[0] = facet.sellToken.selector;
+            selectors[1] = facet.buyToken.selector;
+            selectors[2] = facet.cancelTokenSale.selector;
+            selectors[3] = facet.onERC721Received.selector;
+            selectors[4] = facet.getTokenSalePrice.selector;
+            selectors[5] = facet.isTokenForSale.selector;
+            selectors[6] = facet.isTokenAllowed.selector;
+            diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
+        }
+        // ---------------------- Mint Facet ----------------------
+        {
+            BeanHeadsMintFacet facet = new BeanHeadsMintFacet();
+            bytes4[] memory selectors = new bytes4[](7);
+            selectors[0] = facet.mintGenesis.selector;
+            selectors[1] = bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
+            selectors[2] = bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"));
+            selectors[3] = facet.approve.selector;
+            selectors[4] = facet.name.selector;
+            selectors[5] = facet.symbol.selector;
+            selectors[6] = facet.balanceOf.selector;
+            diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
+        }
+        // ---------------------- View Facet ----------------------
+        {
+            BeanHeadsViewFacet facet = new BeanHeadsViewFacet();
+            bytes4[] memory selectors = new bytes4[](12);
+            selectors[0] = facet.tokenURI.selector;
+            selectors[1] = facet.getNextTokenId.selector;
+            selectors[2] = facet.getOwnerOf.selector;
+            selectors[3] = facet.getOwnerTokens.selector;
+            selectors[4] = facet.getAttributesByTokenId.selector;
+            selectors[5] = facet.getAttributesByOwner.selector;
+            selectors[6] = facet.getAttributes.selector;
+            selectors[7] = facet.getGeneration.selector;
+            selectors[8] = facet.exists.selector;
+            selectors[9] = facet.getPriceFeed.selector;
+            selectors[10] = facet.getOwnerTokensCount.selector;
+            selectors[11] = facet.getTotalSupply.selector;
+            diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
+        }
+        // ---------------------- Diamond Loupe Facet ----------------------
+        {
+            DiamondLoupeFacet facet = new DiamondLoupeFacet();
+            bytes4[] memory selectors = new bytes4[](5);
+            selectors[0] = IDiamondLoupe.facets.selector;
+            selectors[1] = IDiamondLoupe.facetFunctionSelectors.selector;
+            selectors[2] = IDiamondLoupe.facetAddresses.selector;
+            selectors[3] = IDiamondLoupe.facetAddress.selector;
+            selectors[4] = IERC165.supportsInterface.selector;
+            diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
+        }
+        // ---------------------- Ownership Facet ----------------------
+        {
+            OwnershipFacet facet = new OwnershipFacet();
+            bytes4[] memory selectors = new bytes4[](2);
+            selectors[0] = IERC173.transferOwnership.selector;
+            selectors[1] = IERC173.owner.selector;
+            diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
+        }
+
+        DiamondInit diamondInit = new DiamondInit();
+        bytes memory initCallData = abi.encodeWithSelector(
+            diamondInit.init.selector,
+            address(royalty), // Royalty contract address
+            priceFeed // Price feed address
+        );
+
+        IDiamondCut(address(diamond)).diamondCut(
+            diamondCut,
+            address(diamondInit), // Address of the init contract
+            initCallData // Call data to initialize the diamond
+        );
 
         vm.stopBroadcast();
 
-        console.log("BeanHeads implementation deployed at:", address(implementation));
-        console.log("BeanHeadsRoyalty deployed at:", address(royalty));
-        console.log("BeanHeadsProxy deployed at:", address(proxy));
+        console.log("BeanHeads Diamond deployed at:", address(diamond));
+        console.log("Royalty contract deployed at:", address(royalty));
 
-        return (address(proxy), address(royalty));
+        return (address(diamond), address(royalty));
     }
 }

@@ -68,9 +68,11 @@ contract BeanHeadsViewFacet is ERC721AUpgradeable, IBeanHeadsView {
         returns (Genesis.SVGParams memory)
     {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        uint256[] memory tokens = ds.ownerTokens[_owner];
+        if (msg.sender != _owner) {
+            _revert(IBeanHeadsView__NotOwner.selector);
+        }
 
-        return ds.tokenIdToParams[tokens[_tokenId]];
+        return ds.tokenIdToParams[_tokenId];
     }
 
     /// @inheritdoc IBeanHeadsView
@@ -81,44 +83,14 @@ contract BeanHeadsViewFacet is ERC721AUpgradeable, IBeanHeadsView {
     }
 
     /// @inheritdoc IBeanHeadsView
-    function getTokenSalePrice(uint256 _tokenId) external view tokenExists(_tokenId) returns (uint256) {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        BHStorage.Listing storage listing = ds.tokenIdToListing[_tokenId];
-
-        if (!listing.isActive) {
-            _revert(IBeanHeadsView__TokenNotForSale.selector);
-        }
-
-        return listing.price;
-    }
-
-    /// @inheritdoc IBeanHeadsView
-    function getMintPrice() external view returns (uint256) {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        return ds.mintPriceUsd;
-    }
-
-    /// @inheritdoc IBeanHeadsView
     function getGeneration(uint256 _tokenId) external view tokenExists(_tokenId) returns (uint256) {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         return ds.tokenIdToGeneration[_tokenId];
     }
 
     /// @inheritdoc IBeanHeadsView
-    function getAuthorizedBreeders(address _breeder) external view returns (bool) {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        return ds.authorizedBreeders[_breeder];
-    }
-
-    /// @inheritdoc IBeanHeadsView
     function exists(uint256 tokenId) external view returns (bool) {
         return _exists(tokenId);
-    }
-
-    /// @inheritdoc IBeanHeadsView
-    function isTokenAllowed(address _token) external view returns (bool) {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        return ds.allowedTokens[_token];
     }
 
     /// @inheritdoc IBeanHeadsView
@@ -128,8 +100,13 @@ contract BeanHeadsViewFacet is ERC721AUpgradeable, IBeanHeadsView {
     }
 
     /// @inheritdoc IBeanHeadsView
-    function isTokenForSale(uint256 _tokenId) external view tokenExists(_tokenId) returns (bool) {
+    function getOwnerTokensCount(address _owner) external view returns (uint256) {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        return ds.tokenIdToListing[_tokenId].isActive;
+        return ds.ownerTokens[_owner].length;
+    }
+
+    /// @inheritdoc IBeanHeadsView
+    function getTotalSupply() external view returns (uint256) {
+        return _totalMinted();
     }
 }

@@ -58,19 +58,6 @@ interface IBeanHeadsView {
     function getAttributes(uint256 _tokenId) external view returns (string memory);
 
     /**
-     * @notice Returns the sale price of a token.
-     * @param _tokenId The ID of the token to query.
-     * @return The sale price of the token.
-     */
-    function getTokenSalePrice(uint256 _tokenId) external view returns (uint256);
-
-    /**
-     * @notice Get the current mint price for a Genesis NFT
-     * @return The current mint price in wei
-     */
-    function getMintPrice() external view returns (uint256);
-
-    /**
      * @notice Returns the generation of a token
      * @param _tokenId The ID of the token to query
      * @return _generation The generation number of the token
@@ -78,24 +65,10 @@ interface IBeanHeadsView {
     function getGeneration(uint256 _tokenId) external view returns (uint256);
 
     /**
-     * @notice Get the authorized breeders for minting
-     * @param _breeder The address of the breeder to check
-     * @return True if the breeder is authorized, false otherwise
-     */
-    function getAuthorizedBreeders(address _breeder) external view returns (bool);
-
-    /**
      * @notice Checks if a token exists
      * @param tokenId The ID of the token to check
      */
     function exists(uint256 tokenId) external view returns (bool);
-
-    /**
-     * @notice Check if the token is allowed for minting
-     * @param _token The address of the token to check
-     * @return isAllowed True if the token is allowed, false otherwise
-     */
-    function isTokenAllowed(address _token) external view returns (bool);
 
     /**
      * @notice Returns the price feed address for a token.
@@ -105,9 +78,14 @@ interface IBeanHeadsView {
     function getPriceFeed(address _token) external view returns (address);
 
     /**
-     * @notice Check if the token is on sale
-     * @param _tokenId The ID of the token to check
-     * @return isOnSale True if the token is on sale, false otherwise
+     * @notice Returns the number of tokens owned by the specified address.
+     * @param owner Address to query.
      */
-    function isTokenForSale(uint256 _tokenId) external view returns (bool);
+    function getOwnerTokensCount(address owner) external view returns (uint256);
+
+    /**
+     * @notice Returns the total supply of tokens.
+     * @return The total number of tokens minted.
+     */
+    function getTotalSupply() external view returns (uint256);
 }

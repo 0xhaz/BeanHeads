@@ -11,7 +11,6 @@ import {Vm} from "forge-std/Vm.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {DeployBeanHeadsBreeder} from "script/DeployBeanHeadsBreeder.s.sol";
 import {BeanHeadsBreeder} from "src/vrf/BeanHeadsBreeder.sol";
-import {BeanHeads} from "src/core/BeanHeads.sol";
 import {IBeanHeadsBreeder} from "src/interfaces/IBeanHeadsBreeder.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
@@ -405,7 +404,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 blockConfirmations = block.number + BREEDING_COOLDOWN;
         vm.roll(blockConfirmations);
 
-        uint256 tokenBalanceAfter = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
+        uint256 tokenBalanceAfter = IBeanHeads(beanHeads).balanceOf(USER1);
         assertEq(tokenBalanceAfter, 1);
 
         vm.recordLogs();

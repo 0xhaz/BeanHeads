@@ -41,4 +41,33 @@ contract BeanHeadsBreedingFacet is ERC721AUpgradeable, IBeanHeadsBreeding {
 
         emit MintedNewBreed(_to, _tokenId);
     }
+
+    /// @inheritdoc IBeanHeadsBreeding
+    function getAuthorizedBreeders(address _breeder) external view returns (bool) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.authorizedBreeders[_breeder];
+    }
+
+    /// @inheritdoc IBeanHeadsBreeding
+    function getMintPrice() external view returns (uint256) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.mintPriceUsd;
+    }
+
+    /// @inheritdoc IBeanHeadsBreeding
+    function burn(uint256 tokenId) external onlyBreeder {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+
+        _burn(tokenId, true);
+
+        // Remove token from owner's list
+        uint256[] storage ownerTokens = ds.ownerTokens[msg.sender];
+        for (uint256 i = 0; i < ownerTokens.length; i++) {
+            if (ownerTokens[i] == tokenId) {
+                ownerTokens[i] = ownerTokens[ownerTokens.length - 1];
+                ownerTokens.pop();
+                break;
+            }
+        }
+    }
 }
