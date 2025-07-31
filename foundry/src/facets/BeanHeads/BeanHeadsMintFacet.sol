@@ -13,8 +13,9 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {Genesis} from "src/types/Genesis.sol";
 import {IBeanHeadsMint} from "src/interfaces/IBeanHeadsMint.sol";
 import {OracleLib} from "src/libraries/OracleLib.sol";
+import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
 
-contract BeanHeadsMintFacet is ERC721AUpgradeable, IBeanHeadsMint {
+contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     using SafeERC20 for IERC20;
     using OracleLib for AggregatorV3Interface;
 
@@ -63,9 +64,6 @@ contract BeanHeadsMintFacet is ERC721AUpgradeable, IBeanHeadsMint {
             // Set the payment token and generation
             ds.tokenIdToPaymentToken[currentTokenId] = _paymentToken;
             ds.tokenIdToGeneration[currentTokenId] = 1;
-
-            // Add the token to the owner's list
-            ds.ownerTokens[_to].push(currentTokenId);
         }
 
         emit MintedGenesis(_to, _tokenId);
@@ -73,28 +71,18 @@ contract BeanHeadsMintFacet is ERC721AUpgradeable, IBeanHeadsMint {
 
     /// @inheritdoc ERC721AUpgradeable
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public payable override {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         if (msg.sender != from && !isApprovedForAll(from, msg.sender) && getApproved(tokenId) != msg.sender) {
             _revert(IBeanHeadsMint__NotOwnerOrApproved.selector);
         }
         super.safeTransferFrom(from, to, tokenId, data);
-
-        // Update owner's tokens
-        ds.ownerTokens[to].push(tokenId);
-        ds.tokenIdToListing[tokenId].isActive = false; // Deactivate listing on transfer
     }
 
     /// @inheritdoc ERC721AUpgradeable
     function safeTransferFrom(address from, address to, uint256 tokenId) public payable override {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         if (msg.sender != from && !isApprovedForAll(from, msg.sender) && getApproved(tokenId) != msg.sender) {
             _revert(IBeanHeadsMint__NotOwnerOrApproved.selector);
         }
         super.safeTransferFrom(from, to, tokenId);
-
-        // Update owner's tokens
-        ds.ownerTokens[to].push(tokenId);
-        ds.tokenIdToListing[tokenId].isActive = false; // Deactivate listing on transfer
     }
 
     /// @inheritdoc ERC721AUpgradeable
@@ -118,50 +106,5 @@ contract BeanHeadsMintFacet is ERC721AUpgradeable, IBeanHeadsMint {
     /// @inheritdoc ERC721AUpgradeable
     function balanceOf(address owner) public view override returns (uint256) {
         return ERC721AUpgradeable.balanceOf(owner);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                           INTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Converts a USD-denominated price (1e18) to token amount based on Chainlink price feed and token decimals
-     * @dev Assumes price feed returns 8 decimals, so adds 1e10 precision adjustment to make up to 1e18
-     * @param token The ERC20 token address used for payment
-     * @param usdAmount Amount in 18-decimal USD
-     * @return tokenAmount Equivalent amount of `token` based on its USD price
-     */
-    function _getTokenAmountFromUsd(address token, uint256 usdAmount) internal view returns (uint256) {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(ds.priceFeeds[token]);
-        (, int256 answer,,,) = priceFeed.latestRoundData();
-
-        if (answer <= 0) _revert(IBeanHeadsMint__InvalidOraclePrice.selector);
-
-        uint256 price = uint256(answer) * BHStorage.ADDITIONAL_FEED_PRECISION;
-        uint8 tokenDecimals = IERC20Metadata(token).decimals();
-
-        // Required token amount = usdAmount / tokenPrice
-        uint256 tokenAmountIn18 = (usdAmount * BHStorage.PRECISION) / price;
-
-        if (tokenDecimals < 18) {
-            return tokenAmountIn18 / (10 ** (18 - tokenDecimals));
-        } else if (tokenDecimals > 18) {
-            return tokenAmountIn18 * (10 ** (tokenDecimals - 18));
-        } else {
-            return tokenAmountIn18;
-        }
-    }
-
-    /**
-     * @notice Check if the user's payment token's allowance and balance are sufficient
-     * @param token The ERC20 token address used for payment
-     * @param amount The amount to check against the user's balance and allowance
-     */
-    function _checkPaymentTokenAllowanceAndBalance(IERC20 token, uint256 amount) internal view {
-        if (token.allowance(msg.sender, address(this)) < amount) {
-            _revert(IBeanHeadsMint__InsufficientAllowance.selector);
-        }
-        if (token.balanceOf(msg.sender) < amount) _revert(IBeanHeadsMint__InsufficientPayment.selector);
     }
 }

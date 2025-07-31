@@ -138,6 +138,7 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
 
         IERC20 token = IERC20(paymentToken);
         uint256 price = i_beanHeads.getMintPrice();
+
         uint256 tokenAmount = _getTokenAmountFromUsd(paymentToken, price);
 
         uint256 allowance = token.allowance(msg.sender, address(this));

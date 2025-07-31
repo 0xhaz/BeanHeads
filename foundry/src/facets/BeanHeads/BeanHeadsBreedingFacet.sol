@@ -5,8 +5,9 @@ import {ERC721AUpgradeable} from "src/ERC721A/ERC721AUpgradeable.sol";
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {IBeanHeadsBreeding} from "src/interfaces/IBeanHeadsBreeding.sol";
+import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
 
-contract BeanHeadsBreedingFacet is ERC721AUpgradeable, IBeanHeadsBreeding {
+contract BeanHeadsBreedingFacet is BeanHeadsBase, IBeanHeadsBreeding {
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
     //////////////////////////////////////////////////////////////*/
@@ -16,6 +17,14 @@ contract BeanHeadsBreedingFacet is ERC721AUpgradeable, IBeanHeadsBreeding {
         BHStorage.BeanHeadsStorage storage s = BHStorage.diamondStorage();
         if (!s.authorizedBreeders[msg.sender]) {
             _revert(IBeanHeadsBreeding__UnauthorizedBreeders.selector);
+        }
+        _;
+    }
+
+    /// @notice Modifier to check if the token exists
+    modifier tokenExists(uint256 tokenId) {
+        if (!_exists(tokenId)) {
+            _revert(IBeanHeadsBreeding__TokenDoesNotExist.selector);
         }
         _;
     }
@@ -37,7 +46,6 @@ contract BeanHeadsBreedingFacet is ERC721AUpgradeable, IBeanHeadsBreeding {
 
         _safeMint(_to, 1);
         ds.authorizedBreeders[_to] = true; // Ensure the recipient is marked as an authorized breeder
-        ds.ownerTokens[_to].push(_tokenId);
 
         emit MintedNewBreed(_to, _tokenId);
     }
@@ -56,18 +64,24 @@ contract BeanHeadsBreedingFacet is ERC721AUpgradeable, IBeanHeadsBreeding {
 
     /// @inheritdoc IBeanHeadsBreeding
     function burn(uint256 tokenId) external onlyBreeder {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-
         _burn(tokenId, true);
+    }
 
-        // Remove token from owner's list
-        uint256[] storage ownerTokens = ds.ownerTokens[msg.sender];
-        for (uint256 i = 0; i < ownerTokens.length; i++) {
-            if (ownerTokens[i] == tokenId) {
-                ownerTokens[i] = ownerTokens[ownerTokens.length - 1];
-                ownerTokens.pop();
-                break;
-            }
-        }
+    /// @inheritdoc IBeanHeadsBreeding
+    function getGeneration(uint256 _tokenId) external view tokenExists(_tokenId) returns (uint256) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.tokenIdToGeneration[_tokenId];
+    }
+
+    /// @inheritdoc IBeanHeadsBreeding
+    function getOwnerTokens(address _owner) external view returns (uint256[] memory) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.ownerTokens[_owner];
+    }
+
+    /// @inheritdoc IBeanHeadsBreeding
+    function getPriceFeed(address _token) external view returns (address) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.priceFeeds[_token];
     }
 }

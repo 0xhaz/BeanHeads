@@ -45,22 +45,26 @@ contract DeployBeanHeads is Script {
         // ---------------------- Admin Facet ----------------------
         {
             BeanHeadsAdminFacet facet = new BeanHeadsAdminFacet();
-            bytes4[] memory selectors = new bytes4[](5);
+            bytes4[] memory selectors = new bytes4[](6);
             selectors[0] = facet.setAllowedToken.selector;
             selectors[1] = facet.addPriceFeed.selector;
             selectors[2] = facet.withdraw.selector;
             selectors[3] = facet.authorizeBreeder.selector;
             selectors[4] = facet.setContractOwner.selector;
+            selectors[5] = facet.setMintPrice.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
         // ---------------------- Breeding Facet ----------------------
         {
             BeanHeadsBreedingFacet facet = new BeanHeadsBreedingFacet();
-            bytes4[] memory selectors = new bytes4[](4);
+            bytes4[] memory selectors = new bytes4[](7);
             selectors[0] = facet.mintFromBreeders.selector;
             selectors[1] = facet.getAuthorizedBreeders.selector;
             selectors[2] = facet.getMintPrice.selector;
             selectors[3] = facet.burn.selector;
+            selectors[4] = facet.getGeneration.selector;
+            selectors[5] = facet.getOwnerTokens.selector;
+            selectors[6] = facet.getPriceFeed.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
         // ---------------------- Marketplace Facet ----------------------
@@ -92,19 +96,16 @@ contract DeployBeanHeads is Script {
         // ---------------------- View Facet ----------------------
         {
             BeanHeadsViewFacet facet = new BeanHeadsViewFacet();
-            bytes4[] memory selectors = new bytes4[](12);
+            bytes4[] memory selectors = new bytes4[](9);
             selectors[0] = facet.tokenURI.selector;
             selectors[1] = facet.getNextTokenId.selector;
             selectors[2] = facet.getOwnerOf.selector;
-            selectors[3] = facet.getOwnerTokens.selector;
-            selectors[4] = facet.getAttributesByTokenId.selector;
-            selectors[5] = facet.getAttributesByOwner.selector;
-            selectors[6] = facet.getAttributes.selector;
-            selectors[7] = facet.getGeneration.selector;
-            selectors[8] = facet.exists.selector;
-            selectors[9] = facet.getPriceFeed.selector;
-            selectors[10] = facet.getOwnerTokensCount.selector;
-            selectors[11] = facet.getTotalSupply.selector;
+            selectors[3] = facet.getAttributesByTokenId.selector;
+            selectors[4] = facet.getAttributesByOwner.selector;
+            selectors[5] = facet.getAttributes.selector;
+            selectors[6] = facet.exists.selector;
+            selectors[7] = facet.getOwnerTokensCount.selector;
+            selectors[8] = facet.getTotalSupply.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
         // ---------------------- Diamond Loupe Facet ----------------------

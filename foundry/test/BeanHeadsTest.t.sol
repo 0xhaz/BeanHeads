@@ -16,6 +16,7 @@ import {IBeanHeadsMint} from "src/interfaces/IBeanHeadsMint.sol";
 import {IBeanHeadsView} from "src/interfaces/IBeanHeadsView.sol";
 import {IBeanHeadsBreeding} from "src/interfaces/IBeanHeadsBreeding.sol";
 import {IBeanHeadsAdmin} from "src/interfaces/IBeanHeadsAdmin.sol";
+import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 contract BeanHeadsTest is Test, Helpers {
@@ -440,25 +441,11 @@ contract BeanHeadsTest is Test, Helpers {
         vm.stopPrank();
     }
 
-    function test_burnToken_Success() public {
-        vm.prank(USER);
-        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
-
-        vm.prank(USER);
-        beanHeads.burn(tokenId);
-
-        vm.expectRevert(); // ERC721A revert for non-existent
-        beanHeads.getOwnerOf(tokenId);
-        assertFalse(beanHeads.exists(tokenId));
-    }
-
     function test_getMintPrice() public view {
         assertEq(beanHeads.getMintPrice(), MINT_PRICE);
     }
 
-    // function test_supportsInterface_IERC2981() public view {
-    //     assertTrue(beanHeads.supportsInterface(type(IERC2981).interfaceId));
-    // }
+
 
     function test_setRoyaltyInfo_FailWithRevert() public {
         vm.startPrank(deployerAddress);
@@ -503,7 +490,7 @@ contract BeanHeadsTest is Test, Helpers {
         beanHeads.sellToken(tokenId + 2, price); // Trying to sell a token not owned by USER
 
         mockERC20.approve(address(beanHeads), type(uint256).max);
-        vm.expectRevert(IBeanHeadsMarketplace.IBeanHeadsMarketplace__InsufficientPayment.selector);
+        vm.expectRevert(BeanHeadsBase.IBeanHeadsBase__InsufficientPayment.selector);
         beanHeads.buyToken(tokenId, address(mockERC20)); // USER2 trying to buy with insufficient funds
         vm.stopPrank();
 

@@ -13,7 +13,6 @@ import {SafeERC20} from
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";

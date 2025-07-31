@@ -269,4 +269,6 @@ interface IBeanHeads {
     function balanceOf(address owner) external view returns (uint256);
 
     function getTotalSupply() external view returns (uint256);
+
+    function owner() external view returns (address);
 }

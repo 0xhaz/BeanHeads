@@ -555,9 +555,12 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         uint256 t1 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));
         uint256 t2 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));
+        console.log("User2 Wallet Balance: ", mockERC20.balanceOf(USER2));
 
         IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), t1);
         IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), t2);
+
+        require(mockERC20.balanceOf(USER2) < 1 ether);
 
         // Deposit tokens for USER2
         beanHeadsBreeder.depositBeanHeads(t1);
@@ -568,20 +571,29 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         uint256 lastBlock = block.number;
         vm.roll(lastBlock + BREEDING_COOLDOWN + 1);
+
         // Attempt to request breed with insufficient ether
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__InsufficientBalance.selector);
         beanHeadsBreeder.requestBreed(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
         vm.stopPrank();
+    }
 
+    function testRequestBreed_FailedWithReverts_CooldownNotPassed() public {
         vm.startPrank(USER2);
 
         mockERC20.approve(address(beanHeadsBreeder), type(uint256).max);
         mockERC20.approve(address(beanHeads), type(uint256).max);
         mockERC20.mint(100 ether); // Mint some mock ERC20 tokens for USER2
 
-        beanHeadsBreeder.requestBreed(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
-        // Attempt to request breed with prior block.number
-        vm.roll(lastBlock + BREEDING_COOLDOWN - 1); // Roll back to the block before the cooldown period
+        uint256 t1 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));
+        uint256 t2 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));
+
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), t1);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), t2);
+
+        beanHeadsBreeder.depositBeanHeads(t1);
+        beanHeadsBreeder.depositBeanHeads(t2);
+
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__CoolDownNotPassed.selector);
         beanHeadsBreeder.requestBreed(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
         vm.stopPrank();

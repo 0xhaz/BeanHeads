@@ -28,11 +28,11 @@ contract DeployBeanHeadsBreeder is Script {
             DeployBeanHeads deployBeanHeads = new DeployBeanHeads();
             (beanHeads,) = deployBeanHeads.run();
         } else if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
-            beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
+            beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeadsDiamond", block.chainid);
         } else if (block.chainid == helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID()) {
-            beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
+            beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeadsDiamond", block.chainid);
         } else if (block.chainid == helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID()) {
-            beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeads", block.chainid);
+            beanHeads = DevOpsTools.get_most_recent_deployment("BeanHeadsDiamond", block.chainid);
         } else {
             revert("Unsupported network");
         }

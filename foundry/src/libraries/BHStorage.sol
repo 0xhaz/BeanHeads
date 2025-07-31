@@ -8,13 +8,6 @@ import {Genesis} from "src/types/Genesis.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {IDiamondCut} from "src/interfaces/IDiamondCut.sol";
 
-/**
- * @title BHDLib
- * @author 0xhaz
- * @notice Diamond library for BeanHeads that stores all storage slots
- * @dev Implementation of EIP-2535 Diamond Standard
- * @dev https://eips.ethereum.org/EIPS/eip-2535
- */
 library BHStorage {
     error BHDLib__NotContractOwner(address caller, address owner);
     error BHDLib__NotSelectorsProvided(address facetAddress);
@@ -28,6 +21,7 @@ library BHStorage {
     error BHDLib__CannotReplaceFunctionThatDoesNotExist(bytes4 selector);
     error BHDLib__CannotRemoveFunctionThatDoesNotExist(bytes4 selector);
     error BHDLib__InitializationFunctionReverted(address init, bytes data);
+    error BHDLib__CannotBeZeroAddress(address facetAddress);
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event DiamondCut(IDiamondCut.FacetCut[] _diamondCut, address _init, bytes _calldata);
@@ -35,7 +29,6 @@ library BHStorage {
     bytes32 internal constant BH_STORAGE_POSITION = keccak256("beanheads.diamond.storage");
 
     uint256 internal constant PRECISION = 1e18;
-
     uint256 internal constant ADDITIONAL_FEED_PRECISION = 1e10;
 
     struct Listing {
@@ -46,12 +39,12 @@ library BHStorage {
 
     struct FacetPosition {
         address facetAddress;
-        uint96 functionSelectorPosition; // position in facetFunctionSelectors.functionSelectors array
+        uint96 functionSelectorPosition;
     }
 
     struct FacetFunctionSelectors {
         bytes4[] functionSelectors;
-        uint256 facetAddressPosition; // position of facetAddress in facetAddresses array
+        uint256 facetAddressPosition;
     }
 
     struct BeanHeadsStorage {
@@ -63,20 +56,15 @@ library BHStorage {
         mapping(address tokenAddress => bool isAllowed) allowedTokens;
         mapping(uint256 tokenId => address tokenAddress) tokenIdToPaymentToken;
         mapping(address tokenAddress => address priceFeed) priceFeeds;
-        // the position of the selector in the facetFunctionSelectors.selectors array
         mapping(bytes4 selector => FacetPosition position) selectorToFacetPosition;
-        // maps facet addresses to function selectors
         mapping(address facetAddress => FacetFunctionSelectors selectors) facetFunctionSelectors;
         address[] privateFeedsAddresses;
-        // facet addresses
         address[] facetAddresses;
         address royaltyContract;
         AggregatorV3Interface priceFeed;
         uint256 mintPriceUsd;
-        // owner of the contract
         address owner;
         bytes4[] selectors;
-        // Used to query if a contract implements an interface.
         mapping(bytes4 interfaceId => bool isSupported) supportedInterfaces;
     }
 
@@ -119,14 +107,20 @@ library BHStorage {
                 revert BHDLib__CannotAddZeroSelector(facet.functionSelectors);
             }
 
+            // Validate FacetCutAction
+            if (
+                facet.action != IDiamondCut.FacetCutAction.Add && facet.action != IDiamondCut.FacetCutAction.Replace
+                    && facet.action != IDiamondCut.FacetCutAction.Remove
+            ) {
+                revert BHDLib__IncorrectFacetCutAction(uint8(facet.action));
+            }
+
             if (facet.action == IDiamondCut.FacetCutAction.Add) {
                 addFunctions(facet.facetAddress, facet.functionSelectors);
             } else if (facet.action == IDiamondCut.FacetCutAction.Replace) {
                 replaceFunctions(facet.facetAddress, facet.functionSelectors);
             } else if (facet.action == IDiamondCut.FacetCutAction.Remove) {
                 removeFunctions(facet.facetAddress, facet.functionSelectors);
-            } else {
-                revert BHDLib__IncorrectFacetCutAction(uint8(facet.action));
             }
         }
 
@@ -135,11 +129,15 @@ library BHStorage {
     }
 
     function addFunctions(address _facetAddress, bytes4[] memory _functionSelectors) internal {
-        // require(_functionSelectors.length > 0, "BHStorage: No selectors provided");
+        if (_functionSelectors.length == 0) {
+            revert BHDLib__NotSelectorsProvided(_facetAddress);
+        }
 
         BeanHeadsStorage storage ds = diamondStorage();
 
-        require(_facetAddress != address(0), "BHStorage: Cannot add zero address");
+        if (_facetAddress == address(0)) {
+            revert BHDLib__CannotBeZeroAddress(_facetAddress);
+        }
 
         uint96 selectorPosition = uint96(ds.facetFunctionSelectors[_facetAddress].functionSelectors.length);
 
@@ -152,7 +150,9 @@ library BHStorage {
             bytes4 selector = _functionSelectors[selectorIndex];
 
             address oldFacetAddress = ds.selectorToFacetPosition[selector].facetAddress;
-            require(oldFacetAddress == address(0), "BHStorage: Cannot add existing selector");
+            if (oldFacetAddress != address(0)) {
+                revert BHDLib__CannotAddExistingSelector(selector);
+            }
 
             addFunction(ds, selector, selectorPosition, _facetAddress);
 
@@ -161,9 +161,13 @@ library BHStorage {
     }
 
     function replaceFunctions(address _facetAddress, bytes4[] memory _functionSelectors) internal {
-        require(_functionSelectors.length > 0, "BHStorage: No selectors provided");
+        if (_functionSelectors.length == 0) {
+            revert BHDLib__NotSelectorsProvided(_facetAddress);
+        }
         BeanHeadsStorage storage ds = diamondStorage();
-        require(_facetAddress != address(0), "BHStorage: Cannot add zero address");
+        if (_facetAddress == address(0)) {
+            revert BHDLib__CannotBeZeroAddress(_facetAddress);
+        }
 
         uint96 selectorPosition = uint96(ds.facetFunctionSelectors[_facetAddress].functionSelectors.length);
 
@@ -176,8 +180,13 @@ library BHStorage {
             bytes4 selector = _functionSelectors[selectorIndex];
 
             address oldFacetAddress = ds.selectorToFacetPosition[selector].facetAddress;
+            if (oldFacetAddress == address(0)) {
+                revert BHDLib__CannotReplaceFunctionThatDoesNotExist(selector);
+            }
+            if (oldFacetAddress == _facetAddress) {
+                revert BHDLib__CannotReplaceImmutableFunction(selector);
+            }
 
-            require(oldFacetAddress != _facetAddress, "BHStorage: Cannot replace immutable function");
             removeFunction(ds, oldFacetAddress, selector);
             addFunction(ds, selector, selectorPosition, _facetAddress);
 
@@ -186,15 +195,22 @@ library BHStorage {
     }
 
     function removeFunctions(address _facetAddress, bytes4[] memory _functionSelectors) internal {
-        require(_functionSelectors.length > 0, "BHStorage: No selectors provided");
+        if (_functionSelectors.length == 0) {
+            revert BHDLib__NotSelectorsProvided(_facetAddress);
+        }
         BeanHeadsStorage storage ds = diamondStorage();
 
-        require(_facetAddress == address(0), "BHStorage: Must be zero address");
+        if (_facetAddress != address(0)) {
+            revert BHDLib__MustBeZeroAddress(_facetAddress);
+        }
 
         for (uint256 selectorIndex; selectorIndex < _functionSelectors.length; selectorIndex++) {
             bytes4 selector = _functionSelectors[selectorIndex];
 
             address oldFacetAddress = ds.selectorToFacetPosition[selector].facetAddress;
+            if (oldFacetAddress == address(0)) {
+                revert BHDLib__CannotRemoveFunctionThatDoesNotExist(selector);
+            }
 
             removeFunction(ds, oldFacetAddress, selector);
         }
@@ -215,8 +231,9 @@ library BHStorage {
     }
 
     function removeFunction(BeanHeadsStorage storage ds, address _facetAddress, bytes4 _selector) internal {
-        require(_facetAddress != address(0), "BHStorage: Can't remove function that does not exist");
-        // an immutable function is a function defined directly in a diamond
+        if (_facetAddress == address(0)) {
+            revert BHDLib__CannotRemoveFunctionThatDoesNotExist(_selector);
+        }
         require(_facetAddress != address(this), "BHStorage: Cannot replace immutable function");
         // replace selector with last selector, then delete last selector
         uint256 selectorPosition = ds.selectorToFacetPosition[_selector].functionSelectorPosition;
@@ -251,18 +268,9 @@ library BHStorage {
             return; // No initialization required
         }
         enforceHasContractCode(_init, "BHStorage: Init address has no code");
-        (bool success, bytes memory error) = _init.delegatecall(_calldata);
+        (bool success,) = _init.delegatecall(_calldata);
         if (!success) {
-            if (error.length > 0) {
-                // bubble up error
-                // @solidity memory-safe-assembly
-                assembly {
-                    let returndata_size := mload(error)
-                    revert(add(32, error), returndata_size)
-                }
-            } else {
-                revert BHDLib__InitializationFunctionReverted(_init, _calldata);
-            }
+            revert BHDLib__InitializationFunctionReverted(_init, _calldata);
         }
     }
 

@@ -39,4 +39,25 @@ interface IBeanHeadsBreeding {
      * @dev This function can only be called by the owner of the token or an authorized breeder.
      */
     function burn(uint256 tokenId) external;
+
+    /**
+     * @notice Returns the generation of a token
+     * @param _tokenId The ID of the token to query
+     * @return _generation The generation number of the token
+     */
+    function getGeneration(uint256 _tokenId) external view returns (uint256);
+
+    /**
+     * @notice Returns the tokens owned by a specific address
+     * @param _owner The address of the owner
+     * @return An array of token IDs owned by the address
+     */
+    function getOwnerTokens(address _owner) external view returns (uint256[] memory);
+
+    /**
+     * @notice Returns the price feed address for a token.
+     * @param _token The address of the token to query.
+     * @return The price feed address for the token.
+     */
+    function getPriceFeed(address _token) external view returns (address);
 }

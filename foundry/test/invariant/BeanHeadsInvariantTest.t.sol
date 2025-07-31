@@ -114,7 +114,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
     function test_fuzzMintGenesis(uint256 amount) public {
         amount = bound(amount, 1, 100);
         vm.startPrank(USER);
-        uint256 totalPrice = beanHeads.getMintPrice() * amount;
+        // uint256 totalPrice = beanHeads.getMintPrice() * amount;
         uint256 firstTokenId = beanHeads.mintGenesis(USER, params, amount, address(mockERC20));
         assertEq(beanHeads.balanceOf(USER), amount);
         for (uint256 i = 0; i < amount; i++) {
@@ -303,7 +303,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
 
         // Compute royalty in USD terms
         uint256 royaltyUsd = (salePrice * 600) / 10_000;
-        uint256 sellerReceiveUsd = salePrice - royaltyUsd;
+        // uint256 sellerReceiveUsd = salePrice - royaltyUsd;
 
         // Record balances before purchase
         uint256 deployerBalanceBefore = mockERC20.balanceOf(deployerAddress);
