@@ -1,0 +1,1574 @@
+No files changed, compilation skipped
+
+Ran 3 tests for test/bridge/BeanHeadsBridgeTest.t.sol:BeanHeadsBridgeTest
+[PASS] test_Initialize() (gas: 32571)
+Logs:
+  Sepolia Network Details:  11155111
+  Active network config set for chain ID: 11155111
+  Active network config set for chain ID: 11155111
+  Converting deployerAddress to address type
+  Deployer address: 0x0E128580d848fB51849ab6564467A9BA79B4820c
+  BeanHeadsBridge deployed at: 0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9
+  BeanHeads deployed at: 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+  Arb Network Details:  421614
+  Active network config set for chain ID: 421614
+  Active network config set for chain ID: 421614
+  Converting deployerAddress to address type
+  Deployer address: 0x0E128580d848fB51849ab6564467A9BA79B4820c
+  BeanHeadsBridge deployed at: 0x140cE19e8f89696A3a7D9f09922b2dd99f597e87
+  BeanHeads deployed at: 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+  Setting up Sepolia BeanHeadsBridge...
+  Setting up Arbitrum BeanHeadsBridge...
+  Claiming role on Sepolia
+  Accepting role on Sepolia
+  Linking token to pool in the token admin registry on Sepolia
+  Claiming role on Arbitrum
+  Accepting role on Arbitrum
+  Linking token to pool in the token admin registry on Arbitrum
+  After configure Sepolia Token Pool: 0x8143dE8Fbc957334e0310Ec049f248b729f476c7
+  After configure Arbitrum Token Pool: 0xA695E5cA989482fDcE4321A01a3308F790749497
+
+Traces:
+  [32571] BeanHeadsBridgeTest::test_Initialize()
+    ├─ [0] VM::selectFork(0)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [473] BeanHeadsBridge::owner() [staticcall]
+    │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    ├─ [0] VM::assertEq(0x0E128580d848fB51849ab6564467A9BA79B4820c, 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [628] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c::owner() [staticcall]
+    │   ├─ [251] 0x3ebbFf0F65d5098A131a690607d748a59fEEefd0::owner() [delegatecall]
+    │   │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    ├─ [0] VM::assertEq(0x0E128580d848fB51849ab6564467A9BA79B4820c, 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [5680] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c::isTokenAllowed(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497]) [staticcall]
+    │   ├─ [800] 0x4a782A076472c8D1Abf1AD0F9e7E0A472469358c::isTokenAllowed(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497]) [delegatecall]
+    │   │   └─ ← [Return] true
+    │   └─ ← [Return] true
+    ├─ [0] VM::assertEq(true, true) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [670] BeanHeadsBridge::remoteBridgeAddresses(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87]) [staticcall]
+    │   └─ ← [Return] true
+    ├─ [0] VM::assertEq(true, true) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(1)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [473] BeanHeadsBridge::owner() [staticcall]
+    │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    ├─ [0] VM::assertEq(0x0E128580d848fB51849ab6564467A9BA79B4820c, 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [3128] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429::owner() [staticcall]
+    │   ├─ [251] 0x28b847C007AbA728252A118343E458700804437f::owner() [delegatecall]
+    │   │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    ├─ [0] VM::assertEq(0x0E128580d848fB51849ab6564467A9BA79B4820c, 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [5680] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429::isTokenAllowed(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [staticcall]
+    │   ├─ [800] 0xfD59a6705C59c9E85eF09ea8DbA49a458D4C840d::isTokenAllowed(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [delegatecall]
+    │   │   └─ ← [Return] true
+    │   └─ ← [Return] true
+    ├─ [0] VM::assertEq(true, true) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [670] BeanHeadsBridge::remoteBridgeAddresses(BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9]) [staticcall]
+    │   └─ ← [Return] true
+    ├─ [0] VM::assertEq(true, true) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    └─ ← [Return] 
+
+[PASS] test_MintGenesis() (gas: 372126)
+Logs:
+  Sepolia Network Details:  11155111
+  Active network config set for chain ID: 11155111
+  Active network config set for chain ID: 11155111
+  Converting deployerAddress to address type
+  Deployer address: 0x0E128580d848fB51849ab6564467A9BA79B4820c
+  BeanHeadsBridge deployed at: 0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9
+  BeanHeads deployed at: 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+  Arb Network Details:  421614
+  Active network config set for chain ID: 421614
+  Active network config set for chain ID: 421614
+  Converting deployerAddress to address type
+  Deployer address: 0x0E128580d848fB51849ab6564467A9BA79B4820c
+  BeanHeadsBridge deployed at: 0x140cE19e8f89696A3a7D9f09922b2dd99f597e87
+  BeanHeads deployed at: 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+  Setting up Sepolia BeanHeadsBridge...
+  Setting up Arbitrum BeanHeadsBridge...
+  Claiming role on Sepolia
+  Accepting role on Sepolia
+  Linking token to pool in the token admin registry on Sepolia
+  Claiming role on Arbitrum
+  Accepting role on Arbitrum
+  Linking token to pool in the token admin registry on Arbitrum
+  After configure Sepolia Token Pool: 0x8143dE8Fbc957334e0310Ec049f248b729f476c7
+  After configure Arbitrum Token Pool: 0xA695E5cA989482fDcE4321A01a3308F790749497
+
+Traces:
+  [372126] BeanHeadsBridgeTest::test_MintGenesis()
+    ├─ [0] VM::selectFork(0)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D])
+    │   └─ ← [Return] 
+    ├─ [341844] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c::mintGenesis(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], SVGParams({ hairParams: HairParams({ hairStyle: 1, hairColor: 0 }), bodyParams: BodyParams({ bodyType: 1, skinColor: 3 }), clothingParams: ClothingParams({ clothes: 3, clothingColor: 0, clothesGraphic: 2 }), facialFeaturesParams: FacialFeaturesParams({ eyebrowShape: 3, eyeShape: 5, facialHairType: 2, mouthStyle: 1, lipColor: 1 }), accessoryParams: AccessoryParams({ accessoryId: 1, hatStyle: 1, hatColor: 3 }), otherParams: OtherParams({ faceMask: false, faceMaskColor: 3, shapes: false, shapeColor: 1, lashes: true }) }), 1, MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497])
+    │   ├─ [336834] 0x8314B8FA845f635c8BffB11AB3D0e596232b2E1E::mintGenesis(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], SVGParams({ hairParams: HairParams({ hairStyle: 1, hairColor: 0 }), bodyParams: BodyParams({ bodyType: 1, skinColor: 3 }), clothingParams: ClothingParams({ clothes: 3, clothingColor: 0, clothesGraphic: 2 }), facialFeaturesParams: FacialFeaturesParams({ eyebrowShape: 3, eyeShape: 5, facialHairType: 2, mouthStyle: 1, lipColor: 1 }), accessoryParams: AccessoryParams({ accessoryId: 1, hatStyle: 1, hatColor: 3 }), otherParams: OtherParams({ faceMask: false, faceMaskColor: 3, shapes: false, shapeColor: 1, lashes: true }) }), 1, MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497]) [delegatecall]
+    │   │   ├─ [16043] 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E::latestRoundData() [staticcall]
+    │   │   │   ├─ [7612] 0x0524b20f305e2e2F7990B9AfE28B4D5e4a76eA0C::latestRoundData() [staticcall]
+    │   │   │   │   └─ ← [Return] 1068, 99982510 [9.998e7], 1754046924 [1.754e9], 1754046924 [1.754e9], 1068
+    │   │   │   └─ ← [Return] 18446744073709552684 [1.844e19], 99982510 [9.998e7], 1754046924 [1.754e9], 1754046924 [1.754e9], 18446744073709552684 [1.844e19]
+    │   │   ├─ [365] MockERC20::decimals() [staticcall]
+    │   │   │   └─ ← [Return] 18
+    │   │   ├─ [839] MockERC20::allowance(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c) [staticcall]
+    │   │   │   └─ ← [Return] 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77]
+    │   │   ├─ [551] MockERC20::balanceOf(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D]) [staticcall]
+    │   │   │   └─ ← [Return] 100000000000000000000 [1e20]
+    │   │   ├─ [27364] MockERC20::transferFrom(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c, 1000174930595361128 [1e18])
+    │   │   │   ├─ emit Transfer(from: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], to: 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c, value: 1000174930595361128 [1e18])
+    │   │   │   ├─ emit Approval(owner: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], spender: 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c, value: 115792089237316195423570985008687907853269984665640564039456583832982534278807 [1.157e77])
+    │   │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    │   │   ├─ emit Transfer(from: 0x0000000000000000000000000000000000000000, to: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], tokenId: 0)
+    │   │   ├─ emit MintedGenesis(owner: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], tokenId: 0)
+    │   │   └─ ← [Return] 0
+    │   └─ ← [Return] 0
+    ├─ [2988] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c::balanceOf(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D]) [staticcall]
+    │   ├─ [608] 0x8314B8FA845f635c8BffB11AB3D0e596232b2E1E::balanceOf(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D]) [delegatecall]
+    │   │   └─ ← [Return] 1
+    │   └─ ← [Return] 1
+    ├─ [0] VM::assertEq(1, 1) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [5508] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c::getTotalSupply() [staticcall]
+    │   ├─ [631] 0xF0B430683b7a4bE390b8277dC893D06CA2338099::getTotalSupply() [delegatecall]
+    │   │   └─ ← [Return] 1
+    │   └─ ← [Return] 1
+    ├─ [0] VM::assertEq(1, 1) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    └─ ← [Return] 
+
+[FAIL: EvmError: Revert] test_sendMintTokenRequest() (gas: 455022)
+Logs:
+  Sepolia Network Details:  11155111
+  Active network config set for chain ID: 11155111
+  Active network config set for chain ID: 11155111
+  Converting deployerAddress to address type
+  Deployer address: 0x0E128580d848fB51849ab6564467A9BA79B4820c
+  BeanHeadsBridge deployed at: 0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9
+  BeanHeads deployed at: 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+  Arb Network Details:  421614
+  Active network config set for chain ID: 421614
+  Active network config set for chain ID: 421614
+  Converting deployerAddress to address type
+  Deployer address: 0x0E128580d848fB51849ab6564467A9BA79B4820c
+  BeanHeadsBridge deployed at: 0x140cE19e8f89696A3a7D9f09922b2dd99f597e87
+  BeanHeads deployed at: 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+  Setting up Sepolia BeanHeadsBridge...
+  Setting up Arbitrum BeanHeadsBridge...
+  Claiming role on Sepolia
+  Accepting role on Sepolia
+  Linking token to pool in the token admin registry on Sepolia
+  Claiming role on Arbitrum
+  Accepting role on Arbitrum
+  Linking token to pool in the token admin registry on Arbitrum
+  After configure Sepolia Token Pool: 0x8143dE8Fbc957334e0310Ec049f248b729f476c7
+  After configure Arbitrum Token Pool: 0xA695E5cA989482fDcE4321A01a3308F790749497
+
+Traces:
+  [241716583] BeanHeadsBridgeTest::setUp()
+    ├─ [0] VM::createSelectFork("sepolia-eth")
+    │   └─ ← [Return] 0
+    ├─ [0] VM::createSelectFork("arb-sepolia")
+    │   └─ ← [Return] 1
+    ├─ [0] VM::selectFork(0)
+    │   └─ ← [Return] 
+    ├─ [6346230] → new CCIPLocalSimulatorFork@0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+    │   ├─ [0] VM::recordLogs()
+    │   │   └─ ← [Return] 
+    │   ├─ [2883507] → new Register@0x104fBc016F4bb334D775a19E8A6510109AC63E00
+    │   │   └─ ← [Return] 1097 bytes of code
+    │   ├─ [0] VM::makePersistent(Register: [0x104fBc016F4bb334D775a19E8A6510109AC63E00])
+    │   │   └─ ← [Return] 
+    │   └─ ← [Return] 16899 bytes of code
+    ├─ [0] VM::makePersistent(CCIPLocalSimulatorFork: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return] 
+    ├─ [3784] CCIPLocalSimulatorFork::getNetworkDetails(11155111 [1.115e7]) [staticcall]
+    │   ├─ [1854] Register::getNetworkDetails(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] NetworkDetails({ chainSelector: 16015286601757825753 [1.601e19], routerAddress: 0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59, linkAddress: 0x779877A7B0D9E8603169DdbD7836e478b4624789, wrappedNativeAddress: 0x097D90c9d3E0B50Ca60e1ae45F6A81010f9FB534, ccipBnMAddress: 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05, ccipLnMAddress: 0x466D489b6d36E7E3b824ef491C225F5830E81cC1, rmnProxyAddress: 0xba3f6251de62dED61Ff98590cB2fDf6871FbB991, registryModuleOwnerCustomAddress: 0x62e731218d0D47305aba2BE3751E7EE9E5520790, tokenAdminRegistryAddress: 0x95F29FEE11c5C55d26cCcf1DB6772DE953B37B82 })
+    │   └─ ← [Return] NetworkDetails({ chainSelector: 16015286601757825753 [1.601e19], routerAddress: 0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59, linkAddress: 0x779877A7B0D9E8603169DdbD7836e478b4624789, wrappedNativeAddress: 0x097D90c9d3E0B50Ca60e1ae45F6A81010f9FB534, ccipBnMAddress: 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05, ccipLnMAddress: 0x466D489b6d36E7E3b824ef491C225F5830E81cC1, rmnProxyAddress: 0xba3f6251de62dED61Ff98590cB2fDf6871FbB991, registryModuleOwnerCustomAddress: 0x62e731218d0D47305aba2BE3751E7EE9E5520790, tokenAdminRegistryAddress: 0x95F29FEE11c5C55d26cCcf1DB6772DE953B37B82 })
+    ├─ [0] console::log("Sepolia Network Details: ", 11155111 [1.115e7]) [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [5099355] → new HelperConfig@0x2e234DAe75C793f67A35089C9d99245E1C58470b
+    │   ├─ [0] VM::envUint("PRIVATE_KEY") [staticcall]
+    │   │   └─ ← [Return] <env var value>
+    │   ├─ [0] console::log("Active network config set for chain ID:", 11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] 23425 bytes of code
+    ├─ [2250] HelperConfig::getActiveNetworkConfig() [staticcall]
+    │   └─ ← [Return] NetworkConfig({ routerClient: 0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59, remoteBridge: 0x0000000000000000000000000000000000000000, linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789, usdPriceFeed: 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E, vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B, subscriptionId: 5283, keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae, deployerKey: 80256633298787419441907362837076583132327027403844714319895364654516721188953 [8.025e76] })
+    ├─ [0] VM::makePersistent(0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E)
+    │   └─ ← [Return] 
+    ├─ [1821622] → new <unknown>@0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+    │   └─ ← [Return] 7538 bytes of code
+    ├─ [39095421] → new DeployBeanHeadsBridge@0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9
+    │   └─ ← [Return] 194821 bytes of code
+    ├─ [62787129] DeployBeanHeadsBridge::run()
+    │   ├─ [5099355] → new HelperConfig@0x5B0091f49210e7B2A57B03dfE1AB9D08289d9294
+    │   │   ├─ [0] VM::envUint("PRIVATE_KEY") [staticcall]
+    │   │   │   └─ ← [Return] <env var value>
+    │   │   ├─ [0] console::log("Active network config set for chain ID:", 11155111 [1.115e7]) [staticcall]
+    │   │   │   └─ ← [Stop] 
+    │   │   └─ ← [Return] 23425 bytes of code
+    │   ├─ [2250] HelperConfig::getActiveNetworkConfig() [staticcall]
+    │   │   └─ ← [Return] NetworkConfig({ routerClient: 0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59, remoteBridge: 0x0000000000000000000000000000000000000000, linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789, usdPriceFeed: 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E, vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B, subscriptionId: 5283, keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae, deployerKey: 80256633298787419441907362837076583132327027403844714319895364654516721188953 [8.025e76] })
+    │   ├─ [316] HelperConfig::LOCAL_CHAIN_ID() [staticcall]
+    │   │   └─ ← [Return] 31337 [3.133e4]
+    │   ├─ [492] HelperConfig::ETH_SEPOLIA_CHAIN_ID() [staticcall]
+    │   │   └─ ← [Return] 11155111 [1.115e7]
+    │   ├─ [0] VM::readDir("./broadcast", 3) [staticcall]
+    │   │   └─ ← [Return] [("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol", 1, true, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111", 2, true, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111/run-1753987476.json", 3, false, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111/run-latest.json", 3, false, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614", 2, true, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614/run-1753987711.json", 3, false, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614/run-latest.json", 3, false, false)]
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::readFile("/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111/run-1753987476.json") [staticcall]
+    │   │   └─ ← [Return] <file>
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] "null"
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondCutFacet"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[2].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsAdminFacet"
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsBreedingFacet"
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMarketplaceFacet"
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMintFacet"
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsViewFacet"
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondLoupeFacet"
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] "OwnershipFacet"
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondInit"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[11].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+    │   ├─ [0] VM::toString(12) [staticcall]
+    │   │   └─ ← [Return] "12"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[12]") [staticcall]
+    │   │   └─ ← [Return] false
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::readFile("/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111/run-latest.json") [staticcall]
+    │   │   └─ ← [Return] <file>
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] "null"
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondCutFacet"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[2].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsAdminFacet"
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsBreedingFacet"
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMarketplaceFacet"
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMintFacet"
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsViewFacet"
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondLoupeFacet"
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] "OwnershipFacet"
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondInit"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[11].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+    │   ├─ [0] VM::toString(12) [staticcall]
+    │   │   └─ ← [Return] "12"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[12]") [staticcall]
+    │   │   └─ ← [Return] false
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::readFile("/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111/run-1753987476.json") [staticcall]
+    │   │   └─ ← [Return] <file>
+    │   ├─ [0] VM::parseJsonUint("<stringified JSON>", ".timestamp") [staticcall]
+    │   │   └─ ← [Return] 1753987476 [1.753e9]
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] "null"
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondCutFacet"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[2].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsAdminFacet"
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsBreedingFacet"
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMarketplaceFacet"
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMintFacet"
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsViewFacet"
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondLoupeFacet"
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] "OwnershipFacet"
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondInit"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[11].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+    │   ├─ [0] VM::toString(12) [staticcall]
+    │   │   └─ ← [Return] "12"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[12]") [staticcall]
+    │   │   └─ ← [Return] false
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::readFile("/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111/run-latest.json") [staticcall]
+    │   │   └─ ← [Return] <file>
+    │   ├─ [0] VM::parseJsonUint("<stringified JSON>", ".timestamp") [staticcall]
+    │   │   └─ ← [Return] 1753987476 [1.753e9]
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] VM::toString(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] "11155111"
+    │   ├─ [0] console::log("Converting deployerAddress to address type") [staticcall]
+    │   │   └─ ← [Stop] 
+    │   ├─ [0] VM::addr(<pk>) [staticcall]
+    │   │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    │   ├─ [0] console::log("Deployer address:", 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   │   └─ ← [Stop] 
+    │   ├─ [0] VM::startBroadcast(<pk>)
+    │   │   └─ ← [Return] 
+    │   ├─ [3007675] → new BeanHeadsBridge@0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9
+    │   │   ├─ emit OwnershipTransferred(previousOwner: 0x0000000000000000000000000000000000000000, newOwner: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   │   └─ ← [Return] 14667 bytes of code
+    │   ├─ [0] VM::stopBroadcast()
+    │   │   └─ ← [Return] 
+    │   ├─ [0] console::log("BeanHeadsBridge deployed at:", BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9]) [staticcall]
+    │   │   └─ ← [Stop] 
+    │   ├─ [0] console::log("BeanHeads deployed at:", 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c) [staticcall]
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9], 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c
+    ├─ [0] VM::makePersistent(BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9])
+    │   └─ ← [Return] 
+    ├─ [0] VM::makePersistent(0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c)
+    │   └─ ← [Return] 
+    ├─ [0] VM::makePersistent(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [473] BeanHeadsBridge::owner() [staticcall]
+    │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    ├─ [0] VM::assertEq(0x0E128580d848fB51849ab6564467A9BA79B4820c, 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [7128] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c::owner() [staticcall]
+    │   ├─ [2251] 0x3ebbFf0F65d5098A131a690607d748a59fEEefd0::owner() [delegatecall]
+    │   │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    ├─ [0] VM::assertEq(0x0E128580d848fB51849ab6564467A9BA79B4820c, 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(1)
+    │   └─ ← [Return] 
+    ├─ [6346230] → new CCIPLocalSimulatorFork@0xc7183455a4C133Ae270771860664b6B7ec320bB1
+    │   ├─ [0] VM::recordLogs()
+    │   │   └─ ← [Return] 
+    │   ├─ [2883507] → new Register@0xa38D17ef017A314cCD72b8F199C0e108EF7Ca04c
+    │   │   └─ ← [Return] 1097 bytes of code
+    │   ├─ [0] VM::makePersistent(Register: [0xa38D17ef017A314cCD72b8F199C0e108EF7Ca04c])
+    │   │   └─ ← [Return] 
+    │   └─ ← [Return] 16899 bytes of code
+    ├─ [0] VM::makePersistent(CCIPLocalSimulatorFork: [0xc7183455a4C133Ae270771860664b6B7ec320bB1])
+    │   └─ ← [Return] 
+    ├─ [3784] CCIPLocalSimulatorFork::getNetworkDetails(421614 [4.216e5]) [staticcall]
+    │   ├─ [1854] Register::getNetworkDetails(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] NetworkDetails({ chainSelector: 3478487238524512106 [3.478e18], routerAddress: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, linkAddress: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, wrappedNativeAddress: 0xE591bf0A0CF924A0674d7792db046B23CEbF5f34, ccipBnMAddress: 0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D, ccipLnMAddress: 0x139E99f0ab4084E14e6bb7DacA289a91a2d92927, rmnProxyAddress: 0x9527E2d01A3064ef6b50c1Da1C0cC523803BCFF2, registryModuleOwnerCustomAddress: 0xE625f0b8b0Ac86946035a7729Aba124c8A64cf69, tokenAdminRegistryAddress: 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f })
+    │   └─ ← [Return] NetworkDetails({ chainSelector: 3478487238524512106 [3.478e18], routerAddress: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, linkAddress: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, wrappedNativeAddress: 0xE591bf0A0CF924A0674d7792db046B23CEbF5f34, ccipBnMAddress: 0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D, ccipLnMAddress: 0x139E99f0ab4084E14e6bb7DacA289a91a2d92927, rmnProxyAddress: 0x9527E2d01A3064ef6b50c1Da1C0cC523803BCFF2, registryModuleOwnerCustomAddress: 0xE625f0b8b0Ac86946035a7729Aba124c8A64cf69, tokenAdminRegistryAddress: 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f })
+    ├─ [0] console::log("Arb Network Details: ", 421614 [4.216e5]) [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [5099415] → new HelperConfig@0xa0Cb889707d426A7A386870A03bc70d1b0697598
+    │   ├─ [0] VM::envUint("PRIVATE_KEY") [staticcall]
+    │   │   └─ ← [Return] <env var value>
+    │   ├─ [0] console::log("Active network config set for chain ID:", 421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] 23425 bytes of code
+    ├─ [2304] HelperConfig::getActiveNetworkConfig() [staticcall]
+    │   └─ ← [Return] NetworkConfig({ routerClient: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, remoteBridge: 0x0000000000000000000000000000000000000000, linkToken: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, usdPriceFeed: 0x0153002d20B96532C639313c2d54c3dA09109309, vrfCoordinator: 0x5CE8D5A2BC84beb22a398CCA51996F7930313D61, subscriptionId: 403, keyHash: 0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be, deployerKey: 80256633298787419441907362837076583132327027403844714319895364654516721188953 [8.025e76] })
+    ├─ [0] VM::makePersistent(0x0153002d20B96532C639313c2d54c3dA09109309)
+    │   └─ ← [Return] 
+    ├─ [1821622] → new <unknown>@0x1d1499e622D69689cdf9004d05Ec547d650Ff211
+    │   └─ ← [Return] 7538 bytes of code
+    ├─ [39095421] → new DeployBeanHeadsBridge@0xA4AD4f68d0b91CFD19687c881e50f3A00242828c
+    │   └─ ← [Return] 194821 bytes of code
+    ├─ [63085572] DeployBeanHeadsBridge::run()
+    │   ├─ [5099415] → new HelperConfig@0xeafCcCE3F73a1ac8690F49acF56C4142183619dd
+    │   │   ├─ [0] VM::envUint("PRIVATE_KEY") [staticcall]
+    │   │   │   └─ ← [Return] <env var value>
+    │   │   ├─ [0] console::log("Active network config set for chain ID:", 421614 [4.216e5]) [staticcall]
+    │   │   │   └─ ← [Stop] 
+    │   │   └─ ← [Return] 23425 bytes of code
+    │   ├─ [2304] HelperConfig::getActiveNetworkConfig() [staticcall]
+    │   │   └─ ← [Return] NetworkConfig({ routerClient: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, remoteBridge: 0x0000000000000000000000000000000000000000, linkToken: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, usdPriceFeed: 0x0153002d20B96532C639313c2d54c3dA09109309, vrfCoordinator: 0x5CE8D5A2BC84beb22a398CCA51996F7930313D61, subscriptionId: 403, keyHash: 0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be, deployerKey: 80256633298787419441907362837076583132327027403844714319895364654516721188953 [8.025e76] })
+    │   ├─ [316] HelperConfig::LOCAL_CHAIN_ID() [staticcall]
+    │   │   └─ ← [Return] 31337 [3.133e4]
+    │   ├─ [492] HelperConfig::ETH_SEPOLIA_CHAIN_ID() [staticcall]
+    │   │   └─ ← [Return] 11155111 [1.115e7]
+    │   ├─ [448] HelperConfig::OPTIMISM_SEPOLIA_CHAIN_ID() [staticcall]
+    │   │   └─ ← [Return] 11155420 [1.115e7]
+    │   ├─ [184] HelperConfig::ARBITRUM_SEPOLIA_CHAIN_ID() [staticcall]
+    │   │   └─ ← [Return] 421614 [4.216e5]
+    │   ├─ [0] VM::readDir("./broadcast", 3) [staticcall]
+    │   │   └─ ← [Return] [("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol", 1, true, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111", 2, true, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111/run-1753987476.json", 3, false, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/11155111/run-latest.json", 3, false, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614", 2, true, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614/run-1753987711.json", 3, false, false), ("", "/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614/run-latest.json", 3, false, false)]
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::readFile("/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614/run-1753987711.json") [staticcall]
+    │   │   └─ ← [Return] <file>
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] "null"
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondCutFacet"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[2].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsAdminFacet"
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsBreedingFacet"
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMarketplaceFacet"
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMintFacet"
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsViewFacet"
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondLoupeFacet"
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] "OwnershipFacet"
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondInit"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[11].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+    │   ├─ [0] VM::toString(12) [staticcall]
+    │   │   └─ ← [Return] "12"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[12]") [staticcall]
+    │   │   └─ ← [Return] false
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::readFile("/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614/run-latest.json") [staticcall]
+    │   │   └─ ← [Return] <file>
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] "null"
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondCutFacet"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[2].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsAdminFacet"
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsBreedingFacet"
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMarketplaceFacet"
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMintFacet"
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsViewFacet"
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondLoupeFacet"
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] "OwnershipFacet"
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondInit"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[11].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+    │   ├─ [0] VM::toString(12) [staticcall]
+    │   │   └─ ← [Return] "12"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[12]") [staticcall]
+    │   │   └─ ← [Return] false
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::readFile("/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614/run-1753987711.json") [staticcall]
+    │   │   └─ ← [Return] <file>
+    │   ├─ [0] VM::parseJsonUint("<stringified JSON>", ".timestamp") [staticcall]
+    │   │   └─ ← [Return] 1753987711 [1.753e9]
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(0) [staticcall]
+    │   │   └─ ← [Return] "0"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[0].contractName") [staticcall]
+    │   │   └─ ← [Return] "null"
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(1) [staticcall]
+    │   │   └─ ← [Return] "1"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[1].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondCutFacet"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[2].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(2) [staticcall]
+    │   │   └─ ← [Return] "2"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[2].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(3) [staticcall]
+    │   │   └─ ← [Return] "3"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[3].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsAdminFacet"
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(4) [staticcall]
+    │   │   └─ ← [Return] "4"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[4].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsBreedingFacet"
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(5) [staticcall]
+    │   │   └─ ← [Return] "5"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[5].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMarketplaceFacet"
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(6) [staticcall]
+    │   │   └─ ← [Return] "6"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[6].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsMintFacet"
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(7) [staticcall]
+    │   │   └─ ← [Return] "7"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[7].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsViewFacet"
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(8) [staticcall]
+    │   │   └─ ← [Return] "8"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[8].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondLoupeFacet"
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(9) [staticcall]
+    │   │   └─ ← [Return] "9"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[9].contractName") [staticcall]
+    │   │   └─ ← [Return] "OwnershipFacet"
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(10) [staticcall]
+    │   │   └─ ← [Return] "10"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[10].contractName") [staticcall]
+    │   │   └─ ← [Return] "DiamondInit"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11]") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::parseJsonString("<stringified JSON>", "$.transactions[11].contractName") [staticcall]
+    │   │   └─ ← [Return] "BeanHeadsDiamond"
+    │   ├─ [0] VM::toString(11) [staticcall]
+    │   │   └─ ← [Return] "11"
+    │   ├─ [0] VM::parseJsonAddress("<stringified JSON>", "$.transactions[11].contractAddress") [staticcall]
+    │   │   └─ ← [Return] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+    │   ├─ [0] VM::toString(12) [staticcall]
+    │   │   └─ ← [Return] "12"
+    │   ├─ [0] VM::keyExistsJson("<JSON file>", "$.transactions[12]") [staticcall]
+    │   │   └─ ← [Return] false
+    │   ├─ [0] VM::toString(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] "421614"
+    │   ├─ [0] VM::readFile("/Volumes/extreme/Projects/Solidity/Portfolio/beanheads/foundry/broadcast/DeployBeanHeads.s.sol/421614/run-latest.json") [staticcall]
+    │   │   └─ ← [Return] <file>
+    │   ├─ [0] VM::parseJsonUint("<stringified JSON>", ".timestamp") [staticcall]
+    │   │   └─ ← [Return] 1753987711 [1.753e9]
+    │   ├─ [0] console::log("Converting deployerAddress to address type") [staticcall]
+    │   │   └─ ← [Stop] 
+    │   ├─ [0] VM::addr(<pk>) [staticcall]
+    │   │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    │   ├─ [0] console::log("Deployer address:", 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   │   └─ ← [Stop] 
+    │   ├─ [0] VM::startBroadcast(<pk>)
+    │   │   └─ ← [Return] 
+    │   ├─ [3007675] → new BeanHeadsBridge@0x140cE19e8f89696A3a7D9f09922b2dd99f597e87
+    │   │   ├─ emit OwnershipTransferred(previousOwner: 0x0000000000000000000000000000000000000000, newOwner: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   │   └─ ← [Return] 14667 bytes of code
+    │   ├─ [0] VM::stopBroadcast()
+    │   │   └─ ← [Return] 
+    │   ├─ [0] console::log("BeanHeadsBridge deployed at:", BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87]) [staticcall]
+    │   │   └─ ← [Stop] 
+    │   ├─ [0] console::log("BeanHeads deployed at:", 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429) [staticcall]
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429
+    ├─ [0] VM::makePersistent(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87])
+    │   └─ ← [Return] 
+    ├─ [0] VM::makePersistent(0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429)
+    │   └─ ← [Return] 
+    ├─ [0] VM::makePersistent(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [473] BeanHeadsBridge::owner() [staticcall]
+    │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    ├─ [0] VM::assertEq(0x0E128580d848fB51849ab6564467A9BA79B4820c, 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [7128] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429::owner() [staticcall]
+    │   ├─ [2251] 0x28b847C007AbA728252A118343E458700804437f::owner() [delegatecall]
+    │   │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    ├─ [0] VM::assertEq(0x0E128580d848fB51849ab6564467A9BA79B4820c, 0x0E128580d848fB51849ab6564467A9BA79B4820c) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(0)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [0] console::log("Setting up Sepolia BeanHeadsBridge...") [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [996967] → new MockERC20@0xA695E5cA989482fDcE4321A01a3308F790749497
+    │   ├─ emit OwnershipTransferred(previousOwner: 0x0000000000000000000000000000000000000000, newOwner: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   ├─ emit Transfer(from: 0x0000000000000000000000000000000000000000, to: 0x0E128580d848fB51849ab6564467A9BA79B4820c, value: 10000000000000000000000 [1e22])
+    │   └─ ← [Return] 4297 bytes of code
+    ├─ [0] VM::makePersistent(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497])
+    │   └─ ← [Return] 
+    ├─ [3216984] → new MockTokenPool@0xE586d2848CA7949E8E50404087e44cA9E67Eda74
+    │   ├─ emit AllowListAdd(sender: BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9])
+    │   └─ ← [Return] 15498 bytes of code
+    ├─ [0] VM::makePersistent(MockTokenPool: [0xE586d2848CA7949E8E50404087e44cA9E67Eda74])
+    │   └─ ← [Return] 
+    ├─ [43740] BeanHeadsBridge::setRemoteBridge(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87])
+    │   ├─ emit RemoteBridgeUpdated(newRemoteBridge: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87])
+    │   └─ ← [Stop] 
+    ├─ [37258] CCIPLocalSimulatorFork::requestLinkFromFaucet(BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9], 100000000000000000000 [1e20])
+    │   ├─ [1854] Register::getNetworkDetails(11155111 [1.115e7]) [staticcall]
+    │   │   └─ ← [Return] NetworkDetails({ chainSelector: 16015286601757825753 [1.601e19], routerAddress: 0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59, linkAddress: 0x779877A7B0D9E8603169DdbD7836e478b4624789, wrappedNativeAddress: 0x097D90c9d3E0B50Ca60e1ae45F6A81010f9FB534, ccipBnMAddress: 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05, ccipLnMAddress: 0x466D489b6d36E7E3b824ef491C225F5830E81cC1, rmnProxyAddress: 0xba3f6251de62dED61Ff98590cB2fDf6871FbB991, registryModuleOwnerCustomAddress: 0x62e731218d0D47305aba2BE3751E7EE9E5520790, tokenAdminRegistryAddress: 0x95F29FEE11c5C55d26cCcf1DB6772DE953B37B82 })
+    │   ├─ [0] VM::startPrank(0x4281eCF07378Ee595C564a59048801330f3084eE)
+    │   │   └─ ← [Return] 
+    │   ├─ [30026] 0x779877A7B0D9E8603169DdbD7836e478b4624789::transfer(BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9], 100000000000000000000 [1e20])
+    │   │   ├─ emit Transfer(from: 0x4281eCF07378Ee595C564a59048801330f3084eE, to: BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9], value: 100000000000000000000 [1e20])
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::stopPrank()
+    │   │   └─ ← [Return] 
+    │   └─ ← [Return] true
+    ├─ [670] BeanHeadsBridge::remoteBridgeAddresses(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87]) [staticcall]
+    │   └─ ← [Return] true
+    ├─ [0] VM::assertEq(true, true) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [29187] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c::setAllowedToken(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], true)
+    │   ├─ [24307] 0x2e2238a617FFb9A12bFCfb8939a8e6F385F4879d::setAllowedToken(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], true) [delegatecall]
+    │   │   ├─ emit AllowedTokenUpdated(token: MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], isAllowed: true)
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] 
+    ├─ [71216] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c::addPriceFeed(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E)
+    │   ├─ [68836] 0x2e2238a617FFb9A12bFCfb8939a8e6F385F4879d::addPriceFeed(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E) [delegatecall]
+    │   │   ├─ emit PriceFeedAdded(token: MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], priceFeed: 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E)
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] 
+    ├─ [9080] 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c::setMintPrice(1000000000000000000 [1e18])
+    │   ├─ [6703] 0x2e2238a617FFb9A12bFCfb8939a8e6F385F4879d::setMintPrice(1000000000000000000 [1e18]) [delegatecall]
+    │   │   ├─ emit MintPriceUpdated(newPrice: 1000000000000000000 [1e18])
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(1)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [0] console::log("Setting up Arbitrum BeanHeadsBridge...") [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [996967] → new MockERC20@0x8143dE8Fbc957334e0310Ec049f248b729f476c7
+    │   ├─ emit OwnershipTransferred(previousOwner: 0x0000000000000000000000000000000000000000, newOwner: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   ├─ emit Transfer(from: 0x0000000000000000000000000000000000000000, to: 0x0E128580d848fB51849ab6564467A9BA79B4820c, value: 10000000000000000000000 [1e22])
+    │   └─ ← [Return] 4297 bytes of code
+    ├─ [0] VM::makePersistent(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7])
+    │   └─ ← [Return] 
+    ├─ [3216984] → new MockTokenPool@0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0
+    │   ├─ emit AllowListAdd(sender: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87])
+    │   └─ ← [Return] 15498 bytes of code
+    ├─ [0] VM::makePersistent(MockTokenPool: [0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0])
+    │   └─ ← [Return] 
+    ├─ [43740] BeanHeadsBridge::setRemoteBridge(BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9])
+    │   ├─ emit RemoteBridgeUpdated(newRemoteBridge: BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9])
+    │   └─ ← [Stop] 
+    ├─ [37258] CCIPLocalSimulatorFork::requestLinkFromFaucet(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], 100000000000000000000 [1e20])
+    │   ├─ [1854] Register::getNetworkDetails(421614 [4.216e5]) [staticcall]
+    │   │   └─ ← [Return] NetworkDetails({ chainSelector: 3478487238524512106 [3.478e18], routerAddress: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, linkAddress: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, wrappedNativeAddress: 0xE591bf0A0CF924A0674d7792db046B23CEbF5f34, ccipBnMAddress: 0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D, ccipLnMAddress: 0x139E99f0ab4084E14e6bb7DacA289a91a2d92927, rmnProxyAddress: 0x9527E2d01A3064ef6b50c1Da1C0cC523803BCFF2, registryModuleOwnerCustomAddress: 0xE625f0b8b0Ac86946035a7729Aba124c8A64cf69, tokenAdminRegistryAddress: 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f })
+    │   ├─ [0] VM::startPrank(0x4281eCF07378Ee595C564a59048801330f3084eE)
+    │   │   └─ ← [Return] 
+    │   ├─ [30026] 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E::transfer(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], 100000000000000000000 [1e20])
+    │   │   ├─ emit Transfer(from: 0x4281eCF07378Ee595C564a59048801330f3084eE, to: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], value: 100000000000000000000 [1e20])
+    │   │   └─ ← [Return] true
+    │   ├─ [0] VM::stopPrank()
+    │   │   └─ ← [Return] 
+    │   └─ ← [Return] true
+    ├─ [670] BeanHeadsBridge::remoteBridgeAddresses(BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9]) [staticcall]
+    │   └─ ← [Return] true
+    ├─ [0] VM::assertEq(true, true) [staticcall]
+    │   └─ ← [Return] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [29187] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429::setAllowedToken(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], true)
+    │   ├─ [24307] 0xB9eEd1261ABA78e9B8e9fc2bE542494372556e1c::setAllowedToken(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], true) [delegatecall]
+    │   │   ├─ emit AllowedTokenUpdated(token: MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], isAllowed: true)
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] 
+    ├─ [71216] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429::addPriceFeed(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], 0x0153002d20B96532C639313c2d54c3dA09109309)
+    │   ├─ [68836] 0xB9eEd1261ABA78e9B8e9fc2bE542494372556e1c::addPriceFeed(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], 0x0153002d20B96532C639313c2d54c3dA09109309) [delegatecall]
+    │   │   ├─ emit PriceFeedAdded(token: MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], priceFeed: 0x0153002d20B96532C639313c2d54c3dA09109309)
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] 
+    ├─ [9080] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429::setMintPrice(1000000000000000000 [1e18])
+    │   ├─ [6703] 0xB9eEd1261ABA78e9B8e9fc2bE542494372556e1c::setMintPrice(1000000000000000000 [1e18]) [delegatecall]
+    │   │   ├─ emit MintPriceUpdated(newPrice: 1000000000000000000 [1e18])
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Return] 
+    ├─ [0] VM::mockCall(0x0153002d20B96532C639313c2d54c3dA09109309, 0xfeaf968c, 0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000000000000000000000000000000000000688dbbb600000000000000000000000000000000000000000000000000000000688dbbb60000000000000000000000000000000000000000000000000000000000000001)
+    │   └─ ← [Return] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(0)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [0] console::log("Claiming role on Sepolia") [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [84376] 0x62e731218d0D47305aba2BE3751E7EE9E5520790::registerAdminViaOwner(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497])
+    │   ├─ [474] MockERC20::owner() [staticcall]
+    │   │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    │   ├─ [78736] 0x95F29FEE11c5C55d26cCcf1DB6772DE953B37B82::proposeAdministrator(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   │   ├─ emit AdministratorTransferRequested(token: MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], currentAdmin: 0x0000000000000000000000000000000000000000, newAdmin: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   │   └─ ← [Stop] 
+    │   ├─ emit AdministratorRegistered(token: MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], administrator: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Stop] 
+    ├─ [0] console::log("Accepting role on Sepolia") [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [22441] 0x95F29FEE11c5C55d26cCcf1DB6772DE953B37B82::acceptAdminRole(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497])
+    │   ├─ emit AdministratorTransferred(token: MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], newAdmin: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Stop] 
+    ├─ [0] console::log("Linking token to pool in the token admin registry on Sepolia") [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [25573] 0x95F29FEE11c5C55d26cCcf1DB6772DE953B37B82::setPool(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], MockTokenPool: [0xE586d2848CA7949E8E50404087e44cA9E67Eda74])
+    │   ├─ [302] MockTokenPool::isSupportedToken(MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497]) [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ emit PoolSet(token: MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497], previousPool: 0x0000000000000000000000000000000000000000, newPool: MockTokenPool: [0xE586d2848CA7949E8E50404087e44cA9E67Eda74])
+    │   └─ ← [Stop] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(1)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [0] console::log("Claiming role on Arbitrum") [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [84376] 0xE625f0b8b0Ac86946035a7729Aba124c8A64cf69::registerAdminViaOwner(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7])
+    │   ├─ [474] MockERC20::owner() [staticcall]
+    │   │   └─ ← [Return] 0x0E128580d848fB51849ab6564467A9BA79B4820c
+    │   ├─ [78736] 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f::proposeAdministrator(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   │   ├─ emit AdministratorTransferRequested(token: MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], currentAdmin: 0x0000000000000000000000000000000000000000, newAdmin: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   │   └─ ← [Stop] 
+    │   ├─ emit AdministratorRegistered(token: MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], administrator: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Stop] 
+    ├─ [0] console::log("Accepting role on Arbitrum") [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [22441] 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f::acceptAdminRole(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7])
+    │   ├─ emit AdministratorTransferred(token: MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], newAdmin: 0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Stop] 
+    ├─ [0] console::log("Linking token to pool in the token admin registry on Arbitrum") [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [25573] 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f::setPool(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], MockTokenPool: [0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0])
+    │   ├─ [302] MockTokenPool::isSupportedToken(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ emit PoolSet(token: MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7], previousPool: 0x0000000000000000000000000000000000000000, newPool: MockTokenPool: [0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0])
+    │   └─ ← [Stop] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(0)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D])
+    │   └─ ← [Return] 
+    ├─ [0] VM::deal(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], 1000000000000000000 [1e18])
+    │   └─ ← [Return] 
+    ├─ [24697] MockERC20::mint(100000000000000000000 [1e20])
+    │   ├─ emit Transfer(from: 0x0000000000000000000000000000000000000000, to: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], value: 100000000000000000000 [1e20])
+    │   └─ ← [Stop] 
+    ├─ [24351] MockERC20::approve(BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9], 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   ├─ emit Approval(owner: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], spender: BeanHeadsBridge: [0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9], value: 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    ├─ [24351] MockERC20::approve(0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c, 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   ├─ emit Approval(owner: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], spender: 0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c, value: 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(1)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D])
+    │   └─ ← [Return] 
+    ├─ [0] VM::deal(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], 1000000000000000000 [1e18])
+    │   └─ ← [Return] 
+    ├─ [24697] MockERC20::mint(100000000000000000000 [1e20])
+    │   ├─ emit Transfer(from: 0x0000000000000000000000000000000000000000, to: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], value: 100000000000000000000 [1e20])
+    │   └─ ← [Stop] 
+    ├─ [24351] MockERC20::approve(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   ├─ emit Approval(owner: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], spender: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], value: 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    ├─ [24351] MockERC20::approve(0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429, 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   ├─ emit Approval(owner: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], spender: 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429, value: 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(0)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [214178] MockTokenPool::applyChainUpdates([ChainUpdate({ remoteChainSelector: 3478487238524512106 [3.478e18], allowed: true, remotePoolAddress: 0x0000000000000000000000001fe3176ba9625a6f605c88f04f4616dd501aa4d0, remoteTokenAddress: 0x0000000000000000000000008143de8fbc957334e0310ec049f248b729f476c7, outboundRateLimiterConfig: Config({ isEnabled: false, capacity: 0, rate: 0 }), inboundRateLimiterConfig: Config({ isEnabled: false, capacity: 0, rate: 0 }) })])
+    │   ├─ emit ChainAdded(remoteChainSelector: 3478487238524512106 [3.478e18], remoteToken: 0x0000000000000000000000008143de8fbc957334e0310ec049f248b729f476c7, outboundRateLimiterConfig: Config({ isEnabled: false, capacity: 0, rate: 0 }), inboundRateLimiterConfig: Config({ isEnabled: false, capacity: 0, rate: 0 }))
+    │   └─ ← [Stop] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [1621] MockTokenPool::getRemoteToken(3478487238524512106 [3.478e18]) [staticcall]
+    │   └─ ← [Return] 0x0000000000000000000000008143de8fbc957334e0310ec049f248b729f476c7
+    ├─ [0] console::log("After configure Sepolia Token Pool: %s", MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [staticcall]
+    │   └─ ← [Stop] 
+    ├─ [0] VM::selectFork(1)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(0x0E128580d848fB51849ab6564467A9BA79B4820c)
+    │   └─ ← [Return] 
+    ├─ [214178] MockTokenPool::applyChainUpdates([ChainUpdate({ remoteChainSelector: 16015286601757825753 [1.601e19], allowed: true, remotePoolAddress: 0x000000000000000000000000e586d2848ca7949e8e50404087e44ca9e67eda74, remoteTokenAddress: 0x000000000000000000000000a695e5ca989482fdce4321a01a3308f790749497, outboundRateLimiterConfig: Config({ isEnabled: false, capacity: 0, rate: 0 }), inboundRateLimiterConfig: Config({ isEnabled: false, capacity: 0, rate: 0 }) })])
+    │   ├─ emit ChainAdded(remoteChainSelector: 16015286601757825753 [1.601e19], remoteToken: 0x000000000000000000000000a695e5ca989482fdce4321a01a3308f790749497, outboundRateLimiterConfig: Config({ isEnabled: false, capacity: 0, rate: 0 }), inboundRateLimiterConfig: Config({ isEnabled: false, capacity: 0, rate: 0 }))
+    │   └─ ← [Stop] 
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [1621] MockTokenPool::getRemoteToken(16015286601757825753 [1.601e19]) [staticcall]
+    │   └─ ← [Return] 0x000000000000000000000000a695e5ca989482fdce4321a01a3308f790749497
+    ├─ [0] console::log("After configure Arbitrum Token Pool: %s", MockERC20: [0xA695E5cA989482fDcE4321A01a3308F790749497]) [staticcall]
+    │   └─ ← [Stop] 
+    └─ ← [Return] 
+
+  [455022] BeanHeadsBridgeTest::test_sendMintTokenRequest()
+    ├─ [0] VM::selectFork(1)
+    │   └─ ← [Return] 
+    ├─ [0] VM::startPrank(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D])
+    │   └─ ← [Return] 
+    ├─ [24589] 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E::approve(0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   ├─ emit Approval(owner: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], spender: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, value: 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    ├─ [355371] BeanHeadsBridge::sendMintTokenRequest(16015286601757825753 [1.601e19], user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], SVGParams({ hairParams: HairParams({ hairStyle: 1, hairColor: 0 }), bodyParams: BodyParams({ bodyType: 1, skinColor: 3 }), clothingParams: ClothingParams({ clothes: 3, clothingColor: 0, clothesGraphic: 2 }), facialFeaturesParams: FacialFeaturesParams({ eyebrowShape: 3, eyeShape: 5, facialHairType: 2, mouthStyle: 1, lipColor: 1 }), accessoryParams: AccessoryParams({ accessoryId: 1, hatStyle: 1, hatColor: 3 }), otherParams: OtherParams({ faceMask: false, faceMaskColor: 3, shapes: false, shapeColor: 1, lashes: true }) }), 1, MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7])
+    │   ├─ [7442] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429::getMintPrice() [staticcall]
+    │   │   ├─ [2565] 0x401d5899874EDcDFc85038dC7A297c25A0323c32::getMintPrice() [delegatecall]
+    │   │   │   └─ ← [Return] 1000000000000000000 [1e18]
+    │   │   └─ ← [Return] 1000000000000000000 [1e18]
+    │   ├─ [4967] 0x1C6301DB2BCF8b7240c7F8C02bDeD2d6320D1429::getPriceFeed(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [staticcall]
+    │   │   ├─ [2587] 0x401d5899874EDcDFc85038dC7A297c25A0323c32::getPriceFeed(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [delegatecall]
+    │   │   │   └─ ← [Return] 0x0153002d20B96532C639313c2d54c3dA09109309
+    │   │   └─ ← [Return] 0x0153002d20B96532C639313c2d54c3dA09109309
+    │   ├─ [0] 0x0153002d20B96532C639313c2d54c3dA09109309::latestRoundData() [staticcall]
+    │   │   └─ ← [Return] 1, 100000000 [1e8], 1754119094 [1.754e9], 1754119094 [1.754e9], 1
+    │   ├─ [2365] MockERC20::decimals() [staticcall]
+    │   │   └─ ← [Return] 18
+    │   ├─ [2839] MockERC20::allowance(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87]) [staticcall]
+    │   │   └─ ← [Return] 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77]
+    │   ├─ [2551] MockERC20::balanceOf(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D]) [staticcall]
+    │   │   └─ ← [Return] 100000000000000000000 [1e20]
+    │   ├─ [32964] MockERC20::transferFrom(user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], 1000000000000000000 [1e18])
+    │   │   ├─ emit Transfer(from: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], to: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], value: 1000000000000000000 [1e18])
+    │   │   ├─ emit Approval(owner: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], spender: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], value: 115792089237316195423570985008687907853269984665640564039456584007913129639935 [1.157e77])
+    │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    │   ├─ [2839] MockERC20::allowance(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165) [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [22251] MockERC20::approve(0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, 1000000000000000000 [1e18])
+    │   │   ├─ emit Approval(owner: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], spender: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, value: 1000000000000000000 [1e18])
+    │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    │   ├─ [42104] 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165::getFee(16015286601757825753 [1.601e19], EVM2AnyMessage({ receiver: 0x000000000000000000000000dd7678c7ac3beae79cf1f2c5afb29e6e2cc44cd9, data: 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000006ca6d1e2d5347bfab1d91e883f1915560e09129d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000008143de8fbc957334e0310ec049f248b729f476c70000000000000000000000000000000000000000000000000000000000000001, tokenAmounts: [EVMTokenAmount({ token: 0x8143dE8Fbc957334e0310Ec049f248b729f476c7, amount: 1000000000000000000 [1e18] })], feeToken: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, extraArgs: 0x97a657c90000000000000000000000000000000000000000000000000000000000030d40 })) [staticcall]
+    │   │   ├─ [31230] 0x64d78F20aD987c7D52FdCB8FB0777bD00de53210::getFee(16015286601757825753 [1.601e19], EVM2AnyMessage({ receiver: 0x000000000000000000000000dd7678c7ac3beae79cf1f2c5afb29e6e2cc44cd9, data: 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000006ca6d1e2d5347bfab1d91e883f1915560e09129d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000008143de8fbc957334e0310ec049f248b729f476c70000000000000000000000000000000000000000000000000000000000000001, tokenAmounts: [EVMTokenAmount({ token: 0x8143dE8Fbc957334e0310Ec049f248b729f476c7, amount: 1000000000000000000 [1e18] })], feeToken: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, extraArgs: 0x97a657c90000000000000000000000000000000000000000000000000000000000030d40 })) [staticcall]
+    │   │   │   ├─ [5528] 0x89D5b13908b9063abCC6791dc724bF7B7c93634C::getTokenAndGasPrices(0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, 16015286601757825753 [1.601e19]) [staticcall]
+    │   │   │   │   └─ ← [Return] 0x000000000000000000000000000000000000000000000000e2f14d6a16995000000000000000000000000000000000000000000000000000000000030627f598
+    │   │   │   ├─ [2610] 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f::getPool(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [staticcall]
+    │   │   │   │   └─ ← [Return] MockTokenPool: [0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0]
+    │   │   │   └─ ← [Return] 14237358684796368 [1.423e16]
+    │   │   └─ ← [Return] 14237358684796368 [1.423e16]
+    │   ├─ [2488] 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E::balanceOf(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87]) [staticcall]
+    │   │   └─ ← [Return] 100000000000000000000 [1e20]
+    │   ├─ [24589] 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E::approve(0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, 14237358684796368 [1.423e16])
+    │   │   ├─ emit Approval(owner: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], spender: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, value: 14237358684796368 [1.423e16])
+    │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    │   ├─ [168561] 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165::ccipSend(16015286601757825753 [1.601e19], EVM2AnyMessage({ receiver: 0x000000000000000000000000dd7678c7ac3beae79cf1f2c5afb29e6e2cc44cd9, data: 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000006ca6d1e2d5347bfab1d91e883f1915560e09129d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000008143de8fbc957334e0310ec049f248b729f476c70000000000000000000000000000000000000000000000000000000000000001, tokenAmounts: [EVMTokenAmount({ token: 0x8143dE8Fbc957334e0310Ec049f248b729f476c7, amount: 1000000000000000000 [1e18] })], feeToken: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, extraArgs: 0x97a657c90000000000000000000000000000000000000000000000000000000000030d40 }))
+    │   │   ├─ [7450] 0x9527E2d01A3064ef6b50c1Da1C0cC523803BCFF2::isCursed() [staticcall]
+    │   │   │   ├─ [2388] 0x76B12C4f3672aA613F1b2302327827B7B74064E1::isCursed()
+    │   │   │   │   └─ ← [Return] false
+    │   │   │   └─ ← [Return] false
+    │   │   ├─ [10230] 0x64d78F20aD987c7D52FdCB8FB0777bD00de53210::getFee(16015286601757825753 [1.601e19], EVM2AnyMessage({ receiver: 0x000000000000000000000000dd7678c7ac3beae79cf1f2c5afb29e6e2cc44cd9, data: 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000006ca6d1e2d5347bfab1d91e883f1915560e09129d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000008143de8fbc957334e0310ec049f248b729f476c70000000000000000000000000000000000000000000000000000000000000001, tokenAmounts: [EVMTokenAmount({ token: 0x8143dE8Fbc957334e0310Ec049f248b729f476c7, amount: 1000000000000000000 [1e18] })], feeToken: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, extraArgs: 0x97a657c90000000000000000000000000000000000000000000000000000000000030d40 })) [staticcall]
+    │   │   │   ├─ [1528] 0x89D5b13908b9063abCC6791dc724bF7B7c93634C::getTokenAndGasPrices(0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, 16015286601757825753 [1.601e19]) [staticcall]
+    │   │   │   │   └─ ← [Return] 0x000000000000000000000000000000000000000000000000e2f14d6a16995000000000000000000000000000000000000000000000000000000000030627f598
+    │   │   │   ├─ [610] 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f::getPool(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [staticcall]
+    │   │   │   │   └─ ← [Return] MockTokenPool: [0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0]
+    │   │   │   └─ ← [Return] 14237358684796368 [1.423e16]
+    │   │   ├─ [13631] 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E::transferFrom(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], 0x64d78F20aD987c7D52FdCB8FB0777bD00de53210, 14237358684796368 [1.423e16])
+    │   │   │   ├─ emit Transfer(from: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], to: 0x64d78F20aD987c7D52FdCB8FB0777bD00de53210, value: 14237358684796368 [1.423e16])
+    │   │   │   ├─ emit Approval(owner: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], spender: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, value: 0)
+    │   │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    │   │   ├─ [1580] 0x64d78F20aD987c7D52FdCB8FB0777bD00de53210::getPoolBySourceToken(16015286601757825753 [1.601e19], MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [staticcall]
+    │   │   │   ├─ [610] 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f::getPool(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [staticcall]
+    │   │   │   │   └─ ← [Return] MockTokenPool: [0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0]
+    │   │   │   └─ ← [Return] 0x0000000000000000000000001fe3176ba9625a6f605c88f04f4616dd501aa4d0
+    │   │   ├─ [27364] MockERC20::transferFrom(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], MockTokenPool: [0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0], 1000000000000000000 [1e18])
+    │   │   │   ├─ emit Transfer(from: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], to: MockTokenPool: [0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0], value: 1000000000000000000 [1e18])
+    │   │   │   ├─ emit Approval(owner: BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87], spender: 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165, value: 0)
+    │   │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    │   │   ├─ [91961] 0x64d78F20aD987c7D52FdCB8FB0777bD00de53210::forwardFromRouter(16015286601757825753 [1.601e19], (0x000000000000000000000000dd7678c7ac3beae79cf1f2c5afb29e6e2cc44cd9, 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000006ca6d1e2d5347bfab1d91e883f1915560e09129d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000008143de8fbc957334e0310ec049f248b729f476c70000000000000000000000000000000000000000000000000000000000000001, [(0x8143dE8Fbc957334e0310Ec049f248b729f476c7, 1000000000000000000 [1e18])], 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, 0x97a657c90000000000000000000000000000000000000000000000000000000000030d40), 14237358684796368 [1.423e16], BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87])
+    │   │   │   ├─ [994] 0x9527E2d01A3064ef6b50c1Da1C0cC523803BCFF2::isCursed(0x0000000000000000de41ba4fc9d91ad9) [staticcall]
+    │   │   │   │   ├─ [429] 0x76B12C4f3672aA613F1b2302327827B7B74064E1::isCursed(0x0000000000000000de41ba4fc9d91ad9)
+    │   │   │   │   │   └─ ← [Return] false
+    │   │   │   │   └─ ← [Return] false
+    │   │   │   ├─ [2730] 0x4205E1Ca0202A248A5D42F5975A8FE56F3E302e9::getSenderNonce(BeanHeadsBridge: [0x140cE19e8f89696A3a7D9f09922b2dd99f597e87]) [staticcall]
+    │   │   │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000000
+    │   │   │   ├─ [610] 0x8126bE56454B628a88C17849B9ED99dd5a11Bd2f::getPool(MockERC20: [0x8143dE8Fbc957334e0310Ec049f248b729f476c7]) [staticcall]
+    │   │   │   │   └─ ← [Return] MockTokenPool: [0x1Fe3176ba9625a6F605C88f04F4616dd501AA4D0]
+    │   │   │   ├─ [243] MockTokenPool::supportsInterface(0xaff2afbf) [staticcall]
+    │   │   │   │   └─ ← [Return] true
+    │   │   │   ├─ [18197] MockTokenPool::lockOrBurn(LockOrBurnInV1({ receiver: 0x000000000000000000000000dd7678c7ac3beae79cf1f2c5afb29e6e2cc44cd9, remoteChainSelector: 16015286601757825753 [1.601e19], originalSender: 0x140cE19e8f89696A3a7D9f09922b2dd99f597e87, amount: 1000000000000000000 [1e18], localToken: 0x8143dE8Fbc957334e0310Ec049f248b729f476c7 }))
+    │   │   │   │   ├─ [994] 0x9527E2d01A3064ef6b50c1Da1C0cC523803BCFF2::isCursed(0x0000000000000000de41ba4fc9d91ad9) [staticcall]
+    │   │   │   │   │   ├─ [429] 0x76B12C4f3672aA613F1b2302327827B7B74064E1::isCursed(0x0000000000000000de41ba4fc9d91ad9)
+    │   │   │   │   │   │   └─ ← [Return] false
+    │   │   │   │   │   └─ ← [Return] false
+    │   │   │   │   ├─ [573] 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165::getOnRamp(16015286601757825753 [1.601e19]) [staticcall]
+    │   │   │   │   │   └─ ← [Return] 0x64d78F20aD987c7D52FdCB8FB0777bD00de53210
+    │   │   │   │   └─ ← [Return] LockOrBurnOutV1({ destTokenAddress: 0x000000000000000000000000a695e5ca989482fdce4321a01a3308f790749497, destPoolData: 0x })
+    │   │   │   ├─ emit CCIPSendRequested(message: EVM2EVMMessage({ sourceChainSelector: 3478487238524512106 [3.478e18], sender: 0x140cE19e8f89696A3a7D9f09922b2dd99f597e87, receiver: 0xdd7678c7Ac3bEAE79CF1F2C5aFB29e6e2CC44cD9, sequenceNumber: 3150, gasLimit: 200000 [2e5], strict: false, nonce: 1, feeToken: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E, feeTokenAmount: 14237358684796368 [1.423e16], data: 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000006ca6d1e2d5347bfab1d91e883f1915560e09129d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000008143de8fbc957334e0310ec049f248b729f476c70000000000000000000000000000000000000000000000000000000000000001, tokenAmounts: [EVMTokenAmount({ token: 0x8143dE8Fbc957334e0310Ec049f248b729f476c7, amount: 1000000000000000000 [1e18] })], sourceTokenData: [0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000015f9000000000000000000000000000000000000000000000000000000000000000200000000000000000000000001fe3176ba9625a6f605c88f04f4616dd501aa4d00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000a695e5ca989482fdce4321a01a3308f7907494970000000000000000000000000000000000000000000000000000000000000000], messageId: 0x6e72e1c2f288b7bd1f0b098b1d6eb45a171e93ef6ae0e250d92642f5922893f5 }))
+    │   │   │   └─ ← [Return] 0x6e72e1c2f288b7bd1f0b098b1d6eb45a171e93ef6ae0e250d92642f5922893f5
+    │   │   └─ ← [Return] 0x6e72e1c2f288b7bd1f0b098b1d6eb45a171e93ef6ae0e250d92642f5922893f5
+    │   ├─ emit SentMintTokenRequest(messageId: 0x6e72e1c2f288b7bd1f0b098b1d6eb45a171e93ef6ae0e250d92642f5922893f5, destinationChainSelector: 16015286601757825753 [1.601e19], receiver: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], amount: 1)
+    │   └─ ← [Return] 0x6e72e1c2f288b7bd1f0b098b1d6eb45a171e93ef6ae0e250d92642f5922893f5
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return] 
+    ├─ [0] VM::selectFork(0)
+    │   └─ ← [Return] 
+    ├─ [24589] 0x779877A7B0D9E8603169DdbD7836e478b4624789::approve(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59, 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   ├─ emit Approval(owner: BeanHeadsBridgeTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], spender: 0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59, value: 115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])
+    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    ├─ [0] VM::prank(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59)
+    │   └─ ← [Return] 
+    ├─ [2543] BeanHeadsBridge::ccipReceive(Any2EVMMessage({ messageId: 0x6e72e1c2f288b7bd1f0b098b1d6eb45a171e93ef6ae0e250d92642f5922893f5, sourceChainSelector: 3478487238524512106 [3.478e18], sender: 0x000000000000000000000000140ce19e8f89696a3a7d9f09922b2dd99f597e87, data: 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000006ca6d1e2d5347bfab1d91e883f1915560e09129d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000008143de8fbc957334e0310ec049f248b729f476c70000000000000000000000000000000000000000000000000000000000000001, destTokenAmounts: [EVMTokenAmount({ token: 0xA695E5cA989482fDcE4321A01a3308F790749497, amount: 1000000000000000000 [1e18] })] }))
+    │   └─ ← [Revert] EvmError: Revert
+    └─ ← [Revert] EvmError: Revert
+
+Suite result: FAILED. 2 passed; 1 failed; 0 skipped; finished in 28.80s (12.22s CPU time)
+
+Ran 1 test suite in 32.16s (28.80s CPU time): 2 tests passed, 1 failed, 0 skipped (3 total tests)
+
+Failing tests:
+Encountered 1 failing test in test/bridge/BeanHeadsBridgeTest.t.sol:BeanHeadsBridgeTest
+[FAIL: EvmError: Revert] test_sendMintTokenRequest() (gas: 455022)
+
+Encountered a total of 1 failing tests, 2 tests succeeded

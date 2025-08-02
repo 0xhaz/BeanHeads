@@ -5,8 +5,9 @@ import {IERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MockERC20 is IERC20 {
+contract MockERC20 is IERC20, Ownable {
     using SafeERC20 for IERC20;
 
     string public name = "MockERC20";
@@ -17,7 +18,7 @@ contract MockERC20 is IERC20 {
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
 
-    constructor(uint256 initialSupply) {
+    constructor(uint256 initialSupply) Ownable(msg.sender) {
         _mint(msg.sender, initialSupply);
     }
 

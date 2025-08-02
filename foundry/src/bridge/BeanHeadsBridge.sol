@@ -16,6 +16,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
+import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsBridge} from "src/interfaces/IBeanHeadsBridge.sol";
 import {OracleLib} from "src/libraries/OracleLib.sol";
 
@@ -29,6 +30,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     address private immutable i_beanHeadsContract;
 
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
+    uint256 private constant PRECISION = 1e18;
 
     /// @notice Mapping to track the remote bridge address
     mapping(address remoteBridge => bool isRegistered) public remoteBridgeAddresses;
@@ -87,10 +89,12 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         if (allowance < mintPayment) revert IBeanHeadsBridge__InsufficientAllowance();
         if (balance < mintPayment) revert IBeanHeadsBridge__InsufficientPayment();
 
+        token.safeTransferFrom(msg.sender, address(this), mintPayment);
+
         bytes memory mintGenesisCalldata = abi.encode(ActionType.MINT, _receiver, _params, _paymentToken, _amount);
 
         Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
-        Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({token: address(0), amount: mintPayment});
+        Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({token: _paymentToken, amount: mintPayment});
         tokenAmounts[0] = tokenAmount;
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
@@ -104,6 +108,9 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
                 })
             )
         });
+
+        // Approve router to spend the tokens
+        token.safeApprove(address(i_router), mintPayment);
 
         messageId = _sendCCIP(_destinationChainSelector, message);
 
@@ -166,7 +173,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         bytes memory buyTokenCalldata = abi.encode(ActionType.BUY, msg.sender, _tokenId, _paymentToken);
 
         Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
-        Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({token: address(0), amount: _price});
+        Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({token: _paymentToken, amount: _price});
         tokenAmounts[0] = tokenAmount;
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
@@ -180,6 +187,9 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
                 })
             )
         });
+
+        // Approve router to spend the tokens
+        token.safeApprove(address(i_router), _price);
 
         messageId = _sendCCIP(_destinationChainSelector, message);
 
@@ -278,6 +288,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             /// @notice Decode the message data for minting a Genesis token.
             (address receiver, Genesis.SVGParams memory params, address paymentToken, uint256 amount) =
                 abi.decode(rest, (address, Genesis.SVGParams, address, uint256));
+            paymentToken = message.destTokenAmounts[0].token;
 
             IBeanHeads(i_beanHeadsContract).mintGenesis(receiver, params, amount, paymentToken);
 
@@ -360,12 +371,21 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         if (feedAddress == address(0)) revert IBeanHeadsBridge__InvalidToken();
 
         AggregatorV3Interface priceFeed = AggregatorV3Interface(feedAddress);
-        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
-        if (price <= 0) revert IBeanHeadsBridge__InvalidOraclePrice(); // optional safety check
+        (, int256 answer,,,) = priceFeed.latestRoundData();
+        if (answer <= 0) revert IBeanHeadsBridge__InvalidOraclePrice(); // optional safety check
 
-        uint8 decimals = IERC20Metadata(token).decimals();
-        uint256 scale = 10 ** uint256(decimals);
+        uint256 price = uint256(answer) * ADDITIONAL_FEED_PRECISION; // Adjust for 1e10 precision
+        uint8 tokenDecimals = IERC20Metadata(token).decimals();
 
-        tokenAmount = (usdAmount * scale * ADDITIONAL_FEED_PRECISION) / uint256(price);
+        // Required token amount = usdAmount / tokenPrice
+        uint256 tokenAmountIn18 = (usdAmount * PRECISION) / price; // Convert to 18 decimals
+
+        if (tokenDecimals < 18) {
+            return tokenAmountIn18 / (10 ** (18 - tokenDecimals));
+        } else if (tokenDecimals > 18) {
+            return tokenAmountIn18 * (10 ** (tokenDecimals - 18));
+        } else {
+            return tokenAmountIn18;
+        }
     }
 }

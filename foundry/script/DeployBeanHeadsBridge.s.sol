@@ -6,6 +6,7 @@ import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
+import {BHStorage} from "src/libraries/BHStorage.sol";
 
 contract DeployBeanHeadsBridge is Script {
     function run() public returns (address, address, address) {

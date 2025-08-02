@@ -7,6 +7,7 @@ import {AggregatorV3Interface} from
 import {Genesis} from "src/types/Genesis.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {IDiamondCut} from "src/interfaces/IDiamondCut.sol";
+import {console} from "forge-std/console.sol";
 
 library BHStorage {
     error BHDLib__NotContractOwner(address caller, address owner);
@@ -22,6 +23,7 @@ library BHStorage {
     error BHDLib__CannotRemoveFunctionThatDoesNotExist(bytes4 selector);
     error BHDLib__InitializationFunctionReverted(address init, bytes data);
     error BHDLib__CannotBeZeroAddress(address facetAddress);
+    error BHDLib__OwnerAlreadySet(address owner);
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event DiamondCut(IDiamondCut.FacetCut[] _diamondCut, address _init, bytes _calldata);
@@ -78,6 +80,7 @@ library BHStorage {
     function setContractOwner(address _newOwner) internal {
         BeanHeadsStorage storage ds = diamondStorage();
         address previousOwner = ds.owner;
+        if (ds.owner != address(0)) revert BHDLib__OwnerAlreadySet(ds.owner);
         ds.owner = _newOwner;
         emit OwnershipTransferred(previousOwner, _newOwner);
     }

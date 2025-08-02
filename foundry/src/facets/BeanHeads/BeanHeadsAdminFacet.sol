@@ -72,10 +72,4 @@ contract BeanHeadsAdminFacet is ERC721AUpgradeable, IBeanHeadsAdmin, ReentrancyG
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         ds.authorizedBreeders[_breeder] = true;
     }
-
-    /// @notice Function to set a new contract owner
-    /// @param _newOwner The address of the new owner
-    function setContractOwner(address _newOwner) external onlyOwner {
-        BHStorage.setContractOwner(_newOwner);
-    }
 }

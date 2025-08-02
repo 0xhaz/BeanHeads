@@ -45,13 +45,12 @@ contract DeployBeanHeads is Script {
         // ---------------------- Admin Facet ----------------------
         {
             BeanHeadsAdminFacet facet = new BeanHeadsAdminFacet();
-            bytes4[] memory selectors = new bytes4[](6);
+            bytes4[] memory selectors = new bytes4[](5);
             selectors[0] = facet.setAllowedToken.selector;
             selectors[1] = facet.addPriceFeed.selector;
             selectors[2] = facet.withdraw.selector;
             selectors[3] = facet.authorizeBreeder.selector;
-            selectors[4] = facet.setContractOwner.selector;
-            selectors[5] = facet.setMintPrice.selector;
+            selectors[4] = facet.setMintPrice.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
         // ---------------------- Breeding Facet ----------------------
