@@ -70,7 +70,11 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     }
 
     /// @inheritdoc ERC721AUpgradeable
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public payable override {
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data)
+        public
+        payable
+        override(IBeanHeadsMint, ERC721AUpgradeable)
+    {
         if (msg.sender != from && !isApprovedForAll(from, msg.sender) && getApproved(tokenId) != msg.sender) {
             _revert(IBeanHeadsMint__NotOwnerOrApproved.selector);
         }
@@ -78,7 +82,11 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     }
 
     /// @inheritdoc ERC721AUpgradeable
-    function safeTransferFrom(address from, address to, uint256 tokenId) public payable override {
+    function safeTransferFrom(address from, address to, uint256 tokenId)
+        public
+        payable
+        override(IBeanHeadsMint, ERC721AUpgradeable)
+    {
         if (msg.sender != from && !isApprovedForAll(from, msg.sender) && getApproved(tokenId) != msg.sender) {
             _revert(IBeanHeadsMint__NotOwnerOrApproved.selector);
         }
@@ -86,7 +94,7 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     }
 
     /// @inheritdoc ERC721AUpgradeable
-    function approve(address to, uint256 tokenId) public payable override {
+    function approve(address to, uint256 tokenId) public payable override(IBeanHeadsMint, ERC721AUpgradeable) {
         if (msg.sender != ownerOf(tokenId)) {
             _revert(IBeanHeadsMint__NotOwner.selector);
         }
@@ -94,17 +102,17 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     }
 
     /// @inheritdoc ERC721AUpgradeable
-    function name() public view override returns (string memory) {
+    function name() public view override(IBeanHeadsMint, ERC721AUpgradeable) returns (string memory) {
         return ERC721AUpgradeable.name();
     }
 
     /// @inheritdoc ERC721AUpgradeable
-    function symbol() public view override returns (string memory) {
+    function symbol() public view override(IBeanHeadsMint, ERC721AUpgradeable) returns (string memory) {
         return ERC721AUpgradeable.symbol();
     }
 
     /// @inheritdoc ERC721AUpgradeable
-    function balanceOf(address owner) public view override returns (uint256) {
+    function balanceOf(address owner) public view override(IBeanHeadsMint, ERC721AUpgradeable) returns (uint256) {
         return ERC721AUpgradeable.balanceOf(owner);
     }
 }

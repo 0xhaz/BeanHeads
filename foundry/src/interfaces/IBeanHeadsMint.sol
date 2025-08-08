@@ -33,4 +33,16 @@ interface IBeanHeadsMint {
     function mintGenesis(address to, Genesis.SVGParams memory params, uint256 amount, address token)
         external
         returns (uint256);
+
+    function name() external view returns (string memory);
+
+    function symbol() external view returns (string memory);
+
+    function balanceOf(address owner) external view returns (uint256);
+
+    function approve(address to, uint256 tokenId) external payable;
+
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) external payable;
+
+    function safeTransferFrom(address from, address to, uint256 tokenId) external payable;
 }

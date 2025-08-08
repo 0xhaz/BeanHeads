@@ -19,6 +19,7 @@ import {Genesis} from "src/types/Genesis.sol";
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsBridge} from "src/interfaces/IBeanHeadsBridge.sol";
 import {OracleLib} from "src/libraries/OracleLib.sol";
+import {console} from "forge-std/console.sol";
 
 contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -61,7 +62,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         i_beanHeadsContract = beanHeads;
     }
 
-    /// @notice Inherits from IBeanHeadsBridge
+    /// @inheritdoc IBeanHeadsBridge
     function setRemoteBridge(address _newRemoteBridge) external onlyOwner {
         if (_newRemoteBridge == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
         s_remoteBridge = _newRemoteBridge;
@@ -70,7 +71,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit RemoteBridgeUpdated(_newRemoteBridge);
     }
 
-    /// @notice Inherits from IBeanHeadsBridge
+    /// @inheritdoc IBeanHeadsBridge
     function sendMintTokenRequest(
         uint64 _destinationChainSelector,
         address _receiver,
@@ -84,14 +85,12 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         uint256 rawMintPayment = IBeanHeads(i_beanHeadsContract).getMintPrice() * _amount;
         uint256 mintPayment = _getTokenAmountFromUsd(_paymentToken, rawMintPayment);
 
-        uint256 allowance = token.allowance(msg.sender, address(this));
-        uint256 balance = token.balanceOf(msg.sender);
-        if (allowance < mintPayment) revert IBeanHeadsBridge__InsufficientAllowance();
-        if (balance < mintPayment) revert IBeanHeadsBridge__InsufficientPayment();
+        _checkPaymentTokenAllowanceAndBalance(token, mintPayment);
 
         token.safeTransferFrom(msg.sender, address(this), mintPayment);
 
-        bytes memory mintGenesisCalldata = abi.encode(ActionType.MINT, _receiver, _params, _paymentToken, _amount);
+        bytes memory encodeMintPayload = abi.encode(_receiver, _params, _amount);
+        bytes memory mintGenesisCalldata = abi.encode(ActionType.MINT, encodeMintPayload);
 
         Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
         Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({token: _paymentToken, amount: mintPayment});
@@ -104,7 +103,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             feeToken: address(s_linkToken),
             extraArgs: Client._argsToBytes(
                 Client.EVMExtraArgsV1({
-                    gasLimit: 200_000 // Set a default gas limit for the callback
+                    gasLimit: 500_000 // Set a default gas limit for the callback
                 })
             )
         });
@@ -117,16 +116,16 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit SentMintTokenRequest(messageId, _destinationChainSelector, _receiver, _amount);
     }
 
-    /// @notice Inherits from IBeanHeadsBridge
+    /// @inheritdoc IBeanHeadsBridge
     function sendSellTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, uint256 _price)
         external
-        onlyTokenOwner(_tokenId)
         onlyRegisteredRemoteBridge
         returns (bytes32 messageId)
     {
         if (_price == 0) revert IBeanHeadsBridge__InvalidAmount();
 
-        bytes memory sellTokenCalldata = abi.encode(ActionType.SELL, msg.sender, _tokenId, _price);
+        bytes memory encodeSellPayload = abi.encode(msg.sender, _tokenId, _price);
+        bytes memory sellTokenCalldata = abi.encode(ActionType.SELL, encodeSellPayload);
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(s_remoteBridge),
@@ -145,7 +144,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit SentSellTokenRequest(messageId, _destinationChainSelector, msg.sender, _tokenId, _price);
     }
 
-    /// @notice Inherits from IBeanHeadsBridge
+    /// @inheritdoc IBeanHeadsBridge
     function sendBuyTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, address _paymentToken)
         external
         onlyRegisteredRemoteBridge
@@ -165,12 +164,10 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         IERC20 token = IERC20(_paymentToken);
         uint256 _price = _getTokenAmountFromUsd(_paymentToken, _rawPrice);
 
-        uint256 allowance = token.allowance(msg.sender, address(this));
-        uint256 balance = token.balanceOf(msg.sender);
-        if (allowance < _price) revert IBeanHeadsBridge__InsufficientAllowance();
-        if (balance < _price) revert IBeanHeadsBridge__InsufficientPayment();
+        _checkPaymentTokenAllowanceAndBalance(token, _price);
 
-        bytes memory buyTokenCalldata = abi.encode(ActionType.BUY, msg.sender, _tokenId, _paymentToken);
+        bytes memory encodeBuyPayload = abi.encode(msg.sender, _tokenId, _price);
+        bytes memory buyTokenCalldata = abi.encode(ActionType.BUY, encodeBuyPayload);
 
         Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
         Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({token: _paymentToken, amount: _price});
@@ -196,12 +193,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit SentBuyTokenRequest(messageId, _destinationChainSelector, msg.sender, _tokenId, _price);
     }
 
-    /**
-     * @notice Sends a cancel token sale request to the remote bridge.
-     * @param _destinationChainSelector The target chain selector for the cancel request.
-     * @param _tokenId The ID of the token to cancel the sale for.
-     * @return messageId The ID of the sent message.
-     */
+    /// @inheritdoc IBeanHeadsBridge
     function sendCancelTokenSaleRequest(uint64 _destinationChainSelector, uint256 _tokenId)
         external
         onlyTokenOwner(_tokenId)
@@ -210,7 +202,8 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     {
         if (_tokenId == 0) revert IBeanHeadsBridge__InvalidAmount();
 
-        bytes memory cancelTokenCalldata = abi.encode(ActionType.CANCEL, msg.sender, _tokenId);
+        bytes memory encodeCancelPayload = abi.encode(msg.sender, _tokenId);
+        bytes memory cancelTokenCalldata = abi.encode(ActionType.CANCEL, encodeCancelPayload);
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(s_remoteBridge),
@@ -229,7 +222,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit CancelSellTokenRequest(messageId, _destinationChainSelector, msg.sender, _tokenId);
     }
 
-    /// @notice Inherits from IBeanHeadsBridge
+    /// @inheritdoc IBeanHeadsBridge
     function sendTransferTokenRequest(
         uint64 _destinationChainSelector,
         uint256 _tokenId,
@@ -244,7 +237,8 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         // Fetch the token attributes to recreate the token on the destination chain
         Genesis.SVGParams memory params = IBeanHeads(i_beanHeadsContract).getAttributesByTokenId(_tokenId);
 
-        bytes memory transferCalldata = abi.encode(ActionType.TRANSFER, _receiver, params, _tokenId, paymentToken);
+        bytes memory encodeTransferPayload = abi.encode(_receiver, _tokenId, params, paymentToken);
+        bytes memory transferCalldata = abi.encode(ActionType.TRANSFER, encodeTransferPayload);
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(s_remoteBridge),
@@ -263,13 +257,13 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit SentTransferTokenRequest(messageId, _destinationChainSelector, _receiver, _tokenId);
     }
 
-    /// @notice Inherits from IBeanHeadsBridge
+    /// @inheritdoc IBeanHeadsBridge
     function depositLink(uint256 amount) external onlyOwner {
         if (amount == 0) revert IBeanHeadsBridge__InvalidAmount();
         s_linkToken.transferFrom(msg.sender, address(this), amount);
     }
 
-    /// @notice Inherits from IBeanHeadsBridge
+    /// @inheritdoc IBeanHeadsBridge
     function withdrawLink(uint256 amount) external onlyOwner {
         if (amount == 0) revert IBeanHeadsBridge__InvalidAmount();
         uint256 contractBalance = s_linkToken.balanceOf(address(this));
@@ -279,6 +273,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
     function _ccipReceive(Client.Any2EVMMessage memory message) internal override {
         address sender = abi.decode(message.sender, (address));
+
         if (sender != s_remoteBridge) revert IBeanHeadsBridge__UnauthorizedSender(sender);
 
         // Decode the action type from the message data
@@ -286,13 +281,19 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
         if (action == ActionType.MINT) {
             /// @notice Decode the message data for minting a Genesis token.
-            (address receiver, Genesis.SVGParams memory params, address paymentToken, uint256 amount) =
-                abi.decode(rest, (address, Genesis.SVGParams, address, uint256));
-            paymentToken = message.destTokenAmounts[0].token;
+            (address receiver, Genesis.SVGParams memory params, uint256 quantity) =
+                abi.decode(rest, (address, Genesis.SVGParams, uint256));
 
-            IBeanHeads(i_beanHeadsContract).mintGenesis(receiver, params, amount, paymentToken);
+            address bridgedToken = message.destTokenAmounts[0].token;
+            uint256 bridgedAmount = message.destTokenAmounts[0].amount;
 
-            emit TokenMintedCrossChain(receiver, params, amount);
+            // Approve the BeanHeads contract to spend the bridged token
+            IERC20(bridgedToken).safeApprove(i_beanHeadsContract, 0);
+            IERC20(bridgedToken).safeApprove(i_beanHeadsContract, bridgedAmount);
+
+            IBeanHeads(i_beanHeadsContract).mintGenesis(receiver, params, quantity, bridgedToken);
+
+            emit TokenMintedCrossChain(receiver, params, quantity);
         }
 
         if (action == ActionType.SELL) {
@@ -387,5 +388,15 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         } else {
             return tokenAmountIn18;
         }
+    }
+
+    /**
+     * @notice Check if the user's payment token's allowance and balance are sufficient
+     * @param token The ERC20 token address used for payment
+     * @param amount The amount to check against the user's balance and allowance
+     */
+    function _checkPaymentTokenAllowanceAndBalance(IERC20 token, uint256 amount) internal view {
+        if (token.allowance(msg.sender, address(this)) < amount) revert IBeanHeadsBridge__InsufficientAllowance();
+        if (token.balanceOf(msg.sender) < amount) revert IBeanHeadsBridge__InsufficientPayment();
     }
 }

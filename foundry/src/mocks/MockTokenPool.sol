@@ -7,17 +7,21 @@ import {IERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Extensions} from "src/mocks/IERC20.sol";
 
 /// @title MockTokenPool
 /// @notice Mocks a token pool that wraps/unwraps ETH instead of transferring ERC20 tokens.
+
 contract MockTokenPool is TokenPool {
     using SafeERC20 for IERC20;
 
-    IERC20 public immutable token;
+    address token;
 
     constructor(IERC20 _token, address[] memory allowList, address rmnProxy, address router)
         TokenPool(_token, allowList, rmnProxy, router)
-    {}
+    {
+        token = address(_token);
+    }
 
     /// @notice Accept ETH for wrap simulation
     receive() external payable {}
@@ -28,6 +32,7 @@ contract MockTokenPool is TokenPool {
         returns (Pool.LockOrBurnOutV1 memory lockOrBurnOut)
     {
         _validateLockOrBurn(lockOrBurnIn);
+        IERC20Extensions(token).burn(address(this), lockOrBurnIn.amount);
 
         lockOrBurnOut =
             Pool.LockOrBurnOutV1({destTokenAddress: getRemoteToken(lockOrBurnIn.remoteChainSelector), destPoolData: ""});
@@ -44,7 +49,7 @@ contract MockTokenPool is TokenPool {
         uint256 amount = releaseOrMintIn.amount;
 
         // simulate token transfer
-        token.safeTransfer(receiver, amount);
+        IERC20Extensions(token).mint(receiver, amount);
 
         releaseOrMintOut = Pool.ReleaseOrMintOutV1({destinationAmount: amount});
     }

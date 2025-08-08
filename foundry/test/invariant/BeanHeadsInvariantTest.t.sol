@@ -97,7 +97,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         vm.stopPrank();
 
         vm.startPrank(USER);
-        mockERC20.mint(100 ether);
+        mockERC20.mint(USER, 100 ether);
         mockERC20.approve(address(beanHeads), type(uint256).max);
         vm.stopPrank();
 
@@ -311,7 +311,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
 
         // USER2 buys token
         vm.startPrank(USER2);
-        mockERC20.mint(100 ether);
+        mockERC20.mint(USER2, 100 ether);
         uint256 buyerBalanceBefore = mockERC20.balanceOf(USER2);
         mockERC20.approve(address(beanHeads), type(uint256).max);
         beanHeads.buyToken(tokenId, address(mockERC20));

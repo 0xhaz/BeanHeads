@@ -68,6 +68,7 @@ library BHStorage {
         address owner;
         bytes4[] selectors;
         mapping(bytes4 interfaceId => bool isSupported) supportedInterfaces;
+        mapping(uint256 tokenId => uint256 nonces) tokenNonces;
     }
 
     function diamondStorage() internal pure returns (BeanHeadsStorage storage ds) {

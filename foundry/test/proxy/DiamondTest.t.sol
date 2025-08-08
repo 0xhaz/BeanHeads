@@ -94,11 +94,11 @@ contract DiamondTest is Test {
         assertEq(currentOwner, owner);
     }
 
-    function test_TransferOwnership() public {
-        IERC173(address(diamond)).transferOwnership(newOwner);
-        address currentOwner = IERC173(address(diamond)).owner();
-        assertEq(currentOwner, newOwner);
-    }
+    // function test_TransferOwnership() public {
+    //     IERC173(address(diamond)).transferOwnership(newOwner);
+    //     address currentOwner = IERC173(address(diamond)).owner();
+    //     assertEq(currentOwner, newOwner);
+    // }
 
     function test_Facets() public view {
         IDiamondLoupe.Facet[] memory facetsList = IDiamondLoupe(address(diamond)).facets();

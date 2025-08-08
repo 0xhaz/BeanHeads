@@ -82,7 +82,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         vm.stopPrank();
 
         vm.startPrank(USER1);
-        mockERC20.mint(100 ether);
+        mockERC20.mint(USER1, 100 ether);
         mockERC20.approve(address(beanHeads), type(uint256).max);
         mockERC20.approve(address(beanHeadsBreeder), type(uint256).max);
         vm.stopPrank();
@@ -546,7 +546,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         beanHeadsBreeder.requestBreed(tokenId, tokenId, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
         vm.stopPrank();
         vm.startPrank(USER2);
-        mockERC20.mint(2 ether); // Mint some mock ERC20 tokens for USER2
+        mockERC20.mint(USER2, 2 ether); // Mint some mock ERC20 tokens for USER2
         mockERC20.approve(address(beanHeadsBreeder), type(uint256).max);
         mockERC20.approve(address(beanHeads), type(uint256).max);
 
@@ -583,7 +583,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         mockERC20.approve(address(beanHeadsBreeder), type(uint256).max);
         mockERC20.approve(address(beanHeads), type(uint256).max);
-        mockERC20.mint(100 ether); // Mint some mock ERC20 tokens for USER2
+        mockERC20.mint(USER2, 100 ether); // Mint some mock ERC20 tokens for USER2
 
         uint256 t1 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));
         uint256 t2 = IBeanHeads(address(beanHeads)).mintGenesis(USER2, params, 1, address(mockERC20));

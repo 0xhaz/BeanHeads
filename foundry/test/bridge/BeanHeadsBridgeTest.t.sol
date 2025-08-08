@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Client} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/libraries/Client.sol";
 import {CCIPReceiver} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/applications/CCIPReceiver.sol";
-import {CCIPLocalSimulatorFork, Register} from "chainlink-local/ccip/CCIPLocalSimulatorFork.sol";
+import {CCIPLocalSimulatorFork, Register, IRouterFork} from "chainlink-local/ccip/CCIPLocalSimulatorFork.sol";
 import {IRouterClient} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/interfaces/IRouterClient.sol";
 import {RegistryModuleOwnerCustom} from
     "chainlink-brownie-contracts/contracts/src/v0.8/ccip/tokenAdminRegistry/RegistryModuleOwnerCustom.sol";
@@ -15,7 +15,9 @@ import {Test, console} from "forge-std/Test.sol";
 import {Ownable as OwnableOZ} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
-import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+
+import {IBeanHeads, IBeanHeadsView, IBeanHeadsMint} from "src/interfaces/IBeanHeads.sol";
 import {MockTokenPool, Pool} from "src/mocks/MockTokenPool.sol";
 import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
 import {IBeanHeadsBridge} from "src/interfaces/IBeanHeadsBridge.sol";
@@ -25,6 +27,9 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {Helpers} from "test/Helpers.sol";
 import {MockERC20} from "src/mocks/MockERC20.sol";
+import {IERC173} from "src/interfaces/IERC173.sol";
+import {Vm} from "forge-std/Vm.sol";
+import {IDiamondLoupe} from "src/interfaces/IDiamondLoupe.sol";
 
 contract BeanHeadsBridgeTest is Test, Helpers {
     BeanHeadsBridge public sepoliaBeanHeadsBridge;
@@ -52,7 +57,8 @@ contract BeanHeadsBridgeTest is Test, Helpers {
     MockERC20 public mockArbToken;
 
     uint256 public constant MINT_PRICE = 1 ether;
-    address public constant NATIVE_TOKEN = address(0);
+    uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
+    uint256 private constant PRECISION = 1e18;
 
     address public USER = makeAddr("user");
     address public USER2 = makeAddr("user2");
@@ -67,11 +73,23 @@ contract BeanHeadsBridgeTest is Test, Helpers {
     AggregatorV3Interface public priceFeedSepolia;
     AggregatorV3Interface public priceFeedArbitrum;
 
+    enum ActionType {
+        MINT,
+        SELL,
+        BUY,
+        CANCEL,
+        TRANSFER
+    }
+
+    uint256 sepoliaSnapshot;
+    uint256 arbSnapshot;
+
+    event DebugLog(bytes32 indexed topic, bytes data);
+
     function setUp() public {
         HelperConfig.NetworkConfig memory config;
         // create fork
         sepoliaFork = vm.createSelectFork("sepolia-eth");
-
         arbFork = vm.createSelectFork("arb-sepolia");
 
         // Deploy on Sepolia
@@ -104,8 +122,8 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         ownerSepolia = deployerSepoliaAddress;
         vm.makePersistent(ownerSepolia);
-        assertEq(sepoliaBeanHeadsBridge.owner(), ownerSepolia);
-        assertEq(sepoliaBeanHeads.owner(), ownerSepolia);
+        assertEq(IERC173(address(sepoliaBeanHeadsBridge)).owner(), ownerSepolia);
+        assertEq(IERC173(address(sepoliaBeanHeads)).owner(), ownerSepolia);
 
         // Deploy on Arbitrum
         vm.selectFork(arbFork);
@@ -137,17 +155,18 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         ownerArbitrum = deployerArbitrumAddress;
         vm.makePersistent(ownerArbitrum);
-        assertEq(arbBeanHeadsBridge.owner(), ownerArbitrum);
-        assertEq(arbBeanHeads.owner(), ownerArbitrum);
+        assertEq(IERC173(address(arbBeanHeadsBridge)).owner(), ownerArbitrum);
+        assertEq(IERC173(address(arbBeanHeads)).owner(), ownerArbitrum);
 
         vm.selectFork(sepoliaFork);
         vm.startPrank(ownerSepolia);
         console.log("Setting up Sepolia BeanHeadsBridge...");
-        mockSepoliaToken = new MockERC20(10_000 ether);
+        mockSepoliaToken = new MockERC20(100_000 ether);
         vm.makePersistent(address(mockSepoliaToken));
 
-        address[] memory sepoliaAllowList = new address[](1);
+        address[] memory sepoliaAllowList = new address[](2);
         sepoliaAllowList[0] = address(sepoliaBeanHeadsBridge);
+        sepoliaAllowList[1] = USER;
         sepoliaTokenPool = new MockTokenPool(
             IERC20(address(mockSepoliaToken)),
             sepoliaAllowList,
@@ -156,10 +175,11 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(sepoliaTokenPool));
 
-        mockSepoliaToken.transfer(address(sepoliaTokenPool), 10_000 ether);
+        // mockSepoliaToken.transfer(address(sepoliaTokenPool), 10_000 ether);
+        // mockSepoliaToken.transfer(address(sepoliaBeanHeadsBridge), 10_000 ether);
 
         sepoliaBeanHeadsBridge.setRemoteBridge(address(arbBeanHeadsBridge));
-        ccipSimulatorSepolia.requestLinkFromFaucet(address(sepoliaBeanHeadsBridge), 100 ether);
+        ccipSimulatorSepolia.requestLinkFromFaucet(address(sepoliaBeanHeadsBridge), 10 ether);
         assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
         vm.stopPrank();
 
@@ -170,16 +190,23 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         sepoliaBeanHeads.addPriceFeed(address(mockSepoliaToken), address(priceFeedSepolia));
         // sepoliaBeanHeads.addPriceFeed(address(mockArbToken), address(priceFeedArbitrum));
         sepoliaBeanHeads.setMintPrice(MINT_PRICE);
+
+        vm.mockCall(
+            address(priceFeedSepolia),
+            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+            abi.encode(uint80(1), int256(1e8), uint256(block.timestamp), uint256(block.timestamp), uint80(1))
+        );
         vm.stopPrank();
 
         vm.selectFork(arbFork);
         vm.startPrank(ownerArbitrum);
         console.log("Setting up Arbitrum BeanHeadsBridge...");
-        mockArbToken = new MockERC20(10_000 ether);
+        mockArbToken = new MockERC20(100_000 ether);
         vm.makePersistent(address(mockArbToken));
 
-        address[] memory arbAllowList = new address[](1);
+        address[] memory arbAllowList = new address[](2);
         arbAllowList[0] = address(arbBeanHeadsBridge);
+        arbAllowList[1] = USER;
         arbTokenPool = new MockTokenPool(
             IERC20(address(mockArbToken)),
             arbAllowList,
@@ -188,10 +215,11 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(arbTokenPool));
 
-        mockArbToken.transfer(address(arbTokenPool), 10_000 ether);
+        // mockArbToken.transfer(address(arbTokenPool), 10_000 ether);
+        // mockArbToken.transfer(address(arbBeanHeadsBridge), 10_000 ether);
 
         arbBeanHeadsBridge.setRemoteBridge(address(sepoliaBeanHeadsBridge));
-        ccipSimulatorArbitrum.requestLinkFromFaucet(address(arbBeanHeadsBridge), 100 ether);
+        ccipSimulatorArbitrum.requestLinkFromFaucet(address(arbBeanHeadsBridge), 10 ether);
         assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
         vm.stopPrank();
 
@@ -258,9 +286,21 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         vm.stopPrank();
 
         vm.selectFork(sepoliaFork);
+        vm.startPrank(ownerSepolia);
+        sepoliaBeanHeads.setAllowedToken(address(mockArbToken), true);
+        sepoliaBeanHeads.addPriceFeed(address(mockArbToken), address(priceFeedArbitrum));
+        vm.stopPrank();
+
+        vm.selectFork(arbFork);
+        vm.startPrank(ownerArbitrum);
+        arbBeanHeads.setAllowedToken(address(mockSepoliaToken), true);
+        arbBeanHeads.addPriceFeed(address(mockSepoliaToken), address(priceFeedSepolia));
+        vm.stopPrank();
+
+        vm.selectFork(sepoliaFork);
         vm.startPrank(USER);
         vm.deal(USER, 1 ether);
-        mockSepoliaToken.mint(100 ether);
+        mockSepoliaToken.mint(USER, 100 ether);
         mockSepoliaToken.approve(address(sepoliaBeanHeadsBridge), type(uint256).max);
         mockSepoliaToken.approve(address(sepoliaBeanHeads), type(uint256).max);
         vm.stopPrank();
@@ -268,10 +308,22 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         vm.selectFork(arbFork);
         vm.startPrank(USER);
         vm.deal(USER, 1 ether);
-        mockArbToken.mint(100 ether);
+        mockArbToken.mint(USER, 100 ether);
         mockArbToken.approve(address(arbBeanHeadsBridge), type(uint256).max);
         mockArbToken.approve(address(arbBeanHeads), type(uint256).max);
         vm.stopPrank();
+
+        vm.selectFork(sepoliaFork);
+        vm.prank(address(sepoliaBeanHeadsBridge));
+        mockSepoliaToken.approve(address(sepoliaBeanHeads), type(uint256).max);
+        vm.prank(address(sepoliaBeanHeadsBridge));
+        mockArbToken.approve(address(sepoliaBeanHeads), type(uint256).max);
+
+        vm.selectFork(arbFork);
+        vm.prank(address(arbBeanHeadsBridge));
+        mockArbToken.approve(address(arbBeanHeads), type(uint256).max);
+        vm.prank(address(arbBeanHeadsBridge));
+        mockSepoliaToken.approve(address(arbBeanHeads), type(uint256).max);
 
         configureTokenPool(
             sepoliaFork,
@@ -281,9 +333,6 @@ contract BeanHeadsBridgeTest is Test, Helpers {
             address(arbTokenPool),
             address(mockArbToken)
         );
-        address afterConfigureSepoliaTokenPool =
-            abi.decode(TokenPool(address(sepoliaTokenPool)).getRemoteToken(arbNetworkDetails.chainSelector), (address));
-        console.log("After configure Sepolia Token Pool: %s", afterConfigureSepoliaTokenPool);
 
         configureTokenPool(
             arbFork,
@@ -293,9 +342,11 @@ contract BeanHeadsBridgeTest is Test, Helpers {
             address(sepoliaTokenPool),
             address(mockSepoliaToken)
         );
-        address afterConfigureArbitrumTokenPool =
-            abi.decode(TokenPool(address(arbTokenPool)).getRemoteToken(sepoliaNetworkDetails.chainSelector), (address));
-        console.log("After configure Arbitrum Token Pool: %s", afterConfigureArbitrumTokenPool);
+
+        vm.selectFork(sepoliaFork);
+        sepoliaSnapshot = vm.snapshotState();
+        vm.selectFork(arbFork);
+        arbSnapshot = vm.snapshotState();
     }
 
     function configureTokenPool(
@@ -327,18 +378,21 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         vm.selectFork(sepoliaFork);
         vm.startPrank(ownerSepolia);
         assertEq(sepoliaBeanHeadsBridge.owner(), ownerSepolia);
-        assertEq(sepoliaBeanHeads.owner(), ownerSepolia);
+        assertEq(IERC173(address(sepoliaBeanHeads)).owner(), ownerSepolia);
         assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
-        // assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockArbToken)), true);
+        assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockArbToken)), true);
         assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
+        assertEq(sepoliaBeanHeads.getMintPrice(), MINT_PRICE);
+        assertEq(sepoliaBeanHeads.name(), "BeanHeads");
+        assertEq(sepoliaBeanHeads.symbol(), "BEANS");
         vm.stopPrank();
 
         vm.selectFork(arbFork);
         vm.startPrank(ownerArbitrum);
         assertEq(arbBeanHeadsBridge.owner(), ownerArbitrum);
-        assertEq(arbBeanHeads.owner(), ownerArbitrum);
+        assertEq(IERC173(address(arbBeanHeads)).owner(), ownerArbitrum);
         assertEq(arbBeanHeads.isTokenAllowed(address(mockArbToken)), true);
-        // assertEq(arbBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
+        assertEq(arbBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
         assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
         vm.stopPrank();
     }
@@ -357,44 +411,126 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         uint256 userTokenSupply = sepoliaBeanHeads.getTotalSupply();
         assertEq(userTokenSupply, tokenAmount);
 
+        uint256 nextMintToken = sepoliaBeanHeads.mintGenesis(USER, params, tokenAmount, address(mockSepoliaToken));
+        assertEq(nextMintToken, tokenAmount);
+
+        uint256 nextTokenId = sepoliaBeanHeads.getNextTokenId();
+        assertEq(nextTokenId, tokenAmount + 1);
+
         vm.stopPrank();
     }
 
     function test_sendMintTokenRequest() public {
         vm.selectFork(arbFork);
-        vm.startPrank(USER);
 
         uint256 tokenAmount = 1;
-        uint256 mintPayment = MINT_PRICE * tokenAmount;
 
-        bytes32 messageId = arbBeanHeadsBridge.sendMintTokenRequest(
+        ccipSimulatorArbitrum.requestLinkFromFaucet(USER, 10 ether);
+
+        vm.prank(USER);
+        IERC20(address(mockArbToken)).approve(address(arbBeanHeadsBridge), type(uint256).max);
+
+        vm.prank(USER);
+        arbBeanHeadsBridge.sendMintTokenRequest(
             sepoliaNetworkDetails.chainSelector, USER, params, tokenAmount, address(mockArbToken)
         );
-        vm.stopPrank();
 
-        // Force bridge to trust source for this test
+        vm.warp(block.timestamp + 20 minutes);
+
+        ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+
         vm.selectFork(sepoliaFork);
-        vm.startPrank(ownerSepolia);
-        sepoliaBeanHeadsBridge.setRemoteBridge(address(arbBeanHeadsBridge));
+        vm.prank(USER);
+        uint256 userTokenBalance = sepoliaBeanHeads.balanceOf(USER);
+        assertEq(userTokenBalance, tokenAmount);
+        uint256 userTokenSupply = sepoliaBeanHeads.getTotalSupply();
+        assertEq(userTokenSupply, tokenAmount);
+        assertEq(sepoliaBeanHeads.getOwnerOf(0), USER);
+    }
+
+    modifier mintedTokens() {
+        vm.selectFork(sepoliaFork);
+        vm.startPrank(USER);
+        uint256 tokenAmount = 1;
+        sepoliaBeanHeads.mintGenesis(USER, params, tokenAmount, address(mockSepoliaToken));
         vm.stopPrank();
+        // vm.selectFork(arbFork);
+        // arbBeanHeads.mintGenesis(USER, params, tokenAmount, address(mockArbToken));
+        _;
+    }
 
-        Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
-        tokenAmounts[0] = Client.EVMTokenAmount({token: address(mockArbToken), amount: mintPayment});
+    // function test_sendSellTokenRequest() public mintedTokens {
+    //     vm.selectFork(arbFork);
+    //     uint256 tokenId = 0;
+    //     uint256 price = 10 ether;
 
-        bytes memory data =
-            abi.encode(IBeanHeadsBridge.ActionType.MINT, USER, params, address(mockArbToken), tokenAmount);
+    //     vm.prank(USER);
+    //     arbBeanHeadsBridge.sendSellTokenRequest(sepoliaNetworkDetails.chainSelector, tokenId, price);
 
-        Client.Any2EVMMessage memory receivedMessage = Client.Any2EVMMessage({
-            messageId: messageId,
-            sourceChainSelector: arbNetworkDetails.chainSelector,
-            sender: abi.encode(address(arbBeanHeadsBridge)),
-            data: data,
-            destTokenAmounts: tokenAmounts
-        });
+    //     vm.warp(block.timestamp + 20 minutes);
 
-        vm.prank(sepoliaNetworkDetails.routerAddress);
-        sepoliaBeanHeadsBridge.ccipReceive(receivedMessage);
+    //     ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
 
-        assertEq(sepoliaBeanHeads.balanceOf(USER), tokenAmount);
+    //     vm.selectFork(sepoliaFork);
+    //     vm.prank(USER);
+    //     uint256 newTokenPrice = sepoliaBeanHeads.getTokenSalePrice(tokenId);
+    //     assertEq(newTokenPrice, price);
+    //     assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), true);
+    // }
+
+    // function test_sendMintTokenRequest_MoreDetails() public {
+    //     vm.selectFork(arbFork);
+    //     uint256 tokenAmount = 1;
+
+    //     bytes memory encodeMintPayload = abi.encode(USER, params, tokenAmount);
+    //     bytes memory mintGenesisCalldata = abi.encode(ActionType.MINT, encodeMintPayload);
+
+    //     Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
+    //     Client.EVMTokenAmount memory tokenAmountData =
+    //         Client.EVMTokenAmount({token: address(mockArbToken), amount: tokenAmount});
+    //     tokenAmounts[0] = tokenAmountData;
+
+    //     IRouterClient routerArbClient = IRouterClient(arbNetworkDetails.routerAddress);
+
+    //     Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
+    //         receiver: abi.encode(arbBeanHeadsBridge),
+    //         data: mintGenesisCalldata,
+    //         tokenAmounts: tokenAmounts,
+    //         feeToken: arbNetworkDetails.linkAddress,
+    //         extraArgs: Client._argsToBytes(
+    //             Client.EVMExtraArgsV1({
+    //                 gasLimit: 500_000 // Set a default gas limit for the callback
+    //             })
+    //         )
+    //     });
+
+    //     uint256 fee = routerArbClient.getFee(sepoliaNetworkDetails.chainSelector, message);
+
+    //     ccipSimulatorArbitrum.requestLinkFromFaucet(USER, 10 ether);
+    //     vm.startPrank(USER);
+    //     IERC20(address(mockArbToken)).approve(address(arbBeanHeadsBridge), type(uint256).max);
+    //     IERC20(address(mockArbToken)).approve(address(routerArbClient), type(uint256).max);
+    //     IERC20(arbNetworkDetails.linkAddress).approve(address(routerArbClient), fee);
+
+    //     routerArbClient.ccipSend(sepoliaNetworkDetails.chainSelector, message);
+    //     vm.stopPrank();
+
+    //     ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+
+    //     vm.selectFork(sepoliaFork);
+    //     vm.prank(USER);
+    //     uint256 userTokenBalance = sepoliaBeanHeads.balanceOf(USER);
+    //     assertEq(userTokenBalance, tokenAmount);
+    //     uint256 userTokenSupply = sepoliaBeanHeads.getTotalSupply();
+    //     assertEq(userTokenSupply, tokenAmount);
+    //     assertEq(sepoliaBeanHeads.getOwnerOf(0), USER);
+    // }
+
+    function testFacetSelector() public {
+        vm.selectFork(sepoliaFork);
+        bytes4 sel = bytes4(keccak256("balanceOf(address)"));
+        address facet = IDiamondLoupe(address(sepoliaBeanHeads)).facetAddress(sel);
+        console.log("Facet address for balanceOf:", facet);
+        assert(facet != address(0));
     }
 }

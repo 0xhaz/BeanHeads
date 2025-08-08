@@ -60,12 +60,12 @@ contract MockERC20 is IERC20, Ownable {
         return true;
     }
 
-    function mint(uint256 amount) external {
-        _mint(msg.sender, amount);
+    function mint(address owner, uint256 amount) external {
+        _mint(owner, amount);
     }
 
-    function burn(uint256 amount) external {
-        _burn(msg.sender, amount);
+    function burn(address owner, uint256 amount) external {
+        _burn(owner, amount);
     }
 
     // Internal functions

@@ -77,7 +77,7 @@ contract BeanHeadsTest is Test, Helpers {
         MINT_PRICE = beanHeads.getMintPrice();
 
         vm.startPrank(USER);
-        mockERC20.mint(100 ether);
+        mockERC20.mint(USER, 100 ether);
         mockERC20.approve(address(beanHeads), type(uint256).max);
         vm.stopPrank();
 
@@ -288,7 +288,7 @@ contract BeanHeadsTest is Test, Helpers {
         vm.deal(USER2, 10 ether);
         vm.startPrank(USER2);
         mockERC20.approve(address(beanHeads), type(uint256).max);
-        mockERC20.mint(100 ether);
+        mockERC20.mint(USER2, 100 ether);
         uint256 expectedRoyalty = (salePrice * 600) / 10_000;
         vm.recordLogs();
         beanHeads.buyToken(tokenId, address(mockERC20));
@@ -445,8 +445,6 @@ contract BeanHeadsTest is Test, Helpers {
         assertEq(beanHeads.getMintPrice(), MINT_PRICE);
     }
 
-
-
     function test_setRoyaltyInfo_FailWithRevert() public {
         vm.startPrank(deployerAddress);
         vm.expectRevert(BeanHeadsRoyalty.BeanHeadsRoyalty__InvalidRoyaltyFee.selector);
@@ -497,7 +495,7 @@ contract BeanHeadsTest is Test, Helpers {
         vm.startPrank(USER2);
         vm.deal(USER2, 1 ether); // Enough ether now
         mockERC20.approve(address(beanHeads), type(uint256).max);
-        mockERC20.mint(10 ether); // Mint some mock ERC20 tokens for USER2
+        mockERC20.mint(USER2, 10 ether); // Mint some mock ERC20 tokens for USER2
         vm.expectRevert(IBeanHeadsMarketplace.IBeanHeadsMarketplace__TokenNotForSale.selector);
         beanHeads.buyToken(tokenId2, address(mockERC20)); // Trying to buy a token not on sale
         vm.stopPrank();
@@ -524,13 +522,13 @@ contract BeanHeadsTest is Test, Helpers {
 
     function test_mintGenesis_FailedWithReverts() public {
         vm.startPrank(USER2);
-        mockERC20.mint(0.5 ether); // Mint some tokens for USER2
+        mockERC20.mint(USER2, 0.5 ether); // Mint some tokens for USER2
         mockERC20.approve(address(beanHeads), type(uint256).max);
         vm.expectRevert(IBeanHeadsMint.IBeanHeadsMint__InvalidAmount.selector);
         beanHeads.mintGenesis(USER2, params, 0, address(mockERC20)); // Invalid amount of 0
 
         MockERC20 newMockERC20 = new MockERC20(100 ether);
-        newMockERC20.mint(100 ether);
+        newMockERC20.mint(USER2, 100 ether);
         newMockERC20.approve(address(beanHeads), type(uint256).max);
         vm.expectRevert(IBeanHeadsMint.IBeanHeadsMint__TokenNotAllowed.selector);
         beanHeads.mintGenesis(USER2, params, 1, address(newMockERC20)); // Trying to mint with a token not allowed

@@ -18,6 +18,8 @@ interface IBeanHeadsMarketplace {
     error IBeanHeadsMarketplace__InvalidOraclePrice();
     /// @notice Error thrown when the allowance for the token is insufficient
     error IBeanHeadsMarketplace__InsufficientAllowance();
+    /// @notice Error thrown when the price is higher than the maximum allowed price
+    error IBeanHeadsMarketplace__PriceExceedsMax();
 
     /// @notice Emitted when a seller sets a price for a token
     event SetTokenPrice(address indexed owner, uint256 indexed tokenId, uint256 price);

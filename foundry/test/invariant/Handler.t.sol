@@ -86,7 +86,7 @@ contract Handler is CommonBase, Helpers {
         uint256 adjustedPrice = salePrice;
 
         vm.startPrank(user);
-        mockERC20.mint(adjustedPrice);
+        mockERC20.mint(user, adjustedPrice);
         mockERC20.approve(address(beanHeads), adjustedPrice);
         vm.stopPrank();
 

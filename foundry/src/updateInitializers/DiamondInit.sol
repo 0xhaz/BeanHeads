@@ -11,16 +11,19 @@ pragma solidity ^0.8.24;
  */
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IDiamondCut} from "src/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "src/interfaces/IDiamondLoupe.sol";
 import {IERC165} from "src/interfaces/IERC165.sol";
 import {IERC173} from "src/interfaces/IERC173.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721AUpgradeable} from "src/interfaces/IERC721AUpgradeable.sol";
 import {ERC721AStorage} from "src/libraries/ERC721A/ERC721AStorage.sol";
-import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import {IERC721Permit} from "src/interfaces/IERC721Permit.sol";
 
 // It is expected that this contract is customized if you want to deploy your diamond
 // with data from a deployment script. Use the init function to initialize state variables
@@ -45,6 +48,8 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IERC2981).interfaceId] = true;
         ds.supportedInterfaces[type(IERC721AUpgradeable).interfaceId] = true;
         ds.supportedInterfaces[type(IERC721Receiver).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC1271).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC721Permit).interfaceId] = true;
 
         // Initialize ERC721A state variables
         ERC721AStorage.Layout storage erc721AStorage = ERC721AStorage.layout();
