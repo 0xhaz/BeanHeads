@@ -6,7 +6,6 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {IERC721Permit} from "src/interfaces/IERC721Permit.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 import {ERC721AUpgradeable} from "src/ERC721A/ERC721AUpgradeable.sol";
 import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";

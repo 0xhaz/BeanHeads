@@ -9,8 +9,9 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {ERC721AUpgradeable} from "src/ERC721A/ERC721AUpgradeable.sol";
 import {IBeanHeadsAdmin} from "src/interfaces/IBeanHeadsAdmin.sol";
+import {ReentrancyLib} from "src/libraries/ReentrancyLib.sol";
 
-contract BeanHeadsAdminFacet is ERC721AUpgradeable, IBeanHeadsAdmin, ReentrancyGuard {
+contract BeanHeadsAdminFacet is ERC721AUpgradeable, IBeanHeadsAdmin {
     using SafeERC20 for IERC20;
 
     /*//////////////////////////////////////////////////////////////
@@ -21,6 +22,12 @@ contract BeanHeadsAdminFacet is ERC721AUpgradeable, IBeanHeadsAdmin, ReentrancyG
     modifier onlyOwner() {
         BHStorage.enforceContractOwner();
         _;
+    }
+
+    modifier nonReentrant() {
+        ReentrancyLib.enforceNotEntered();
+        _;
+        ReentrancyLib.resetStatus();
     }
 
     /*//////////////////////////////////////////////////////////////

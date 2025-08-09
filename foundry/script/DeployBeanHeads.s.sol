@@ -10,10 +10,10 @@ import {BeanHeadsMintFacet} from "src/facets/BeanHeads/BeanHeadsMintFacet.sol";
 import {BeanHeadsViewFacet} from "src/facets/BeanHeads/BeanHeadsViewFacet.sol";
 import {BeanHeadsBreedingFacet} from "src/facets/BeanHeads/BeanHeadsBreedingFacet.sol";
 import {BeanHeadsMarketplaceFacet} from "src/facets/BeanHeads/BeanHeadsMarketplaceFacet.sol";
+import {BeanHeadsMarketplaceSigFacet} from "src/facets/BeanHeads/BeanHeadsMarketplaceSigFacet.sol";
 import {BeanHeadsAdminFacet} from "src/facets/BeanHeads/BeanHeadsAdminFacet.sol";
 import {OwnershipFacet, IERC173} from "src/facets/OwnershipFacet.sol";
 import {IERC165} from "src/interfaces/IERC165.sol";
-
 import {BeanHeadsRoyalty} from "src/core/BeanHeadsRoyalty.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 
@@ -79,6 +79,7 @@ contract DeployBeanHeads is Script {
             selectors[6] = facet.isTokenAllowed.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
+
         // ---------------------- Mint Facet ----------------------
         {
             BeanHeadsMintFacet facet = new BeanHeadsMintFacet();

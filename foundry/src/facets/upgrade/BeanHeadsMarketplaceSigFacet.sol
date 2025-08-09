@@ -5,7 +5,6 @@ import {IERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
@@ -14,8 +13,9 @@ import {ERC721PermitBase, IERC721Permit, ECDSA} from "src/abstracts/ERC721Permit
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeads, IBeanHeadsMarketplace} from "src/interfaces/IBeanHeads.sol";
 import {PermitTypes} from "src/libraries/PermitTypes.sol";
+import {ReentrancyLib} from "src/libraries/ReentrancyLib.sol";
 
-contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, ReentrancyGuard {
+contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase {
     using SafeERC20 for IERC20;
 
     /// @notice Modifier to check if the token exists
@@ -24,6 +24,13 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, ReentrancyGuard {
             _revert(IBeanHeadsMarketplace.IBeanHeadsMarketplace__TokenDoesNotExist.selector);
         }
         _;
+    }
+
+    /// @notice Reentrancy guard modifier
+    modifier nonReentrant() {
+        ReentrancyLib.enforceNotEntered();
+        _;
+        ReentrancyLib.resetStatus();
     }
 
     constructor(address diamondAddress) ERC721PermitBase(diamondAddress) {}
@@ -109,10 +116,13 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, ReentrancyGuard {
         }
 
         IERC20 token = IERC20(b.paymentToken);
-        IERC20Permit(b.paymentToken).permit(b.buyer, address(this), permitValue, permitDeadline, v, r, s);
+        try IERC20Permit(b.paymentToken).permit(b.buyer, address(this), permitValue, permitDeadline, v, r, s) {
+            // Permit was successful, continue
+        } catch {
+            _checkPaymentTokenAllowanceAndBalance(token, adjustedPrice);
+        }
 
         // Transfer funds in, split royalties and transfer NFT to recipient
-        _checkPaymentTokenAllowanceAndBalance(token, adjustedPrice);
         token.safeTransferFrom(b.buyer, address(this), adjustedPrice);
 
         (address royaltyReceiver, uint256 royaltyAmount) = _royaltyInfo(b.tokenId, adjustedPrice);

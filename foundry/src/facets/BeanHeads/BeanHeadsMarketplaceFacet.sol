@@ -6,7 +6,7 @@ import {IERC20} from
 import {SafeERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC721AUpgradeable} from "src/ERC721A/ERC721AUpgradeable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
@@ -15,8 +15,9 @@ import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receive
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsMarketplace} from "src/interfaces/IBeanHeadsMarketplace.sol";
 import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
+import {ReentrancyLib} from "src/libraries/ReentrancyLib.sol";
 
-contract BeanHeadsMarketplaceFacet is BeanHeadsBase, ReentrancyGuard, IBeanHeadsMarketplace {
+contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
     using SafeERC20 for IERC20;
 
     /*//////////////////////////////////////////////////////////////
@@ -29,6 +30,13 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, ReentrancyGuard, IBeanHeads
             _revert(IBeanHeadsMarketplace__TokenDoesNotExist.selector);
         }
         _;
+    }
+
+    /// @notice Reentrancy guard modifier
+    modifier nonReentrant() {
+        ReentrancyLib.enforceNotEntered();
+        _;
+        ReentrancyLib.resetStatus();
     }
 
     /*//////////////////////////////////////////////////////////////
