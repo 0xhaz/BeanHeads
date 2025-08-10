@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Genesis} from "src/types/Genesis.sol";
+import {PermitTypes} from "src/types/PermitTypes.sol";
 
 interface IBeanHeadsBridge {
     error IBeanHeadsBridge__InvalidRemoteAddress();
@@ -101,15 +102,21 @@ interface IBeanHeadsBridge {
     ) external payable returns (bytes32 messageId);
 
     /**
-     * @notice Send sellToken request to the remote bridge.
+     * @notice Sends a sell token request to the remote bridge.
      * @param _destinationChainSelector The target chain selector for the sell request.
-     * @param _tokenId The ID of the token to be sold.
-     * @param _price The price of the token to be sold.
+     * @param s The struct containing the sell parameters.
+     * @param sellSig The signature of the seller authorizing the sale.
+     * @param permitDeadline The deadline for the permit signature.
+     * @param permitSig The signature for the permit, if applicable.
      * @return messageId The ID of the sent message.
      */
-    function sendSellTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, uint256 _price)
-        external
-        returns (bytes32 messageId);
+    function sendSellTokenRequest(
+        uint64 _destinationChainSelector,
+        PermitTypes.Sell calldata s,
+        bytes calldata sellSig,
+        uint256 permitDeadline,
+        bytes calldata permitSig
+    ) external returns (bytes32 messageId);
 
     /**
      * @notice Send the buyToken request to the remote bridge.

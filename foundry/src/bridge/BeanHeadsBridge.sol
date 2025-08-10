@@ -19,6 +19,7 @@ import {Genesis} from "src/types/Genesis.sol";
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsBridge} from "src/interfaces/IBeanHeadsBridge.sol";
 import {OracleLib} from "src/libraries/OracleLib.sol";
+import {PermitTypes} from "src/types/PermitTypes.sol";
 import {console} from "forge-std/console.sol";
 
 contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyGuard {
@@ -117,14 +118,16 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     }
 
     /// @inheritdoc IBeanHeadsBridge
-    function sendSellTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, uint256 _price)
-        external
-        onlyRegisteredRemoteBridge
-        returns (bytes32 messageId)
-    {
-        if (_price == 0) revert IBeanHeadsBridge__InvalidAmount();
+    function sendSellTokenRequest(
+        uint64 _destinationChainSelector,
+        PermitTypes.Sell calldata s,
+        bytes calldata sellSig,
+        uint256 permitDeadline,
+        bytes calldata permitSig
+    ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
+        if (s.price == 0) revert IBeanHeadsBridge__InvalidAmount();
 
-        bytes memory encodeSellPayload = abi.encode(msg.sender, _tokenId, _price);
+        bytes memory encodeSellPayload = abi.encode(s, sellSig, permitDeadline, permitSig);
         bytes memory sellTokenCalldata = abi.encode(ActionType.SELL, encodeSellPayload);
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
@@ -134,14 +137,14 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             feeToken: address(s_linkToken),
             extraArgs: Client._argsToBytes(
                 Client.EVMExtraArgsV1({
-                    gasLimit: 200_000 // Set a default gas limit for the callback
+                    gasLimit: 300_000 // Set a default gas limit for the callback
                 })
             )
         });
 
         messageId = _sendCCIP(_destinationChainSelector, message);
 
-        emit SentSellTokenRequest(messageId, _destinationChainSelector, msg.sender, _tokenId, _price);
+        emit SentSellTokenRequest(messageId, _destinationChainSelector, s.owner, s.tokenId, s.price);
     }
 
     /// @inheritdoc IBeanHeadsBridge
@@ -298,16 +301,17 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
         if (action == ActionType.SELL) {
             /// @notice Decode the message data for selling a token.
-            (address seller, uint256 tokenId, uint256 price) = abi.decode(rest, (address, uint256, uint256));
+            (PermitTypes.Sell memory s, bytes memory sellSig, uint256 permitDeadline, bytes memory permitSig) =
+                abi.decode(rest, (PermitTypes.Sell, bytes, uint256, bytes));
 
-            // Ensure the bridge owns the token
-            if (IBeanHeads(i_beanHeadsContract).getOwnerOf(tokenId) != address(this)) {
-                revert IBeanHeadsBridge__TokenNotDeposited(tokenId);
-            }
+            // // Ensure the bridge owns the token
+            // if (IBeanHeads(i_beanHeadsContract).getOwnerOf(tokenId) != address(this)) {
+            //     revert IBeanHeadsBridge__TokenNotDeposited(tokenId);
+            // }
 
-            IBeanHeads(i_beanHeadsContract).sellToken(tokenId, price);
+            IBeanHeads(i_beanHeadsContract).sellTokenWithPermit(s, sellSig, permitDeadline, permitSig);
 
-            emit TokenListedCrossChain(seller, tokenId, price);
+            emit TokenListedCrossChain(s.owner, s.tokenId, s.price);
         }
 
         if (action == ActionType.BUY) {

@@ -3,6 +3,9 @@ pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
+
+import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {IDiamondCut} from "src/interfaces/IDiamondCut.sol";
 import {BeanHeadsMarketplaceSigFacet} from "src/facets/upgrade/BeanHeadsMarketplaceSigFacet.sol";
 import {ReentrancyLib} from "src/libraries/ReentrancyLib.sol";
@@ -29,6 +32,7 @@ contract UpgradeScript is Script {
     BeanHeadsMarketplaceSigFacet facet;
     uint256 deployerKey;
     address diamond;
+    // address beanHeads;
 
     function setUp() public {
         helperConfig = new HelperConfig();
@@ -47,6 +51,19 @@ contract UpgradeScript is Script {
         } else {
             revert("Unsupported network for upgrade");
         }
+        // if (block.chainid == helperConfig.LOCAL_CHAIN_ID()) {
+        //     DeployBeanHeads deployBeanHeads = new DeployBeanHeads();
+        //     (beanHeads,) = deployBeanHeads.run();
+        //     diamond = beanHeads;
+        // } else if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
+        //     diamond = DevOpsTools.get_most_recent_deployment("BeanHeadsDiamond", block.chainid);
+        // } else if (block.chainid == helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID()) {
+        //     diamond = DevOpsTools.get_most_recent_deployment("BeanHeadsDiamond", block.chainid);
+        // } else if (block.chainid == helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID()) {
+        //     diamond = DevOpsTools.get_most_recent_deployment("BeanHeadsDiamond", block.chainid);
+        // } else {
+        //     revert("Unsupported network");
+        // }
 
         facet = new BeanHeadsMarketplaceSigFacet(diamond);
         console.log("BeanHeadsMarketplaceSigFacet deployed at:", address(facet));

@@ -15,7 +15,7 @@ import {BHStorage} from "src/libraries/BHStorage.sol";
  * @dev Implementation of ERC721 Permit extension allowing approvals to be made via signatures.
  * as defined in https://eips.ethereum.org/EIPS/eip-2612[EIP-2612].
  */
-abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
+abstract contract ERC721PermitBase is IERC721Permit, EIP712, BeanHeadsBase {
     /// @dev Permit deadline has expired
     error IPermit__ERC2612ExpiredSignature(uint256 deadline);
     /// @dev Mismatched signature
@@ -27,23 +27,53 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
     /// Cache the domain separator as an immutable value, but also store the chain id that it corresponds to
     /// in order to invalidate the cached domain separator when the chain id changes.
 
-    /// EIP-712 / 4494 constants
-    bytes32 private constant _TYPE_HASH =
-        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-    bytes32 private _NAME_HASH = keccak256(bytes("BeanHeads"));
-    bytes32 private _VERSION_HASH = keccak256(bytes("1"));
+    bytes32 private immutable CACHED_DOMAIN_SEPARATOR;
+    uint256 private immutable CACHE_CHAIN_ID;
+    bytes32 private immutable HASHED_NAME;
+    bytes32 private immutable HASHED_VERSION;
+    address private immutable CACHED_THIS;
 
-    /// ERC-4494 Permit struct
-    bytes32 private constant _PERMIT_TYPEHASH =
+    bytes32 private constant TYPE_HASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 private constant PERMIT_TYPEHASH =
         keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
 
-    /*//////////////////////////////////////////////////////////////
-                                EIP-712 
-    //////////////////////////////////////////////////////////////*/
+    /**
+     * @dev Initializes the {EIP712} domain separator using the `name` parameter,
+     * and setting `version` to "1".
+     * @notice Using the same `name` that is defined in the ERC721 contract.
+     */
+    constructor(address _diamondAddress) EIP712("BeanHeads", "1") {
+        HASHED_NAME = keccak256(bytes("BeanHeads"));
+        HASHED_VERSION = keccak256(bytes("1"));
+        CACHE_CHAIN_ID = block.chainid;
+        CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(_diamondAddress);
+        CACHED_THIS = _diamondAddress;
+    }
+
+    /**
+     * @dev Given an already https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct[hashed struct], this
+     * function returns the hash of the fully encoded EIP712 message for this domain.
+     *
+     * This hash can be used together with {ECDSA-recover} to obtain the signer of a message. For example:
+     *
+     * ```solidity
+     * bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
+     *     keccak256("Mail(address to,string contents)"),
+     *     mailTo,
+     *     keccak256(bytes(mailContents))
+     * )));
+     * address signer = ECDSA.recover(digest, signature);
+     * ```
+     */
+    function _hashTypedDataV4(bytes32 _structHash) internal view override returns (bytes32) {
+        return MessageHashUtils.toTypedDataHash(domainSeparatorV4(), _structHash);
+    }
 
     function eip712Domain()
         public
         view
+        override
         returns (
             bytes1 fields,
             string memory name,
@@ -66,46 +96,16 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
     }
 
     function DOMAIN_SEPARATOR() external view returns (bytes32) {
-        return _domainSeparatorV4();
+        return domainSeparatorV4();
     }
 
-    /**
-     * @dev Returns the domain separator for the current chain.
-     */
-    function _domainSeparatorV4() internal view returns (bytes32) {
-        return keccak256(abi.encode(_TYPE_HASH, _NAME_HASH, _VERSION_HASH, block.chainid, address(this)));
+    function permit(address spender, uint256 tokenId, uint256 deadline, bytes memory sig) external override {
+        _permit(spender, tokenId, deadline, sig);
     }
 
-    /**
-     * @dev Given an already https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct[hashed struct], this
-     * function returns the hash of the fully encoded EIP712 message for this domain.
-     *
-     * This hash can be used together with {ECDSA-recover} to obtain the signer of a message. For example:
-     *
-     * ```solidity
-     * bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
-     *     keccak256("Mail(address to,string contents)"),
-     *     mailTo,
-     *     keccak256(bytes(mailContents))
-     * )));
-     * address signer = ECDSA.recover(digest, signature);
-     * ```
-     */
-    function _hashTypedDataV4(bytes32 _structHash) internal view returns (bytes32) {
-        return MessageHashUtils.toTypedDataHash(_domainSeparatorV4(), _structHash);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                                ERC-4494
-    //////////////////////////////////////////////////////////////*/
-
-    function nonces(uint256 tokenId) external view returns (uint256) {
+    function nonces(uint256 tokenId) external view override returns (uint256) {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         return ds.tokenNonces[tokenId];
-    }
-
-    function permit(address spender, uint256 tokenId, uint256 deadline, bytes memory sig) external {
-        _permit(spender, tokenId, deadline, sig);
     }
 
     function _permit(address spender, uint256 tokenId, uint256 deadline, bytes memory sig) internal virtual {
@@ -118,7 +118,7 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         uint256 nonce = ds.tokenNonces[tokenId];
 
-        bytes32 structHash = keccak256(abi.encode(_PERMIT_TYPEHASH, spender, tokenId, nonce, deadline));
+        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, nonce, deadline));
         bytes32 digest = _hashTypedDataV4(structHash);
 
         (address recovered,,) = ECDSA.tryRecover(digest, sig);
@@ -135,9 +135,14 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
         _approve(spender, tokenId);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                                HELPERS
-    //////////////////////////////////////////////////////////////*/
+    /**
+     * @dev Returns the domain separator for the current chain.
+     */
+    function domainSeparatorV4() internal view returns (bytes32) {
+        return (address(this) == CACHED_THIS && block.chainid == CACHE_CHAIN_ID)
+            ? CACHED_DOMAIN_SEPARATOR
+            : _buildDomainSeparator(CACHED_THIS);
+    }
 
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
         address owner = ownerOf(tokenId);
@@ -153,5 +158,9 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
             signer.staticcall(abi.encodeWithSelector(IERC1271.isValidSignature.selector, digest, sig));
 
         return (success && result.length == 32 && abi.decode(result, (bytes4)) == IERC1271.isValidSignature.selector);
+    }
+
+    function _buildDomainSeparator(address _diamondAddress) private view returns (bytes32) {
+        return keccak256(abi.encode(TYPE_HASH, HASHED_NAME, HASHED_VERSION, block.chainid, _diamondAddress));
     }
 }

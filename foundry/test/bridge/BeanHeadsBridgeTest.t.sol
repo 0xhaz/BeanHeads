@@ -17,7 +17,7 @@ import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 
-import {IBeanHeads, IBeanHeadsView, IBeanHeadsMint} from "src/interfaces/IBeanHeads.sol";
+import {IBeanHeads, IBeanHeadsView, IBeanHeadsMint, IBeanHeadsMarketplace} from "src/interfaces/IBeanHeads.sol";
 import {MockTokenPool, Pool} from "src/mocks/MockTokenPool.sol";
 import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
 import {IBeanHeadsBridge} from "src/interfaces/IBeanHeadsBridge.sol";
@@ -30,6 +30,7 @@ import {MockERC20} from "src/mocks/MockERC20.sol";
 import {IERC173} from "src/interfaces/IERC173.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {IDiamondLoupe} from "src/interfaces/IDiamondLoupe.sol";
+import {PermitTypes} from "src/types/PermitTypes.sol";
 
 contract BeanHeadsBridgeTest is Test, Helpers {
     BeanHeadsBridge public sepoliaBeanHeadsBridge;
@@ -59,9 +60,13 @@ contract BeanHeadsBridgeTest is Test, Helpers {
     uint256 public constant MINT_PRICE = 1 ether;
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
     uint256 private constant PRECISION = 1e18;
+    bytes32 constant PERMIT_TYPEHASH =
+        keccak256("Permit(address owner,address spender,uint256 tokenId,uint256 nonce,uint64 deadline)");
 
     address public USER = makeAddr("user");
     address public USER2 = makeAddr("user2");
+    address public MINTER;
+    uint256 public MINTER_PK;
 
     uint256 sepoliaFork;
     uint256 arbFork;
@@ -91,6 +96,8 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         // create fork
         sepoliaFork = vm.createSelectFork("sepolia-eth");
         arbFork = vm.createSelectFork("arb-sepolia");
+
+        (MINTER, MINTER_PK) = makeAddrAndKey("minter");
 
         // Deploy on Sepolia
         vm.selectFork(sepoliaFork);
@@ -314,6 +321,22 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         vm.stopPrank();
 
         vm.selectFork(sepoliaFork);
+        vm.startPrank(MINTER);
+        vm.deal(MINTER, 1 ether);
+        mockSepoliaToken.mint(MINTER, 100 ether);
+        mockSepoliaToken.approve(address(sepoliaBeanHeadsBridge), type(uint256).max);
+        mockSepoliaToken.approve(address(sepoliaBeanHeads), type(uint256).max);
+        vm.stopPrank();
+
+        vm.selectFork(arbFork);
+        vm.startPrank(MINTER);
+        vm.deal(MINTER, 1 ether);
+        mockArbToken.mint(MINTER, 100 ether);
+        mockArbToken.approve(address(arbBeanHeadsBridge), type(uint256).max);
+        mockArbToken.approve(address(arbBeanHeads), type(uint256).max);
+        vm.stopPrank();
+
+        vm.selectFork(sepoliaFork);
         vm.prank(address(sepoliaBeanHeadsBridge));
         mockSepoliaToken.approve(address(sepoliaBeanHeads), type(uint256).max);
         vm.prank(address(sepoliaBeanHeadsBridge));
@@ -450,33 +473,65 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
     modifier mintedTokens() {
         vm.selectFork(sepoliaFork);
-        vm.startPrank(USER);
+        vm.startPrank(MINTER);
         uint256 tokenAmount = 1;
-        sepoliaBeanHeads.mintGenesis(USER, params, tokenAmount, address(mockSepoliaToken));
+        sepoliaBeanHeads.mintGenesis(MINTER, params, tokenAmount, address(mockSepoliaToken));
+        assertEq(sepoliaBeanHeads.getOwnerOf(0), MINTER);
         vm.stopPrank();
         // vm.selectFork(arbFork);
         // arbBeanHeads.mintGenesis(USER, params, tokenAmount, address(mockArbToken));
         _;
     }
 
-    // function test_sendSellTokenRequest() public mintedTokens {
-    //     vm.selectFork(arbFork);
-    //     uint256 tokenId = 0;
-    //     uint256 price = 10 ether;
+    function test_sendSellTokenRequest_WithPermit() public mintedTokens {
+        uint256 tokenId = 0;
+        uint256 price = 10 ether;
 
-    //     vm.prank(USER);
-    //     arbBeanHeadsBridge.sendSellTokenRequest(sepoliaNetworkDetails.chainSelector, tokenId, price);
+        address owner = MINTER;
+        uint256 nonce0 = getTokenNonce(tokenId);
+        uint64 sellDeadline = uint64(block.timestamp + 1 hours);
+        bytes32 domainSeparator = sepoliaBeanHeads.DOMAIN_SEPARATOR();
 
-    //     vm.warp(block.timestamp + 20 minutes);
+        // Sell struct
+        PermitTypes.Sell memory s =
+            PermitTypes.Sell({owner: owner, tokenId: tokenId, price: price, nonce: nonce0, deadline: sellDeadline});
 
-    //     ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+        // SELL digests
+        bytes32 sellStructHash =
+            keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
+        bytes32 sellDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, sellStructHash));
 
-    //     vm.selectFork(sepoliaFork);
-    //     vm.prank(USER);
-    //     uint256 newTokenPrice = sepoliaBeanHeads.getTokenSalePrice(tokenId);
-    //     assertEq(newTokenPrice, price);
-    //     assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), true);
-    // }
+        (uint8 sv, bytes32 sr, bytes32 ss) = vm.sign(MINTER_PK, sellDigest);
+        bytes memory sellSig = abi.encodePacked(sr, ss, sv);
+
+        // build permit signature
+        uint256 permitNonce = nonce0 + 1;
+        uint64 permitDeadline = uint64(block.timestamp + 1 hours);
+        address spender = address(sepoliaBeanHeads);
+
+        bytes32 permitStructHash = keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, permitNonce, permitDeadline));
+        bytes32 permitDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, permitStructHash));
+
+        (uint8 pv, bytes32 pr, bytes32 ps) = vm.sign(MINTER_PK, permitDigest);
+        bytes memory permitSig = abi.encodePacked(pr, ps, pv);
+
+        // send signal from ARB
+        vm.selectFork(arbFork);
+        vm.prank(MINTER);
+        arbBeanHeadsBridge.sendSellTokenRequest(
+            sepoliaNetworkDetails.chainSelector, s, sellSig, permitDeadline, permitSig
+        );
+
+        vm.warp(block.timestamp + 20 minutes);
+
+        ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+
+        vm.selectFork(sepoliaFork);
+
+        uint256 newTokenPrice = sepoliaBeanHeads.getTokenSalePrice(tokenId);
+        assertEq(newTokenPrice, price);
+        assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), true);
+    }
 
     // function test_sendMintTokenRequest_MoreDetails() public {
     //     vm.selectFork(arbFork);
@@ -526,11 +581,20 @@ contract BeanHeadsBridgeTest is Test, Helpers {
     //     assertEq(sepoliaBeanHeads.getOwnerOf(0), USER);
     // }
 
+    // sanity check on the facet selector
     function testFacetSelector() public {
         vm.selectFork(sepoliaFork);
         bytes4 sel = bytes4(keccak256("balanceOf(address)"));
         address facet = IDiamondLoupe(address(sepoliaBeanHeads)).facetAddress(sel);
         console.log("Facet address for balanceOf:", facet);
         assert(facet != address(0));
+    }
+
+    // helper function to get the current nonce
+    function getTokenNonce(uint256 tokenId) internal view returns (uint256) {
+        (bool ok, bytes memory data) =
+            address(sepoliaBeanHeads).staticcall(abi.encodeWithSignature("nonces(uint256)", tokenId));
+        require(ok, "Failed to get token nonce");
+        return abi.decode(data, (uint256));
     }
 }

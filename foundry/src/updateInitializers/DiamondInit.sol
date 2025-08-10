@@ -14,8 +14,10 @@ import {AggregatorV3Interface} from
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 
 import {BHStorage} from "src/libraries/BHStorage.sol";
+import {IERC721Permit} from "src/interfaces/IERC721Permit.sol";
 import {IDiamondCut} from "src/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "src/interfaces/IDiamondLoupe.sol";
 import {IERC165} from "src/interfaces/IERC165.sol";
@@ -46,6 +48,8 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IERC2981).interfaceId] = true;
         ds.supportedInterfaces[type(IERC721AUpgradeable).interfaceId] = true;
         ds.supportedInterfaces[type(IERC721Receiver).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC1271).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC721Permit).interfaceId] = true;
 
         // Initialize ERC721A state variables
         ERC721AStorage.Layout storage erc721AStorage = ERC721AStorage.layout();

@@ -12,7 +12,7 @@ contract MockPermit721 is ERC721AUpgradeable, ERC721PermitBase {
     bytes32 public constant PERMIT_TYPEHASH =
         keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
 
-    constructor() ERC721PermitBase(address(this)) {
+    constructor() {
         ERC721AStorage.Layout storage _l = ERC721AStorage.layout();
         _l._name = "BeanHeads";
         _l._symbol = "BEANS";

@@ -40,7 +40,15 @@ contract DeployBeanHeads is Script {
         BeanHeadsDiamond diamond = new BeanHeadsDiamond(deployerAddress, address(diamondCutFacet));
 
         // Prepare the facets to be added
-        IDiamondCut.FacetCut[] memory diamondCut = new IDiamondCut.FacetCut[](7);
+        /// 1. BeanHeadsAdminFacet
+        /// 2. BeanHeadsBreedingFacet
+        /// 3. BeanHeadsMarketplaceFacet
+        /// 4. BeanHeadsMarketplaceSigFacet
+        /// 5. BeanHeadsMintFacet
+        /// 6. BeanHeadsViewFacet
+        /// 7. DiamondLoupeFacet
+        /// 8. OwnershipFacet
+        IDiamondCut.FacetCut[] memory diamondCut = new IDiamondCut.FacetCut[](8);
         uint256 i = 0;
         // ---------------------- Admin Facet ----------------------
         {
@@ -77,6 +85,19 @@ contract DeployBeanHeads is Script {
             selectors[4] = facet.getTokenSalePrice.selector;
             selectors[5] = facet.isTokenForSale.selector;
             selectors[6] = facet.isTokenAllowed.selector;
+            diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
+        }
+        // ---------------------- Marketplace With Signature Facet ----------------------
+        {
+            BeanHeadsMarketplaceSigFacet facet = new BeanHeadsMarketplaceSigFacet();
+            bytes4[] memory selectors = new bytes4[](7);
+            selectors[0] = facet.sellTokenWithPermit.selector;
+            selectors[1] = facet.buyTokenWithPermit.selector;
+            selectors[2] = facet.cancelTokenSaleWithPermit.selector;
+            selectors[3] = facet.permit.selector;
+            selectors[4] = facet.nonces.selector;
+            selectors[5] = facet.eip712Domain.selector;
+            selectors[6] = facet.DOMAIN_SEPARATOR.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
 
