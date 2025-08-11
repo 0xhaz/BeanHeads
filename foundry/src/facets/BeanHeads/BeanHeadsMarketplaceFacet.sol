@@ -6,12 +6,12 @@ import {IERC20} from
 import {SafeERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC721AUpgradeable} from "src/ERC721A/ERC721AUpgradeable.sol";
-
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsMarketplace} from "src/interfaces/IBeanHeadsMarketplace.sol";
 import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
@@ -135,6 +135,17 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
     function isTokenAllowed(address _token) external view returns (bool) {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         return ds.allowedTokens[_token];
+    }
+
+    function getTokenSaleInfo(uint256 _tokenId)
+        external
+        view
+        tokenExists(_tokenId)
+        returns (address seller, uint256 price, bool isActive)
+    {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        BHStorage.Listing storage listing = ds.tokenIdToListing[_tokenId];
+        return (listing.seller, listing.price, listing.isActive);
     }
 
     /*//////////////////////////////////////////////////////////////

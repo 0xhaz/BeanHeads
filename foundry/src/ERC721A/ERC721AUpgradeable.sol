@@ -190,7 +190,7 @@ contract ERC721AUpgradeable is ERC721AUpgradeableInternal {
         // Counter overflow is incredibly unrealistic as `tokenId` would have to be 2**256.
         unchecked {
             // We can directly increment and decrement the balances
-            --ERC721AStorage.layout()._packedAddressData[from]; // Updtes: `balance -= 1`
+            --ERC721AStorage.layout()._packedAddressData[from]; // Updates: `balance -= 1`
             ++ERC721AStorage.layout()._packedAddressData[to]; // Updates: `balance += 1`
 
             // Updates:

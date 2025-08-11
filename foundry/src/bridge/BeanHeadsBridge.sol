@@ -14,6 +14,8 @@ import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
+
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {BHStorage} from "src/libraries/BHStorage.sol";
@@ -22,7 +24,7 @@ import {OracleLib} from "src/libraries/OracleLib.sol";
 import {PermitTypes} from "src/types/PermitTypes.sol";
 import {console} from "forge-std/console.sol";
 
-contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyGuard {
+contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyGuard, IERC1271 {
     using SafeERC20 for IERC20;
     using OracleLib for AggregatorV3Interface;
 
@@ -36,6 +38,9 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
     /// @notice Mapping to track the remote bridge address
     mapping(address remoteBridge => bool isRegistered) public remoteBridgeAddresses;
+
+    /// @notice Allowlist of digests that this bridge approves once
+    mapping(bytes32 digest => bool isApproved) private s_approvedDigests;
 
     /// @notice Modifier to ensure that the caller is the owner
     modifier onlyTokenOwner(uint256 tokenId) {
@@ -260,6 +265,12 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit SentTransferTokenRequest(messageId, _destinationChainSelector, _receiver, _tokenId);
     }
 
+    function isValidSignature(bytes32 hash, bytes calldata) external view override returns (bytes4) {
+        if (msg.sender != i_beanHeadsContract) return bytes4(0);
+
+        return s_approvedDigests[hash] ? IERC1271.isValidSignature.selector : bytes4(0);
+    }
+
     /// @inheritdoc IBeanHeadsBridge
     function depositLink(uint256 amount) external onlyOwner {
         if (amount == 0) revert IBeanHeadsBridge__InvalidAmount();
@@ -304,12 +315,15 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             (PermitTypes.Sell memory s, bytes memory sellSig, uint256 permitDeadline, bytes memory permitSig) =
                 abi.decode(rest, (PermitTypes.Sell, bytes, uint256, bytes));
 
-            // // Ensure the bridge owns the token
-            // if (IBeanHeads(i_beanHeadsContract).getOwnerOf(tokenId) != address(this)) {
-            //     revert IBeanHeadsBridge__TokenNotDeposited(tokenId);
-            // }
+            IBeanHeads beans = IBeanHeads(i_beanHeadsContract);
 
-            IBeanHeads(i_beanHeadsContract).sellTokenWithPermit(s, sellSig, permitDeadline, permitSig);
+            // Call facet
+            beans.sellTokenWithPermit(
+                s,
+                sellSig, // sellSig
+                permitDeadline,
+                permitSig
+            );
 
             emit TokenListedCrossChain(s.owner, s.tokenId, s.price);
         }
@@ -402,5 +416,13 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     function _checkPaymentTokenAllowanceAndBalance(IERC20 token, uint256 amount) internal view {
         if (token.allowance(msg.sender, address(this)) < amount) revert IBeanHeadsBridge__InsufficientAllowance();
         if (token.balanceOf(msg.sender) < amount) revert IBeanHeadsBridge__InsufficientPayment();
+    }
+
+    function _approveDigest(bytes32 hash) internal {
+        s_approvedDigests[hash] = true;
+    }
+
+    function _clearDigest(bytes32 hash) internal {
+        s_approvedDigests[hash] = false;
     }
 }

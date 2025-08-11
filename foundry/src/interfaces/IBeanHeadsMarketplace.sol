@@ -71,4 +71,13 @@ interface IBeanHeadsMarketplace {
      * @return The sale price of the token.
      */
     function getTokenSalePrice(uint256 _tokenId) external view returns (uint256);
+
+    /**
+     * @notice Returns the sale information of a token.
+     * @param _tokenId The ID of the token to query.
+     * @return seller The address of the seller.
+     * @return price The sale price of the token.
+     * @return isActive Whether the token is currently for sale.
+     */
+    function getTokenSaleInfo(uint256 _tokenId) external view returns (address seller, uint256 price, bool isActive);
 }

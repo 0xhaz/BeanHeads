@@ -8,6 +8,7 @@ import {SafeERC20} from
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import {IERC721A} from "ERC721A/interfaces/IERC721A.sol";
 import {ERC721PermitBase, IERC721Permit, ECDSA} from "src/abstracts/ERC721PermitBase.sol";
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsMarketplaceSig} from "src/interfaces/IBeanHeadsMarketplaceSig.sol";
@@ -63,7 +64,8 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         IERC721Permit(address(this)).permit(address(this), s.tokenId, permitDeadline, permitSig);
 
         // escrow and list
-        safeTransferFrom(s.owner, address(this), s.tokenId);
+        /// @dev This is a self-external call to the ERC721 contract
+        IERC721A(address(this)).safeTransferFrom(s.owner, address(this), s.tokenId);
         ds.tokenIdToListing[s.tokenId] = BHStorage.Listing({seller: s.owner, price: s.price, isActive: true});
 
         emit TokenListedCrossChain(s.owner, s.tokenId, s.price);

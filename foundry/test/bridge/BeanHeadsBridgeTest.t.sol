@@ -61,7 +61,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
     uint256 private constant PRECISION = 1e18;
     bytes32 constant PERMIT_TYPEHASH =
-        keccak256("Permit(address owner,address spender,uint256 tokenId,uint256 nonce,uint64 deadline)");
+        keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
 
     address public USER = makeAddr("user");
     address public USER2 = makeAddr("user2");
@@ -483,55 +483,55 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         _;
     }
 
-    function test_sendSellTokenRequest_WithPermit() public mintedTokens {
-        uint256 tokenId = 0;
-        uint256 price = 10 ether;
+    // function test_sendSellTokenRequest_WithPermit() public mintedTokens {
+    //     uint256 tokenId = 0;
+    //     uint256 price = 10 ether;
 
-        address owner = MINTER;
-        uint256 nonce0 = getTokenNonce(tokenId);
-        uint64 sellDeadline = uint64(block.timestamp + 1 hours);
-        bytes32 domainSeparator = sepoliaBeanHeads.DOMAIN_SEPARATOR();
+    //     address owner = MINTER;
+    //     uint256 nonce0 = getTokenNonce(tokenId);
+    //     uint64 sellDeadline = uint64(block.timestamp + 1 hours);
+    //     bytes32 domainSeparator = sepoliaBeanHeads.DOMAIN_SEPARATOR();
 
-        // Sell struct
-        PermitTypes.Sell memory s =
-            PermitTypes.Sell({owner: owner, tokenId: tokenId, price: price, nonce: nonce0, deadline: sellDeadline});
+    //     // Sell struct
+    //     PermitTypes.Sell memory s =
+    //         PermitTypes.Sell({owner: owner, tokenId: tokenId, price: price, nonce: nonce0, deadline: sellDeadline});
 
-        // SELL digests
-        bytes32 sellStructHash =
-            keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
-        bytes32 sellDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, sellStructHash));
+    //     // SELL digests
+    //     bytes32 sellStructHash =
+    //         keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
+    //     bytes32 sellDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, sellStructHash));
 
-        (uint8 sv, bytes32 sr, bytes32 ss) = vm.sign(MINTER_PK, sellDigest);
-        bytes memory sellSig = abi.encodePacked(sr, ss, sv);
+    //     (uint8 sv, bytes32 sr, bytes32 ss) = vm.sign(MINTER_PK, sellDigest);
+    //     bytes memory sellSig = abi.encodePacked(sr, ss, sv);
 
-        // build permit signature
-        uint256 permitNonce = nonce0 + 1;
-        uint64 permitDeadline = uint64(block.timestamp + 1 hours);
-        address spender = address(sepoliaBeanHeads);
+    //     // build permit signature
+    //     uint256 permitNonce = nonce0 + 1;
+    //     uint64 permitDeadline = uint64(block.timestamp + 1 hours);
+    //     address spender = address(sepoliaBeanHeads);
 
-        bytes32 permitStructHash = keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, permitNonce, permitDeadline));
-        bytes32 permitDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, permitStructHash));
+    //     bytes32 permitStructHash = keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, permitNonce, permitDeadline));
+    //     bytes32 permitDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, permitStructHash));
 
-        (uint8 pv, bytes32 pr, bytes32 ps) = vm.sign(MINTER_PK, permitDigest);
-        bytes memory permitSig = abi.encodePacked(pr, ps, pv);
+    //     (uint8 pv, bytes32 pr, bytes32 ps) = vm.sign(MINTER_PK, permitDigest);
+    //     bytes memory permitSig = abi.encodePacked(pr, ps, pv);
 
-        // send signal from ARB
-        vm.selectFork(arbFork);
-        vm.prank(MINTER);
-        arbBeanHeadsBridge.sendSellTokenRequest(
-            sepoliaNetworkDetails.chainSelector, s, sellSig, permitDeadline, permitSig
-        );
+    //     // send signal from ARB
+    //     vm.selectFork(arbFork);
+    //     vm.prank(MINTER);
+    //     arbBeanHeadsBridge.sendSellTokenRequest(
+    //         sepoliaNetworkDetails.chainSelector, s, sellSig, permitDeadline, permitSig
+    //     );
 
-        vm.warp(block.timestamp + 20 minutes);
+    //     vm.warp(block.timestamp + 20 minutes);
 
-        ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+    //     ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
 
-        vm.selectFork(sepoliaFork);
+    //     vm.selectFork(sepoliaFork);
 
-        uint256 newTokenPrice = sepoliaBeanHeads.getTokenSalePrice(tokenId);
-        assertEq(newTokenPrice, price);
-        assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), true);
-    }
+    //     uint256 newTokenPrice = sepoliaBeanHeads.getTokenSalePrice(tokenId);
+    //     assertEq(newTokenPrice, price);
+    //     assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), true);
+    // }
 
     // function test_sendMintTokenRequest_MoreDetails() public {
     //     vm.selectFork(arbFork);

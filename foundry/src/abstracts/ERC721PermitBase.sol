@@ -149,6 +149,7 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
         view
         returns (bool)
     {
+        if (signer.code.length == 0) return false; // Not a contract
         (bool success, bytes memory result) =
             signer.staticcall(abi.encodeWithSelector(IERC1271.isValidSignature.selector, digest, sig));
 
