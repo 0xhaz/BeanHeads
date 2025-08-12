@@ -82,6 +82,8 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
     ) external nonReentrant tokenExists(b.tokenId) {
         if (block.timestamp > b.deadline) _revert(IPermit__ERC2612ExpiredSignature.selector);
 
+        _verifyBuySig(b, buySig);
+
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         BHStorage.Listing storage listing = ds.tokenIdToListing[b.tokenId];
 
@@ -91,54 +93,35 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         }
         if (ds.tokenNonces[b.tokenId] != b.listingNonce) _revert(IPermit__InvalidNonce.selector);
 
-        bytes32 structHash = keccak256(
-            abi.encode(
-                PermitTypes.BUY_TYPEHASH,
-                b.buyer,
-                b.paymentToken,
-                b.recipient,
-                b.tokenId,
-                b.maxPriceUsd,
-                b.listingNonce,
-                b.deadline
-            )
-        );
-        bytes32 digest = _hashTypedDataV4(structHash);
-        (address signer,,) = ECDSA.tryRecover(digest, buySig);
-        bool ok = signer == b.buyer || _isValidContractERC1271Signature(b.buyer, digest, buySig);
-        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
+        PermitTypes.BuyLocals memory L;
+        L.priceUsd = listing.price;
+        if (L.priceUsd > b.maxPriceUsd) _revert(IBeanHeadsMarketplaceSig__PriceExceedsMax.selector);
 
-        uint256 priceUsd = listing.price;
-        uint256 adjustedPrice = _getTokenAmountFromUsd(b.paymentToken, priceUsd);
-        if (priceUsd > b.maxPriceUsd) {
-            _revert(IBeanHeadsMarketplaceSig__PriceExceedsMax.selector);
-        }
+        L.adjustedPrice = _getTokenAmountFromUsd(b.paymentToken, L.priceUsd);
 
         IERC20 token = IERC20(b.paymentToken);
-        try IERC20Permit(b.paymentToken).permit(b.buyer, address(this), permitValue, permitDeadline, v, r, s) {
-            // Permit was successful, continue
-        } catch {
-            _checkPaymentTokenAllowanceAndBalance(token, adjustedPrice);
-        }
+        _tryPermitOrCheck(
+            IERC20Permit(b.paymentToken), token, b.buyer, permitValue, permitDeadline, v, r, s, L.adjustedPrice
+        );
 
         // Transfer funds in, split royalties and transfer NFT to recipient
-        token.safeTransferFrom(b.buyer, address(this), adjustedPrice);
+        token.safeTransferFrom(b.buyer, address(this), L.adjustedPrice);
 
-        (address royaltyReceiver, uint256 royaltyAmount) = _royaltyInfo(b.tokenId, adjustedPrice);
-        uint256 royaltyAmt = _getTokenAmountFromUsd(b.paymentToken, royaltyAmount);
-        uint256 sellerAmount = adjustedPrice - royaltyAmt;
+        (L.royaltyReceiver, L.royaltyUsd) = _royaltyInfo(b.tokenId, L.priceUsd);
+        L.royaltyAmount = _getTokenAmountFromUsd(b.paymentToken, L.royaltyUsd);
+        L.sellerAmount = L.adjustedPrice - L.royaltyAmount;
 
-        if (royaltyAmt > 0) {
-            token.safeTransfer(royaltyReceiver, royaltyAmt);
-            emit RoyaltyPaidCrossChain(royaltyReceiver, b.tokenId, priceUsd, royaltyAmt);
+        if (L.royaltyAmount > 0) {
+            token.safeTransfer(L.royaltyReceiver, L.royaltyAmount);
+            emit RoyaltyPaidCrossChain(L.royaltyReceiver, b.tokenId, L.priceUsd, L.royaltyAmount);
         }
 
-        token.safeTransfer(listing.seller, sellerAmount);
+        token.safeTransfer(listing.seller, L.sellerAmount);
 
         ds.tokenIdToPaymentToken[b.tokenId] = b.paymentToken;
         _safeTransfer(address(this), b.recipient, b.tokenId, "");
 
-        emit TokenSoldCrossChain(b.recipient, listing.seller, b.tokenId, adjustedPrice);
+        emit TokenSoldCrossChain(b.recipient, listing.seller, b.tokenId, L.adjustedPrice);
 
         // Clear the listing
         listing.seller = address(0);
@@ -206,8 +189,46 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         return ds.supportedInterfaces[interfaceId];
     }
 
-    /// @notice Inherits from IERC721Receiver interface
+    /// @notice Required by ERC721Receiver interface
+    /// @dev This function is called when a contract is the recipient of an ERC721 transfer
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector; // Return the selector for ERC721Received
+    }
+
+    function _verifyBuySig(PermitTypes.Buy calldata b, bytes calldata buySig) internal view {
+        bytes32 structHash = keccak256(
+            abi.encode(
+                PermitTypes.BUY_TYPEHASH,
+                b.buyer,
+                b.paymentToken,
+                b.recipient,
+                b.tokenId,
+                b.maxPriceUsd,
+                b.listingNonce,
+                b.deadline
+            )
+        );
+        bytes32 digest = _hashTypedDataV4(structHash);
+        (address signer,,) = ECDSA.tryRecover(digest, buySig);
+        bool ok = signer == b.buyer || _isValidContractERC1271Signature(b.buyer, digest, buySig);
+        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
+    }
+
+    function _tryPermitOrCheck(
+        IERC20Permit permitToken,
+        IERC20 token,
+        address owner,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        uint256 amountToSpend
+    ) internal {
+        try permitToken.permit(owner, address(this), value, deadline, v, r, s) {
+            // Permit was successful, continue
+        } catch {
+            _checkPaymentPermitTokenAllowanceAndBalance(token, owner, amountToSpend);
+        }
     }
 }

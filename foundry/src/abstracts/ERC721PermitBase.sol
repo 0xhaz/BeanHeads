@@ -6,9 +6,12 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {IERC721Permit} from "src/interfaces/IERC721Permit.sol";
+import {IERC20} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
 
 import {ERC721AUpgradeable} from "src/ERC721A/ERC721AUpgradeable.sol";
 import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
+import {PermitTypes} from "src/types/PermitTypes.sol";
 import {BHStorage} from "src/libraries/BHStorage.sol";
 
 /**
@@ -154,5 +157,14 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
             signer.staticcall(abi.encodeWithSelector(IERC1271.isValidSignature.selector, digest, sig));
 
         return (success && result.length == 32 && abi.decode(result, (bytes4)) == IERC1271.isValidSignature.selector);
+    }
+
+    function _checkPaymentPermitTokenAllowanceAndBalance(IERC20 token, address owner, uint256 amount) internal view {
+        if (token.allowance(owner, address(this)) < amount) {
+            _revert(IBeanHeadsBase__InsufficientAllowance.selector);
+        }
+        if (token.balanceOf(owner) < amount) {
+            _revert(IBeanHeadsBase__InsufficientPayment.selector);
+        }
     }
 }

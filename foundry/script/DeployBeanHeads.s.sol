@@ -26,8 +26,6 @@ contract DeployBeanHeads is Script {
         HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
 
         address deployerAddress = vm.addr(config.deployerKey);
-        console.log("Deployer address:", deployerAddress);
-        console.log("Deployer balance:", deployerAddress.balance);
         address priceFeed = config.usdPriceFeed;
 
         vm.startBroadcast(config.deployerKey);

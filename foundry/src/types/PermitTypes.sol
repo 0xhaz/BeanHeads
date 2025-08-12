@@ -25,6 +25,15 @@ library PermitTypes {
         uint64 deadline;
     }
 
+    struct BuyLocals {
+        uint256 priceUsd;
+        uint256 adjustedPrice;
+        address royaltyReceiver;
+        uint256 royaltyUsd;
+        uint256 royaltyAmount;
+        uint256 sellerAmount;
+    }
+
     bytes32 internal constant BUY_TYPEHASH = keccak256(
         "buyToken(address buyer,address paymentToken,address recipient,uint256 tokenId,uint256 maxPriceUsd,uint256 listingNonce,uint64 deadline)"
     );

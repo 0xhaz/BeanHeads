@@ -36,4 +36,16 @@ interface IBeanHeadsMarketplaceSig {
         uint256 permitDeadline,
         bytes calldata permitSig
     ) external;
+
+    function buyTokenWithPermit(
+        PermitTypes.Buy calldata b,
+        bytes calldata buySig,
+        uint256 permitValue,
+        uint256 permitDeadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
+    function cancelTokenSaleWithPermit(PermitTypes.Cancel calldata c, bytes calldata cancelSig) external;
 }
