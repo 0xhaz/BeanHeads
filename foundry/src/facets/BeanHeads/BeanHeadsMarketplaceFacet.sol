@@ -137,6 +137,7 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         return ds.allowedTokens[_token];
     }
 
+    /// @inheritdoc IBeanHeadsMarketplace
     function getTokenSaleInfo(uint256 _tokenId)
         external
         view

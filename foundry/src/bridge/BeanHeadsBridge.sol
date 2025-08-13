@@ -15,6 +15,7 @@ import {AggregatorV3Interface} from
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
@@ -41,6 +42,10 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
     /// @notice Allowlist of digests that this bridge approves once
     mapping(bytes32 digest => bool isApproved) private s_approvedDigests;
+
+    mapping(uint256 tokenId => uint256 price) public s_listingPriceUsd;
+
+    mapping(uint256 tokenId => uint256 nonce) public s_listingNonce;
 
     /// @notice Modifier to ensure that the caller is the owner
     modifier onlyTokenOwner(uint256 tokenId) {
@@ -153,28 +158,21 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     }
 
     /// @inheritdoc IBeanHeadsBridge
-    function sendBuyTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, address _paymentToken)
-        external
-        onlyRegisteredRemoteBridge
-        nonReentrant
-        returns (bytes32 messageId)
-    {
-        if (!IBeanHeads(i_beanHeadsContract).isTokenForSale(_tokenId)) {
-            revert IBeanHeadsBridge__TokenIsNotForSale();
-        }
-
-        uint256 _rawPrice = IBeanHeads(i_beanHeadsContract).getTokenSalePrice(_tokenId);
-
-        if (!IBeanHeads(i_beanHeadsContract).isTokenAllowed(_paymentToken)) {
-            revert IBeanHeadsBridge__TokenNotAllowed(_paymentToken);
-        }
-
+    function sendBuyTokenRequest(
+        uint64 _destinationChainSelector,
+        uint256 _tokenId,
+        address _paymentToken,
+        uint256 _price
+    ) external onlyRegisteredRemoteBridge nonReentrant returns (bytes32 messageId) {
         IERC20 token = IERC20(_paymentToken);
-        uint256 _price = _getTokenAmountFromUsd(_paymentToken, _rawPrice);
 
+        // _getTokenAmountFromUsd(_paymentToken, _price);
         _checkPaymentTokenAllowanceAndBalance(token, _price);
 
-        bytes memory encodeBuyPayload = abi.encode(msg.sender, _tokenId, _price);
+        // Transfer the token to the bridge contract
+        token.safeTransferFrom(msg.sender, address(this), _price);
+
+        bytes memory encodeBuyPayload = abi.encode(msg.sender, _tokenId, _price, _paymentToken);
         bytes memory buyTokenCalldata = abi.encode(ActionType.BUY, encodeBuyPayload);
 
         Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
@@ -330,15 +328,18 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
         if (action == ActionType.BUY) {
             /// @notice Decode the message data for buying a token.
-            (address buyer, uint256 buyTokenId, address paymentToken) = abi.decode(rest, (address, uint256, address));
+            (address buyer, uint256 buyTokenId, address paymentToken, uint256 price) =
+                abi.decode(rest, (address, uint256, address, uint256));
 
-            // Ensure the bridge owns the token
-            if (IBeanHeads(i_beanHeadsContract).getOwnerOf(buyTokenId) != address(this)) {
-                revert IBeanHeadsBridge__TokenNotDeposited(buyTokenId);
-            }
+            price = message.destTokenAmounts[0].amount;
+            paymentToken = message.destTokenAmounts[0].token;
+
+            IERC20(paymentToken).safeApprove(i_beanHeadsContract, 0);
+            IERC20(paymentToken).safeApprove(i_beanHeadsContract, price);
 
             IBeanHeads(i_beanHeadsContract).buyToken(buyTokenId, paymentToken);
-            IERC721A(address(i_beanHeadsContract)).safeTransferFrom(address(this), buyer, buyTokenId);
+
+            IERC721A(i_beanHeadsContract).safeTransferFrom(address(this), buyer, buyTokenId);
 
             emit TokenBoughtCrossChain(buyer, buyTokenId);
         }
@@ -424,5 +425,9 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
     function _clearDigest(bytes32 hash) internal {
         s_approvedDigests[hash] = false;
+    }
+
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector; // Return the selector for ERC721Received
     }
 }

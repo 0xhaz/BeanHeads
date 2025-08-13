@@ -33,12 +33,13 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         ReentrancyLib.resetStatus();
     }
 
+    /// @inheritdoc IBeanHeadsMarketplaceSig
     function sellTokenWithPermit(
         PermitTypes.Sell calldata s,
         bytes calldata sellSig,
         uint256 permitDeadline,
         bytes calldata permitSig
-    ) external {
+    ) public tokenExists(s.tokenId) {
         if (block.timestamp > s.deadline) _revert(IPermit__ERC2612ExpiredSignature.selector);
         if (s.price <= 0) {
             _revert(IBeanHeadsMarketplaceSig__PriceMustBeGreaterThanZero.selector);
@@ -71,6 +72,7 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         emit TokenListedCrossChain(s.owner, s.tokenId, s.price);
     }
 
+    /// @inheritdoc IBeanHeadsMarketplaceSig
     function buyTokenWithPermit(
         PermitTypes.Buy calldata b,
         bytes calldata buySig,
@@ -79,7 +81,7 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external nonReentrant tokenExists(b.tokenId) {
+    ) public nonReentrant tokenExists(b.tokenId) {
         if (block.timestamp > b.deadline) _revert(IPermit__ERC2612ExpiredSignature.selector);
 
         _verifyBuySig(b, buySig);
@@ -100,12 +102,15 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         L.adjustedPrice = _getTokenAmountFromUsd(b.paymentToken, L.priceUsd);
 
         IERC20 token = IERC20(b.paymentToken);
-        _tryPermitOrCheck(
-            IERC20Permit(b.paymentToken), token, b.buyer, permitValue, permitDeadline, v, r, s, L.adjustedPrice
-        );
+        uint256 bal = token.balanceOf(address(this));
 
-        // Transfer funds in, split royalties and transfer NFT to recipient
-        token.safeTransferFrom(b.buyer, address(this), L.adjustedPrice);
+        if (bal < L.adjustedPrice) {
+            uint256 need = L.adjustedPrice - bal;
+            _tryPermitOrCheck(IERC20Permit(b.paymentToken), token, b.buyer, permitValue, permitDeadline, v, r, s, need);
+
+            // Transfer funds in, split royalties and transfer NFT to recipient
+            token.safeTransferFrom(b.buyer, address(this), need);
+        }
 
         (L.royaltyReceiver, L.royaltyUsd) = _royaltyInfo(b.tokenId, L.priceUsd);
         L.royaltyAmount = _getTokenAmountFromUsd(b.paymentToken, L.royaltyUsd);
@@ -132,8 +137,9 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         }
     }
 
+    /// @inheritdoc IBeanHeadsMarketplaceSig
     function cancelTokenSaleWithPermit(PermitTypes.Cancel calldata c, bytes calldata cancelSig)
-        external
+        public
         tokenExists(c.tokenId)
     {
         if (block.timestamp > c.deadline) _revert(IPermit__ERC2612ExpiredSignature.selector);
@@ -184,6 +190,10 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         return IERC2981(ds.royaltyContract).royaltyInfo(tokenId, salePrice);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            INTERFACE OVERRIDES
+    //////////////////////////////////////////////////////////////*/
+
     function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         return ds.supportedInterfaces[interfaceId];
@@ -195,6 +205,15 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         return IERC721Receiver.onERC721Received.selector; // Return the selector for ERC721Received
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            HELPER FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Verifies the buy signature
+     * @param b The buy parameters
+     * @param buySig  The signature for the buy permit
+     */
     function _verifyBuySig(PermitTypes.Buy calldata b, bytes calldata buySig) internal view {
         bytes32 structHash = keccak256(
             abi.encode(
@@ -214,6 +233,18 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
     }
 
+    /**
+     * @notice Tries to permit or checks the allowance and balance of the payment token
+     * @param permitToken The token that supports ERC-20 permits
+     * @param token The token to check the allowance and balance for
+     * @param owner The owner of the tokens
+     * @param value The value for the permit
+     * @param deadline The deadline for the permit
+     * @param v The v component of the ECDSA signature
+     * @param r The r component of the ECDSA signature
+     * @param s The s component of the ECDSA signature
+     * @param amountToSpend The amount to spend from the token
+     */
     function _tryPermitOrCheck(
         IERC20Permit permitToken,
         IERC20 token,

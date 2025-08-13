@@ -4,16 +4,27 @@ pragma solidity ^0.8.24;
 import {PermitTypes} from "src/types/PermitTypes.sol";
 
 interface IBeanHeadsMarketplaceSig {
+    /// @notice Error thrown when the amount is invalid
     error IBeanHeadsMarketplaceSig__InvalidAmount();
+    /// @notice Error thrown when the token is not allowed for minting
     error IBeanHeadsMarketplaceSig__TokenNotAllowed(address token);
+    /// @notice Error thrown when the allowance for the payment token is insufficient
     error IBeanHeadsMarketplaceSig__InsufficientAllowance();
+    /// @notice Error thrown when the payment for minting is insufficient
     error IBeanHeadsMarketplaceSig__InsufficientPayment();
+    /// @notice Error thrown when the oracle price is invalid
     error IBeanHeadsMarketplaceSig__InvalidOraclePrice();
+    /// @notice Error thrown when the token does not exist
     error IBeanHeadsMarketplaceSig__TokenDoesNotExist();
+    /// @notice Error thrown when the caller is not the owner of the token
     error IBeanHeadsMarketplaceSig__NotOwner();
+    /// @notice Error thrown when the caller is not the owner or approved for the token
     error IBeanHeadsMarketplaceSig__NotOwnerOrApproved();
+    /// @notice Error thrown when the price is not greater than zero
     error IBeanHeadsMarketplaceSig__PriceMustBeGreaterThanZero();
+    /// @notice Error thrown when the token is not for sale
     error IBeanHeadsMarketplaceSig__TokenNotForSale();
+    /// @notice Error thrown when the sale price exceeds the maximum allowed price
     error IBeanHeadsMarketplaceSig__PriceExceedsMax();
 
     /// @notice Emitted when a seller sets a price for a token
@@ -30,6 +41,13 @@ interface IBeanHeadsMarketplaceSig {
     /// @notice Emitted when a token sale is cancelled
     event TokenSaleCancelledCrossChain(address indexed owner, uint256 indexed tokenId);
 
+    /**
+     * @notice Sell token with custom price
+     * @param s The sell parameters
+     * @param sellSig The signature for the sell permit
+     * @param permitDeadline The deadline for the permit
+     * @param permitSig The signature for the permit
+     */
     function sellTokenWithPermit(
         PermitTypes.Sell calldata s,
         bytes calldata sellSig,
@@ -37,6 +55,16 @@ interface IBeanHeadsMarketplaceSig {
         bytes calldata permitSig
     ) external;
 
+    /**
+     * @notice Buys a token currently on sale with a permit
+     * @param b The buy parameters
+     * @param buySig The signature for the buy permit
+     * @param permitValue The value for the permit
+     * @param permitDeadline The deadline for the permit
+     * @param v The v component of the ECDSA signature
+     * @param r The r component of the ECDSA signature
+     * @param s The s component of the ECDSA signature
+     */
     function buyTokenWithPermit(
         PermitTypes.Buy calldata b,
         bytes calldata buySig,
@@ -47,5 +75,10 @@ interface IBeanHeadsMarketplaceSig {
         bytes32 s
     ) external;
 
+    /**
+     * @notice Cancels the sale of a token with a permit
+     * @param c The cancel parameters
+     * @param cancelSig The signature for the cancel permit
+     */
     function cancelTokenSaleWithPermit(PermitTypes.Cancel calldata c, bytes calldata cancelSig) external;
 }

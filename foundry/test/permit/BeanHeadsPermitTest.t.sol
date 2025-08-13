@@ -215,9 +215,9 @@ contract BeanHeadsPermitTest is Test, ERC721PermitBase, Helpers {
         }
     }
 
-    // -------------------
-    // Helpers
-    // -------------------
+    /*//////////////////////////////////////////////////////////////
+                                HELPERS
+    //////////////////////////////////////////////////////////////*/
     function _newSigner(string memory label) internal pure returns (uint256 pk, address addr) {
         pk = uint256(keccak256(abi.encodePacked(label)));
         addr = vm.addr(pk);

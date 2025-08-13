@@ -17,6 +17,10 @@ interface IBeanHeadsBridge {
     error IBeanHeadsBridge__TokenNotAllowed(address token);
     error IBeanHeadsBridge__TokenIsNotForSale();
     error IBeanHeadsBridge__InsufficientAllowance();
+    error IBeanHeadsBridge__InvalidNonce();
+    error IBeanHeadsBridge__InvalidLength();
+    error IBeanHeadsBridge__InvalidPaymentToken(address received, address expected);
+    error IBeanHeadsBridge__PriceExceedsMax();
 
     enum ActionType {
         MINT,
@@ -124,9 +128,12 @@ interface IBeanHeadsBridge {
      * @param _tokenId The ID of the token to be bought.
      * @return messageId The ID of the sent message.
      */
-    function sendBuyTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, address _paymentToken)
-        external
-        returns (bytes32 messageId);
+    function sendBuyTokenRequest(
+        uint64 _destinationChainSelector,
+        uint256 _tokenId,
+        address _paymentToken,
+        uint256 price
+    ) external returns (bytes32 messageId);
 
     /**
      * @notice Sends a cancel token sale request to the remote bridge.

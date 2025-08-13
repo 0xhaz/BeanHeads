@@ -102,11 +102,23 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
                                 ERC-4494
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Returns the nonce of an NFT - useful for creating permits
+     * @param tokenId The index of the NFT to get the nonce of
+     * @return The uint256 representation of the nonce
+     */
     function nonces(uint256 tokenId) external view returns (uint256) {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         return ds.tokenNonces[tokenId];
     }
 
+    /**
+     * @notice Function to approve by way of owner signature
+     * @param spender The address to approve
+     * @param tokenId The index of the NFT to approve the spender on
+     * @param deadline A timestamp expiry for the permit
+     * @param sig A traditional or EIP-2098 signature
+     */
     function permit(address spender, uint256 tokenId, uint256 deadline, bytes memory sig) external {
         _permit(spender, tokenId, deadline, sig);
     }
@@ -142,11 +154,24 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Checks if the spender is approved or the owner of the token
+     * @param spender The address to check
+     * @param tokenId The ID of the token
+     * @return bool indicating if the spender is approved or owner
+     */
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
         address owner = ownerOf(tokenId);
         return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
     }
 
+    /**
+     * @notice Checks if the signature is valid for a contract using ERC-1271
+     * @param signer The address of the signer
+     * @param digest The hash of the message
+     * @param sig The signature to verify
+     * @return bool indicating if the signature is valid
+     */
     function _isValidContractERC1271Signature(address signer, bytes32 digest, bytes memory sig)
         internal
         view
@@ -159,6 +184,12 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
         return (success && result.length == 32 && abi.decode(result, (bytes4)) == IERC1271.isValidSignature.selector);
     }
 
+    /**
+     * @notice Checks the allowance and balance of a payment token
+     * @param token The ERC20 token to check
+     * @param owner The address of the token owner
+     * @param amount The amount to check
+     */
     function _checkPaymentPermitTokenAllowanceAndBalance(IERC20 token, address owner, uint256 amount) internal view {
         if (token.allowance(owner, address(this)) < amount) {
             _revert(IBeanHeadsBase__InsufficientAllowance.selector);
