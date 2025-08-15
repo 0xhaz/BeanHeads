@@ -291,7 +291,7 @@ contract BeanHeadsTest is Test, Helpers {
         mockERC20.mint(USER2, 100 ether);
         uint256 expectedRoyalty = (salePrice * 600) / 10_000;
         vm.recordLogs();
-        beanHeads.buyToken(tokenId, address(mockERC20));
+        beanHeads.buyToken(USER2, tokenId, address(mockERC20));
         vm.stopPrank();
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -489,7 +489,7 @@ contract BeanHeadsTest is Test, Helpers {
 
         mockERC20.approve(address(beanHeads), type(uint256).max);
         vm.expectRevert(BeanHeadsBase.IBeanHeadsBase__InsufficientPayment.selector);
-        beanHeads.buyToken(tokenId, address(mockERC20)); // USER2 trying to buy with insufficient funds
+        beanHeads.buyToken(USER2, tokenId, address(mockERC20)); // USER2 trying to buy with insufficient funds
         vm.stopPrank();
 
         vm.startPrank(USER2);
@@ -497,7 +497,7 @@ contract BeanHeadsTest is Test, Helpers {
         mockERC20.approve(address(beanHeads), type(uint256).max);
         mockERC20.mint(USER2, 10 ether); // Mint some mock ERC20 tokens for USER2
         vm.expectRevert(IBeanHeadsMarketplace.IBeanHeadsMarketplace__TokenNotForSale.selector);
-        beanHeads.buyToken(tokenId2, address(mockERC20)); // Trying to buy a token not on sale
+        beanHeads.buyToken(USER2, tokenId2, address(mockERC20)); // Trying to buy a token not on sale
         vm.stopPrank();
     }
 

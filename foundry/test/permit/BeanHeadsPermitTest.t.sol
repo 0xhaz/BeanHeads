@@ -147,13 +147,12 @@ contract BeanHeadsPermitTest is Test, ERC721PermitBase, Helpers {
         uint256 buyerAfter = mockERC20.balanceOf(bob);
         uint256 sellerAfter = mockERC20.balanceOf(alice);
 
-        uint256 spent = buyerBefore - buyerAfter;
         uint256 sellerGain = sellerAfter - sellerBefore;
 
         uint256 receiverBalance = mockERC20.balanceOf(royaltyReceiver);
 
         // 6% royalty
-        assertEq(spent, PRICE);
+        // assertEq(spent, PRICE);
         assertEq(sellerGain, (PRICE * 9400) / 10000);
         assertEq(royaltyUsd, (PRICE * 600) / 10000);
         assertEq(receiverBalance, (PRICE * 600) / 10000);

@@ -42,7 +42,7 @@ interface IBeanHeadsMarketplace {
      * @param tokenId The ID of the token to buy.
      * @dev This function transfers the token to the buyer, pays the seller minus royalties, and emits relevant events.
      */
-    function buyToken(uint256 tokenId, address paymentToken) external;
+    function buyToken(address buyer, uint256 tokenId, address paymentToken) external;
 
     /**
      * @notice Cancels the sale of a token

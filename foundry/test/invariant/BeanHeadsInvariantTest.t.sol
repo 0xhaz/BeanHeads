@@ -314,7 +314,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         mockERC20.mint(USER2, 100 ether);
         uint256 buyerBalanceBefore = mockERC20.balanceOf(USER2);
         mockERC20.approve(address(beanHeads), type(uint256).max);
-        beanHeads.buyToken(tokenId, address(mockERC20));
+        beanHeads.buyToken(USER2, tokenId, address(mockERC20));
         vm.stopPrank();
 
         // Post-conditions: ownership and sale cleared

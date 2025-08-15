@@ -57,7 +57,11 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
     }
 
     /// @inheritdoc IBeanHeadsMarketplace
-    function buyToken(uint256 _tokenId, address _paymentToken) external nonReentrant tokenExists(_tokenId) {
+    function buyToken(address _buyer, uint256 _tokenId, address _paymentToken)
+        external
+        nonReentrant
+        tokenExists(_tokenId)
+    {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         BHStorage.Listing storage listing = ds.tokenIdToListing[_tokenId];
 
@@ -87,9 +91,9 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         token.safeTransfer(listing.seller, sellerAmount);
 
         ds.tokenIdToPaymentToken[_tokenId] = _paymentToken;
-        _safeTransfer(address(this), msg.sender, _tokenId, "");
+        _safeTransfer(address(this), _buyer, _tokenId, "");
 
-        emit TokenSold(msg.sender, listing.seller, _tokenId, adjustedPrice);
+        emit TokenSold(_buyer, listing.seller, _tokenId, adjustedPrice);
 
         ds.tokenIdToListing[_tokenId] = BHStorage.Listing({seller: address(0), price: 0, isActive: false});
     }
@@ -166,23 +170,6 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
 
         return IERC2981(ds.royaltyContract).royaltyInfo(tokenId, salePrice);
-    }
-
-    /**
-     * @notice Removes tokens from the owner's list (s_ownerTokens)
-     * @param owner The address of the token owner
-     * @param tokenId The ID of the token to remove
-     */
-    function _removeTokenFromOwner(address owner, uint256 tokenId) internal {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        uint256[] storage tokens = ds.ownerTokens[owner];
-        for (uint256 i = 0; i < tokens.length; i++) {
-            if (tokens[i] == tokenId) {
-                tokens[i] = tokens[tokens.length - 1];
-                tokens.pop();
-                break;
-            }
-        }
     }
 
     /// @notice Inherits from IERC721Receiver interface

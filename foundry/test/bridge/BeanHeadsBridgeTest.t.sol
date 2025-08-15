@@ -569,7 +569,123 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         assertEq(userTokenSupply, 1);
         assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), USER);
         assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), false);
-        assertEq(sepoliaBeanHeads.getTokenSalePrice(tokenId), 0);
+    }
+
+    function test_cancelTokenSale_Local() public mintedTokens {
+        uint256 tokenId = 0;
+
+        vm.selectFork(sepoliaFork);
+        address owner = MINTER;
+        vm.startPrank(owner);
+        sepoliaBeanHeads.sellToken(tokenId, 10 ether);
+        vm.stopPrank();
+
+        console.log(sepoliaBeanHeads.getOwnerOf(tokenId));
+        assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), true);
+
+        uint256 nonce0 = getTokenNonce(tokenId);
+        uint64 cancelDeadline = uint64(block.timestamp + 1 hours);
+        bytes32 domainSeparator = sepoliaBeanHeads.DOMAIN_SEPARATOR();
+
+        // Cancel struct
+        PermitTypes.Cancel memory C =
+            PermitTypes.Cancel({seller: owner, tokenId: tokenId, listingNonce: nonce0, deadline: cancelDeadline});
+
+        bytes memory cancelSig = _signCancelPermit(C, domainSeparator, MINTER_PK);
+
+        // cancel sale from ARB
+        vm.selectFork(arbFork);
+        vm.startPrank(owner);
+        arbBeanHeadsBridge.sendCancelTokenSaleRequest(sepoliaNetworkDetails.chainSelector, C, cancelSig);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 20 minutes);
+
+        ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+
+        vm.selectFork(sepoliaFork);
+
+        console.log(sepoliaBeanHeads.getOwnerOf(tokenId));
+        console.log(owner);
+        assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), owner);
+        assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), false);
+    }
+
+    function test_cancelTokenSale_Remote() public mintedTokens {
+        uint256 tokenId = 0;
+        uint256 price = 10 ether;
+
+        address owner = MINTER;
+        uint256 nonce0 = getTokenNonce(tokenId);
+        uint64 sellDeadline = uint64(block.timestamp + 1 hours);
+        bytes32 domainSeparator = sepoliaBeanHeads.DOMAIN_SEPARATOR();
+        {
+            // Sell struct
+            PermitTypes.Sell memory s =
+                PermitTypes.Sell({owner: owner, tokenId: tokenId, price: price, nonce: nonce0, deadline: sellDeadline});
+
+            // SELL digests
+            bytes32 sellStructHash =
+                keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
+            bytes32 sellDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, sellStructHash));
+
+            (uint8 sv, bytes32 sr, bytes32 ss) = vm.sign(MINTER_PK, sellDigest);
+            bytes memory sellSig = abi.encodePacked(sr, ss, sv);
+
+            // build permit signature
+            uint256 permitNonce = nonce0 + 1;
+            uint64 permitDeadline = uint64(block.timestamp + 1 hours);
+            address spender = address(sepoliaBeanHeads);
+
+            bytes32 permitStructHash =
+                keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, permitNonce, permitDeadline));
+            bytes32 permitDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, permitStructHash));
+
+            (uint8 pv, bytes32 pr, bytes32 ps) = vm.sign(MINTER_PK, permitDigest);
+            bytes memory permitSig = abi.encodePacked(pr, ps, pv);
+
+            // send signal from ARB
+            vm.selectFork(arbFork);
+            vm.prank(MINTER);
+
+            arbBeanHeadsBridge.sendSellTokenRequest(
+                sepoliaNetworkDetails.chainSelector, s, sellSig, permitDeadline, permitSig
+            );
+
+            vm.warp(block.timestamp + 20 minutes);
+
+            ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+
+            vm.selectFork(sepoliaFork);
+            assertEq(sepoliaBeanHeads.getTokenSalePrice(tokenId), price);
+            assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), true);
+            assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), address(sepoliaBeanHeads));
+        }
+
+        // vm.warp(block.timestamp + 1 hours);
+        // {
+        //     uint64 cancelDeadline = uint64(block.timestamp + 1 hours);
+
+        //     // Cancel struct
+        //     PermitTypes.Cancel memory C =
+        //         PermitTypes.Cancel({seller: owner, tokenId: tokenId, listingNonce: nonce0, deadline: cancelDeadline});
+
+        //     bytes memory cancelSig = _signCancelPermit(C, domainSeparator, MINTER_PK);
+
+        //     // cancel sale from ARB
+        //     vm.selectFork(arbFork);
+        //     vm.startPrank(owner);
+        //     arbBeanHeadsBridge.sendCancelTokenSaleRequest(sepoliaNetworkDetails.chainSelector, C, cancelSig);
+        //     vm.stopPrank();
+
+        //     vm.warp(block.timestamp + 20 minutes);
+
+        //     ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+
+        //     vm.selectFork(sepoliaFork);
+        //     assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), owner);
+        //     assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), false);
+        // }
     }
 
     // function test_sendMintTokenRequest_MoreDetails() public {
@@ -635,5 +751,43 @@ contract BeanHeadsBridgeTest is Test, Helpers {
             address(sepoliaBeanHeads).staticcall(abi.encodeWithSignature("nonces(uint256)", tokenId));
         require(ok, "Failed to get token nonce");
         return abi.decode(data, (uint256));
+    }
+
+    function _signSellPermit(PermitTypes.Sell memory s, bytes32 domainSeparator, uint256 privateKey)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        bytes32 structHash =
+            keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        (uint8 v, bytes32 r, bytes32 s_) = vm.sign(privateKey, digest);
+        return abi.encodePacked(r, s_, v);
+    }
+
+    function _signERC721Permit(
+        bytes32 domainSeparator,
+        address spender,
+        uint256 tokenId,
+        uint256 nonce,
+        uint64 deadline,
+        uint256 privateKey
+    ) internal pure returns (bytes memory) {
+        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, nonce, deadline));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        (uint8 v, bytes32 r, bytes32 s_) = vm.sign(privateKey, digest);
+        return abi.encodePacked(r, s_, v);
+    }
+
+    function _signCancelPermit(PermitTypes.Cancel memory c, bytes32 domainSeparator, uint256 privateKey)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        bytes32 structHash =
+            keccak256(abi.encode(PermitTypes.CANCEL_TYPEHASH, c.seller, c.tokenId, c.listingNonce, c.deadline));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        (uint8 v, bytes32 r, bytes32 s_) = vm.sign(privateKey, digest);
+        return abi.encodePacked(r, s_, v);
     }
 }

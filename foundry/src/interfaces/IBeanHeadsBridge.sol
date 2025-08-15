@@ -138,12 +138,15 @@ interface IBeanHeadsBridge {
     /**
      * @notice Sends a cancel token sale request to the remote bridge.
      * @param _destinationChainSelector The target chain selector for the cancel request.
-     * @param _tokenId The ID of the token to cancel the sale for.
+     * @param c The struct containing the cancel parameters.
+     * @param cancelSig The signature of the seller authorizing the cancellation.
      * @return messageId The ID of the sent message.
      */
-    function sendCancelTokenSaleRequest(uint64 _destinationChainSelector, uint256 _tokenId)
-        external
-        returns (bytes32 messageId);
+    function sendCancelTokenSaleRequest(
+        uint64 _destinationChainSelector,
+        PermitTypes.Cancel calldata c,
+        bytes calldata cancelSig
+    ) external returns (bytes32 messageId);
 
     /**
      * @notice Initiates a cross-chain transfer of a token.

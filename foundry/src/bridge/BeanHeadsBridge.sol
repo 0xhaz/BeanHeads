@@ -47,14 +47,6 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
     mapping(uint256 tokenId => uint256 nonce) public s_listingNonce;
 
-    /// @notice Modifier to ensure that the caller is the owner
-    modifier onlyTokenOwner(uint256 tokenId) {
-        if (IBeanHeads(i_beanHeadsContract).getOwnerOf(tokenId) != address(this)) {
-            revert IBeanHeadsBridge__TokenNotDeposited(tokenId);
-        }
-        _;
-    }
-
     /// @notice Modifier to ensure that the remote bridge is registered
     modifier onlyRegisteredRemoteBridge() {
         if (!remoteBridgeAddresses[s_remoteBridge]) {
@@ -200,15 +192,12 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     }
 
     /// @inheritdoc IBeanHeadsBridge
-    function sendCancelTokenSaleRequest(uint64 _destinationChainSelector, uint256 _tokenId)
-        external
-        onlyTokenOwner(_tokenId)
-        onlyRegisteredRemoteBridge
-        returns (bytes32 messageId)
-    {
-        if (_tokenId == 0) revert IBeanHeadsBridge__InvalidAmount();
-
-        bytes memory encodeCancelPayload = abi.encode(msg.sender, _tokenId);
+    function sendCancelTokenSaleRequest(
+        uint64 _destinationChainSelector,
+        PermitTypes.Cancel calldata c,
+        bytes calldata cancelSig
+    ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
+        bytes memory encodeCancelPayload = abi.encode(c, cancelSig);
         bytes memory cancelTokenCalldata = abi.encode(ActionType.CANCEL, encodeCancelPayload);
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
@@ -225,7 +214,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
         messageId = _sendCCIP(_destinationChainSelector, message);
 
-        emit CancelSellTokenRequest(messageId, _destinationChainSelector, msg.sender, _tokenId);
+        emit CancelSellTokenRequest(messageId, _destinationChainSelector, c.seller, c.tokenId);
     }
 
     /// @inheritdoc IBeanHeadsBridge
@@ -234,7 +223,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         uint256 _tokenId,
         address _receiver,
         address paymentToken
-    ) external onlyTokenOwner(_tokenId) onlyRegisteredRemoteBridge returns (bytes32 messageId) {
+    ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
         if (_receiver == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
 
         // Transfer NFT to the bridge contract
@@ -337,25 +326,22 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             IERC20(paymentToken).safeApprove(i_beanHeadsContract, 0);
             IERC20(paymentToken).safeApprove(i_beanHeadsContract, price);
 
-            IBeanHeads(i_beanHeadsContract).buyToken(buyTokenId, paymentToken);
+            IBeanHeads(i_beanHeadsContract).buyToken(buyer, buyTokenId, paymentToken);
 
-            IERC721A(i_beanHeadsContract).safeTransferFrom(address(this), buyer, buyTokenId);
+            // IERC721A(i_beanHeadsContract).transferFrom(address(this), buyer, buyTokenId);
 
             emit TokenBoughtCrossChain(buyer, buyTokenId);
         }
 
         if (action == ActionType.CANCEL) {
             /// @notice Decode the message data for canceling a token sale.
-            (address owner, uint256 cancelTokenId) = abi.decode(rest, (address, uint256));
+            (PermitTypes.Cancel memory c, bytes memory cancelSig) = abi.decode(rest, (PermitTypes.Cancel, bytes));
 
-            // Ensure the bridge owns the token
-            if (IBeanHeads(i_beanHeadsContract).getOwnerOf(cancelTokenId) != address(this)) {
-                revert IBeanHeadsBridge__TokenNotDeposited(cancelTokenId);
-            }
+            IBeanHeads beans = IBeanHeads(i_beanHeadsContract);
 
-            IBeanHeads(i_beanHeadsContract).cancelTokenSale(cancelTokenId);
+            beans.cancelTokenSaleWithPermit(c, cancelSig);
 
-            emit TokenSaleCancelled(owner, cancelTokenId);
+            emit TokenSaleCancelled(c.seller, c.tokenId);
         }
 
         if (action == ActionType.TRANSFER) {

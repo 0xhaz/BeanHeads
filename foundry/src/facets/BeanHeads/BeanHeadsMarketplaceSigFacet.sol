@@ -95,33 +95,11 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         }
         if (ds.tokenNonces[b.tokenId] != b.listingNonce) _revert(IPermit__InvalidNonce.selector);
 
-        PermitTypes.BuyLocals memory L;
-        L.priceUsd = listing.price;
-        if (L.priceUsd > b.maxPriceUsd) _revert(IBeanHeadsMarketplaceSig__PriceExceedsMax.selector);
+        PermitTypes.BuyLocals memory L = _calculatePaymentInfo(b, listing.price);
 
-        L.adjustedPrice = _getTokenAmountFromUsd(b.paymentToken, L.priceUsd);
+        _handlePaymentAndPermit(b, permitValue, permitDeadline, v, r, s, L);
 
-        IERC20 token = IERC20(b.paymentToken);
-        uint256 bal = token.balanceOf(address(this));
-
-        if (bal < L.adjustedPrice) {
-            uint256 need = L.adjustedPrice - bal;
-            _tryPermitOrCheck(IERC20Permit(b.paymentToken), token, b.buyer, permitValue, permitDeadline, v, r, s, need);
-
-            // Transfer funds in, split royalties and transfer NFT to recipient
-            token.safeTransferFrom(b.buyer, address(this), need);
-        }
-
-        (L.royaltyReceiver, L.royaltyUsd) = _royaltyInfo(b.tokenId, L.priceUsd);
-        L.royaltyAmount = _getTokenAmountFromUsd(b.paymentToken, L.royaltyUsd);
-        L.sellerAmount = L.adjustedPrice - L.royaltyAmount;
-
-        if (L.royaltyAmount > 0) {
-            token.safeTransfer(L.royaltyReceiver, L.royaltyAmount);
-            emit RoyaltyPaidCrossChain(L.royaltyReceiver, b.tokenId, L.priceUsd, L.royaltyAmount);
-        }
-
-        token.safeTransfer(listing.seller, L.sellerAmount);
+        _distributePayment(IERC20(b.paymentToken), listing.seller, L);
 
         ds.tokenIdToPaymentToken[b.tokenId] = b.paymentToken;
         _safeTransfer(address(this), b.recipient, b.tokenId, "");
@@ -209,6 +187,15 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
                             HELPER FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
+    function _verifySellSig(PermitTypes.Sell calldata s, bytes calldata sellSig) internal view {
+        bytes32 structHash =
+            keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
+        bytes32 digest = _hashTypedDataV4(structHash);
+        (address signer,,) = ECDSA.tryRecover(digest, sellSig);
+        bool ok = signer == s.owner || _isValidContractERC1271Signature(s.owner, digest, sellSig);
+        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
+    }
+
     /**
      * @notice Verifies the buy signature
      * @param b The buy parameters
@@ -261,5 +248,53 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         } catch {
             _checkPaymentPermitTokenAllowanceAndBalance(token, owner, amountToSpend);
         }
+    }
+
+    function _calculatePaymentInfo(PermitTypes.Buy calldata b, uint256 priceUsd)
+        internal
+        view
+        returns (PermitTypes.BuyLocals memory L)
+    {
+        if (priceUsd > b.maxPriceUsd) {
+            _revert(IBeanHeadsMarketplaceSig__PriceExceedsMax.selector);
+        }
+
+        L.priceUsd = priceUsd;
+        L.adjustedPrice = _getTokenAmountFromUsd(b.paymentToken, priceUsd);
+        (L.royaltyReceiver, L.royaltyUsd) = _royaltyInfo(b.tokenId, priceUsd);
+        L.royaltyAmount = _getTokenAmountFromUsd(b.paymentToken, L.royaltyUsd);
+        L.sellerAmount = L.adjustedPrice - L.royaltyAmount;
+
+        return L;
+    }
+
+    function _handlePaymentAndPermit(
+        PermitTypes.Buy calldata b,
+        uint256 permitValue,
+        uint256 permitDeadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        PermitTypes.BuyLocals memory L
+    ) internal {
+        IERC20 token = IERC20(b.paymentToken);
+        uint256 bal = token.balanceOf(address(this));
+
+        if (bal < L.adjustedPrice) {
+            uint256 need = L.adjustedPrice - bal;
+
+            _tryPermitOrCheck(IERC20Permit(b.paymentToken), token, b.buyer, permitValue, permitDeadline, v, r, s, need);
+
+            token.safeTransferFrom(b.buyer, address(this), need);
+        }
+    }
+
+    function _distributePayment(IERC20 token, address seller, PermitTypes.BuyLocals memory L) internal {
+        if (L.royaltyAmount > 0) {
+            token.safeTransfer(L.royaltyReceiver, L.royaltyAmount);
+            emit RoyaltyPaidCrossChain(L.royaltyReceiver, L.priceUsd, L.priceUsd, L.royaltyAmount);
+        }
+
+        token.safeTransfer(seller, L.sellerAmount);
     }
 }
