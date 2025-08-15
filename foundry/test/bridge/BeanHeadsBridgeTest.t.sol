@@ -498,24 +498,15 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         PermitTypes.Sell memory s =
             PermitTypes.Sell({owner: owner, tokenId: tokenId, price: price, nonce: nonce0, deadline: sellDeadline});
 
-        // SELL digests
-        bytes32 sellStructHash =
-            keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
-        bytes32 sellDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, sellStructHash));
-
-        (uint8 sv, bytes32 sr, bytes32 ss) = vm.sign(MINTER_PK, sellDigest);
-        bytes memory sellSig = abi.encodePacked(sr, ss, sv);
+        bytes memory sellSig = _signSellPermit(s, domainSeparator, MINTER_PK);
 
         // build permit signature
         uint256 permitNonce = nonce0 + 1;
         uint64 permitDeadline = uint64(block.timestamp + 1 hours);
         address spender = address(sepoliaBeanHeads);
 
-        bytes32 permitStructHash = keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, permitNonce, permitDeadline));
-        bytes32 permitDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, permitStructHash));
-
-        (uint8 pv, bytes32 pr, bytes32 ps) = vm.sign(MINTER_PK, permitDigest);
-        bytes memory permitSig = abi.encodePacked(pr, ps, pv);
+        bytes memory permitSig =
+            _signERC721Permit(domainSeparator, spender, tokenId, permitNonce, permitDeadline, MINTER_PK);
 
         // send signal from ARB
         vm.selectFork(arbFork);
@@ -618,31 +609,18 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         address owner = MINTER;
         uint256 nonce0 = getTokenNonce(tokenId);
         uint64 sellDeadline = uint64(block.timestamp + 1 hours);
+        uint64 permitDeadline = uint64(block.timestamp + 1 hours);
+        address spender = address(sepoliaBeanHeads);
+        uint256 permitNonce = nonce0 + 1;
         bytes32 domainSeparator = sepoliaBeanHeads.DOMAIN_SEPARATOR();
         {
             // Sell struct
             PermitTypes.Sell memory s =
                 PermitTypes.Sell({owner: owner, tokenId: tokenId, price: price, nonce: nonce0, deadline: sellDeadline});
 
-            // SELL digests
-            bytes32 sellStructHash =
-                keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
-            bytes32 sellDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, sellStructHash));
-
-            (uint8 sv, bytes32 sr, bytes32 ss) = vm.sign(MINTER_PK, sellDigest);
-            bytes memory sellSig = abi.encodePacked(sr, ss, sv);
-
-            // build permit signature
-            uint256 permitNonce = nonce0 + 1;
-            uint64 permitDeadline = uint64(block.timestamp + 1 hours);
-            address spender = address(sepoliaBeanHeads);
-
-            bytes32 permitStructHash =
-                keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, permitNonce, permitDeadline));
-            bytes32 permitDigest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, permitStructHash));
-
-            (uint8 pv, bytes32 pr, bytes32 ps) = vm.sign(MINTER_PK, permitDigest);
-            bytes memory permitSig = abi.encodePacked(pr, ps, pv);
+            bytes memory sellSig = _signSellPermit(s, domainSeparator, MINTER_PK);
+            bytes memory permitSig =
+                _signERC721Permit(domainSeparator, spender, tokenId, permitNonce, permitDeadline, MINTER_PK);
 
             // send signal from ARB
             vm.selectFork(arbFork);
