@@ -10,10 +10,16 @@ import {AggregatorV3Interface} from
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 
 abstract contract BeanHeadsBase is ERC721AUpgradeable {
+    /// @notice Error if the token does not exist
     error IBeanHeadsBase__TokenDoesNotExist();
+    /// @notice Error if the price feed is invalid
     error IBeanHeadsBase__InvalidOraclePrice();
+    /// @notice Error if the payment token allowance is insufficient
     error IBeanHeadsBase__InsufficientAllowance();
+    /// @notice Error if the payment token balance is insufficient
     error IBeanHeadsBase__InsufficientPayment();
+    /// @notice Error if the token is locked
+    error IBeanHeadsBase__TokenIsLocked();
 
     using BHStorage for BHStorage.BeanHeadsStorage;
 
@@ -24,6 +30,16 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
         override
     {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+
+        // Prevent transfers of locked tokens
+        for (uint256 i = 0; i < quantity; i++) {
+            uint256 tokenId = startTokenId + i;
+
+            // Skip minting (`from == address(0)`) and burning (`to == address(0)`)
+            if (from != address(0) && ds.lockedTokens[tokenId]) {
+                _revert(IBeanHeadsBase__TokenIsLocked.selector);
+            }
+        }
 
         // Handle removal from previous owner
         if (from != address(0)) {

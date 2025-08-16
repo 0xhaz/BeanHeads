@@ -17,6 +17,8 @@ interface IBeanHeadsAdmin {
     event AllowedTokenUpdated(address indexed token, bool isAllowed);
     /// @notice Event emitted when a price feed is added
     event PriceFeedAdded(address indexed token, address indexed priceFeed);
+    /// @notice Emitted when the bridge address is updated
+    event AuthorizedBridgesAdded(address indexed bridges);
 
     /**
      * @notice Sets the mint price for a Genesis NFT
@@ -51,4 +53,12 @@ interface IBeanHeadsAdmin {
      * @param breeder The address of the breeder contract to authorize
      */
     function authorizeBreeder(address breeder) external;
+
+    /**
+     * @notice Sets the remote bridge address for cross-chain operations
+     * @param chainSelector The chain selector for the remote bridge
+     * @param bridge The address of the remote bridge contract
+     * @dev Only callable by the owner
+     */
+    function setRemoteBridge(uint64 chainSelector, address bridge) external;
 }

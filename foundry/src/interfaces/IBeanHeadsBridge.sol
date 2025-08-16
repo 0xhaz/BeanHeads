@@ -81,6 +81,14 @@ interface IBeanHeadsBridge {
     /// @notice Emitted when a token is transferred cross-chain.
     event TokenTransferredCrossChain(address indexed receiver, uint256 tokenId);
 
+    /// @notice Emitted when the token return to the source chain.
+    event TokenReturnedToSourceChain(uint256 tokenId);
+
+    /// @notice Emitted when a token is mirrored on the destination chain.
+    event TokenMirroredOnDestinationChain(
+        address indexed receiver, uint256 tokenId, Genesis.SVGParams params, uint256 originChainId
+    );
+
     /**
      * @notice Updates the trusted remote bridge address.
      * @dev Only callable by the owner.
@@ -155,12 +163,9 @@ interface IBeanHeadsBridge {
      * @param _receiver The address that will receive the transferred token.
      * @return messageId The ID of the sent message.
      */
-    function sendTransferTokenRequest(
-        uint64 _destinationChainSelector,
-        uint256 _tokenId,
-        address _receiver,
-        address _paymentToken
-    ) external returns (bytes32 messageId);
+    function sendTransferTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, address _receiver)
+        external
+        returns (bytes32 messageId);
 
     /**
      * @notice Deposit LINK tokens to the bridge contract.

@@ -569,6 +569,52 @@ contract ERC721AUpgradeableInternal is IERC721AUpgradeable {
         _safeMint(to, quantity, "");
     }
 
+    /**
+     * @dev Mint a token with a specific `tokenId` to track the ownership of a specific token.
+     * @param to The address that will receive the minted token
+     * @param tokenId The ID of the token to be minted
+     */
+    function _mintWithId(address to, uint256 tokenId) internal {
+        if (to == address(0)) _revert(MintToZeroAddress.selector);
+
+        ERC721AStorage.Layout storage es = ERC721AStorage.layout();
+        uint256 startTokenId = _startTokenId();
+        if (tokenId < startTokenId) _revert(InvalidTokenId.selector);
+
+        uint256 currentIndex = es._currentIndex;
+        if (tokenId < currentIndex) _revert(TokenAlreadyExists.selector);
+
+        // Call transfer hook
+        _beforeTokenTransfers(address(0), to, tokenId, 1);
+
+        // Handle any gap by "burning" it as a batch
+        uint256 gap = tokenId - currentIndex;
+        if (gap > 0) {
+            // Only initialize the first gap slot
+            // Burned + optional nextInitialized flag (if gap == 1)
+            uint256 flags = _BITMASK_BURNED | (gap == 1 ? _BITMASK_NEXT_INITIALIZED : 0);
+            es._packedOwnerships[currentIndex] = flags;
+
+            // Update counters for the gap
+            es._burnCounter += gap;
+            es._currentIndex += gap;
+        }
+
+        // Now mint the single token at tokenId (currentIndex == tokenId)
+        uint256 extraData = _nextExtraData(address(0), to, 0);
+        es._packedOwnerships[tokenId] = _packOwnershipData(to, _BITMASK_NEXT_INITIALIZED | extraData);
+
+        //Update balance and minted count for recipient
+        es._packedAddressData[to] += 1 * ((1 << _BITPOS_NUMBER_MINTED) | 1);
+
+        emit Transfer(address(0), to, tokenId);
+
+        // Increment the current index to the next token ID
+        es._currentIndex = tokenId + 1;
+
+        _afterTokenTransfers(address(0), to, tokenId, 1);
+    }
+
     /*//////////////////////////////////////////////////////////////
                           APPROVAL OPERATIONS
     //////////////////////////////////////////////////////////////*/

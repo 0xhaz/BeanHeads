@@ -298,12 +298,20 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         vm.startPrank(ownerSepolia);
         sepoliaBeanHeads.setAllowedToken(address(mockArbToken), true);
         sepoliaBeanHeads.addPriceFeed(address(mockArbToken), address(priceFeedArbitrum));
+        sepoliaBeanHeads.setRemoteBridge(arbNetworkDetails.chainSelector, address(sepoliaBeanHeadsBridge));
+        assertEq(
+            sepoliaBeanHeads.isBridgeAuthorized(arbNetworkDetails.chainSelector, address(sepoliaBeanHeadsBridge)), true
+        );
         vm.stopPrank();
 
         vm.selectFork(arbFork);
         vm.startPrank(ownerArbitrum);
         arbBeanHeads.setAllowedToken(address(mockSepoliaToken), true);
         arbBeanHeads.addPriceFeed(address(mockSepoliaToken), address(priceFeedSepolia));
+        arbBeanHeads.setRemoteBridge(sepoliaNetworkDetails.chainSelector, address(arbBeanHeadsBridge));
+        assertEq(
+            arbBeanHeads.isBridgeAuthorized(sepoliaNetworkDetails.chainSelector, address(arbBeanHeadsBridge)), true
+        );
         vm.stopPrank();
 
         vm.selectFork(sepoliaFork);
@@ -602,117 +610,80 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), false);
     }
 
-    function test_cancelTokenSale_Remote() public mintedTokens {
+    function test_sendTransferTokenRequest_MintOnDest() public mintedTokens {
         uint256 tokenId = 0;
-        uint256 price = 10 ether;
 
+        vm.selectFork(sepoliaFork);
         address owner = MINTER;
-        uint256 nonce0 = getTokenNonce(tokenId);
-        uint64 sellDeadline = uint64(block.timestamp + 1 hours);
-        uint64 permitDeadline = uint64(block.timestamp + 1 hours);
-        address spender = address(sepoliaBeanHeads);
-        uint256 permitNonce = nonce0 + 1;
-        bytes32 domainSeparator = sepoliaBeanHeads.DOMAIN_SEPARATOR();
-        {
-            // Sell struct
-            PermitTypes.Sell memory s =
-                PermitTypes.Sell({owner: owner, tokenId: tokenId, price: price, nonce: nonce0, deadline: sellDeadline});
 
-            bytes memory sellSig = _signSellPermit(s, domainSeparator, MINTER_PK);
-            bytes memory permitSig =
-                _signERC721Permit(domainSeparator, spender, tokenId, permitNonce, permitDeadline, MINTER_PK);
+        assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), owner);
 
-            // send signal from ARB
-            vm.selectFork(arbFork);
-            vm.prank(MINTER);
+        // Sending tokenId from Sepolia to Arbitrum
+        vm.startPrank(owner);
+        mockSepoliaToken.approve(address(sepoliaBeanHeadsBridge), type(uint256).max);
+        sepoliaBeanHeads.approve(address(sepoliaBeanHeadsBridge), tokenId);
+        sepoliaBeanHeadsBridge.sendTransferTokenRequest(arbNetworkDetails.chainSelector, tokenId, USER);
 
-            arbBeanHeadsBridge.sendSellTokenRequest(
-                sepoliaNetworkDetails.chainSelector, s, sellSig, permitDeadline, permitSig
-            );
+        vm.warp(block.timestamp + 20 minutes);
 
-            vm.warp(block.timestamp + 20 minutes);
+        ccipSimulatorSepolia.switchChainAndRouteMessage(arbFork);
 
-            ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+        vm.selectFork(arbFork);
+        vm.startPrank(USER);
+        assertEq(arbBeanHeads.getOwnerOf(tokenId), USER);
+        assertEq(arbBeanHeads.balanceOf(USER), 1);
+        assertEq(arbBeanHeads.getTotalSupply(), 1);
+        vm.stopPrank();
 
-            vm.selectFork(sepoliaFork);
-            assertEq(sepoliaBeanHeads.getTokenSalePrice(tokenId), price);
-            assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), true);
-            assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), address(sepoliaBeanHeads));
-        }
-
-        // vm.warp(block.timestamp + 1 hours);
-        // {
-        //     uint64 cancelDeadline = uint64(block.timestamp + 1 hours);
-
-        //     // Cancel struct
-        //     PermitTypes.Cancel memory C =
-        //         PermitTypes.Cancel({seller: owner, tokenId: tokenId, listingNonce: nonce0, deadline: cancelDeadline});
-
-        //     bytes memory cancelSig = _signCancelPermit(C, domainSeparator, MINTER_PK);
-
-        //     // cancel sale from ARB
-        //     vm.selectFork(arbFork);
-        //     vm.startPrank(owner);
-        //     arbBeanHeadsBridge.sendCancelTokenSaleRequest(sepoliaNetworkDetails.chainSelector, C, cancelSig);
-        //     vm.stopPrank();
-
-        //     vm.warp(block.timestamp + 20 minutes);
-
-        //     ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
-
-        //     vm.selectFork(sepoliaFork);
-        //     assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), owner);
-        //     assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), false);
-        // }
+        vm.selectFork(sepoliaFork);
+        assertEq(sepoliaBeanHeads.isTokenLocked(tokenId), true);
     }
 
-    // function test_sendMintTokenRequest_MoreDetails() public {
-    //     vm.selectFork(arbFork);
-    //     uint256 tokenAmount = 1;
+    function test_sendTransferTokenRequest_ReturnToSource() public mintedTokens {
+        uint256 tokenId = 0;
 
-    //     bytes memory encodeMintPayload = abi.encode(USER, params, tokenAmount);
-    //     bytes memory mintGenesisCalldata = abi.encode(ActionType.MINT, encodeMintPayload);
+        vm.selectFork(sepoliaFork);
+        address owner = MINTER;
 
-    //     Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
-    //     Client.EVMTokenAmount memory tokenAmountData =
-    //         Client.EVMTokenAmount({token: address(mockArbToken), amount: tokenAmount});
-    //     tokenAmounts[0] = tokenAmountData;
+        assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), owner);
 
-    //     IRouterClient routerArbClient = IRouterClient(arbNetworkDetails.routerAddress);
+        // Sending tokenId from Sepolia to Arbitrum
+        vm.startPrank(owner);
+        mockSepoliaToken.approve(address(sepoliaBeanHeadsBridge), type(uint256).max);
+        sepoliaBeanHeads.approve(address(sepoliaBeanHeadsBridge), tokenId);
+        sepoliaBeanHeadsBridge.sendTransferTokenRequest(arbNetworkDetails.chainSelector, tokenId, USER);
 
-    //     Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
-    //         receiver: abi.encode(arbBeanHeadsBridge),
-    //         data: mintGenesisCalldata,
-    //         tokenAmounts: tokenAmounts,
-    //         feeToken: arbNetworkDetails.linkAddress,
-    //         extraArgs: Client._argsToBytes(
-    //             Client.EVMExtraArgsV1({
-    //                 gasLimit: 500_000 // Set a default gas limit for the callback
-    //             })
-    //         )
-    //     });
+        vm.warp(block.timestamp + 20 minutes);
 
-    //     uint256 fee = routerArbClient.getFee(sepoliaNetworkDetails.chainSelector, message);
+        ccipSimulatorSepolia.switchChainAndRouteMessage(arbFork);
 
-    //     ccipSimulatorArbitrum.requestLinkFromFaucet(USER, 10 ether);
-    //     vm.startPrank(USER);
-    //     IERC20(address(mockArbToken)).approve(address(arbBeanHeadsBridge), type(uint256).max);
-    //     IERC20(address(mockArbToken)).approve(address(routerArbClient), type(uint256).max);
-    //     IERC20(arbNetworkDetails.linkAddress).approve(address(routerArbClient), fee);
+        vm.selectFork(sepoliaFork);
+        assertEq(sepoliaBeanHeads.isTokenLocked(tokenId), true);
 
-    //     routerArbClient.ccipSend(sepoliaNetworkDetails.chainSelector, message);
-    //     vm.stopPrank();
+        vm.selectFork(arbFork);
+        vm.startPrank(USER);
+        assertEq(arbBeanHeads.getOwnerOf(tokenId), USER);
+        assertEq(arbBeanHeads.balanceOf(USER), 1);
+        assertEq(arbBeanHeads.getTotalSupply(), 1);
+        vm.stopPrank();
 
-    //     ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+        // Now sending the token back to Sepolia
+        vm.selectFork(arbFork);
+        vm.startPrank(USER);
+        mockArbToken.approve(address(arbBeanHeadsBridge), type(uint256).max);
+        arbBeanHeads.approve(address(arbBeanHeadsBridge), tokenId);
+        arbBeanHeadsBridge.sendTransferTokenRequest(sepoliaNetworkDetails.chainSelector, tokenId, owner);
 
-    //     vm.selectFork(sepoliaFork);
-    //     vm.prank(USER);
-    //     uint256 userTokenBalance = sepoliaBeanHeads.balanceOf(USER);
-    //     assertEq(userTokenBalance, tokenAmount);
-    //     uint256 userTokenSupply = sepoliaBeanHeads.getTotalSupply();
-    //     assertEq(userTokenSupply, tokenAmount);
-    //     assertEq(sepoliaBeanHeads.getOwnerOf(0), USER);
-    // }
+        vm.warp(block.timestamp + 20 minutes);
+        ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+
+        vm.selectFork(sepoliaFork);
+        vm.startPrank(owner);
+        assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), owner);
+        assertEq(sepoliaBeanHeads.balanceOf(owner), 1);
+        assertEq(sepoliaBeanHeads.getTotalSupply(), 1);
+        assertEq(sepoliaBeanHeads.isTokenLocked(tokenId), false);
+    }
 
     // sanity check on the facet selector
     function testFacetSelector() public {

@@ -16,19 +16,6 @@ interface IBeanHeadsView {
     function tokenURI(uint256 _tokenId) external view returns (string memory);
 
     /**
-     * @notice Returns the next available token ID
-     * @return The next token ID as a uint256
-     */
-    function getNextTokenId() external view returns (uint256);
-
-    /**
-     * @notice Returns the owner of a given token ID
-     * @param _tokenId The ID of the token
-     * @return The address of the owner
-     */
-    function getOwnerOf(uint256 _tokenId) external view returns (address);
-
-    /**
      * @notice Returns the attributes of a token by its ID
      * @param _tokenId The ID of the token
      * @return The SVG parameters associated with the token
@@ -67,4 +54,19 @@ interface IBeanHeadsView {
      * @return The total number of tokens minted.
      */
     function getTotalSupply() external view returns (uint256);
+
+    /**
+     * @notice Checks if a bridge is authorized for cross-chain operations
+     * @param chainSelector The chain selector for the remote bridge
+     * @param bridge The address of the remote bridge contract
+     * @return True if the bridge is authorized, false otherwise
+     */
+    function isBridgeAuthorized(uint64 chainSelector, address bridge) external view returns (bool);
+
+    /**
+     * @notice Checks if a token is locked
+     * @param tokenId The ID of the token to check
+     * @return True if the token is locked, false otherwise
+     */
+    function isTokenLocked(uint256 tokenId) external view returns (bool);
 }

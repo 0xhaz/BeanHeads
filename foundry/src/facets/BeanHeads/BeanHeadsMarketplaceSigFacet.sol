@@ -49,13 +49,7 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         uint256 nonce = ds.tokenNonces[s.tokenId];
         if (nonce != s.nonce) _revert(IPermit__InvalidNonce.selector);
 
-        bytes32 structHash =
-            keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, nonce, s.deadline));
-        bytes32 digest = _hashTypedDataV4(structHash);
-
-        (address signer,,) = ECDSA.tryRecover(digest, sellSig);
-        bool ok = signer == s.owner || _isValidContractERC1271Signature(s.owner, digest, sellSig);
-        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
+        _verifySellSig(s, sellSig);
 
         unchecked {
             ds.tokenNonces[s.tokenId] = nonce + 1;

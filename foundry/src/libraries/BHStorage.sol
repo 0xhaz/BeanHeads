@@ -69,6 +69,10 @@ library BHStorage {
         bytes4[] selectors;
         mapping(bytes4 interfaceId => bool isSupported) supportedInterfaces;
         mapping(uint256 tokenId => uint256 nonces) tokenNonces;
+        mapping(uint256 tokenId => bool isLocked) lockedTokens;
+        mapping(uint256 tokenId => uint256 chainId) tokenIdToOrigin;
+        mapping(address remoteBridges => bool isBridge) authorizedBridges;
+        mapping(uint64 chainSelector => address remoteBridge) remoteBridges;
     }
 
     function diamondStorage() internal pure returns (BeanHeadsStorage storage ds) {

@@ -14,6 +14,7 @@ import {Genesis} from "src/types/Genesis.sol";
 import {IBeanHeadsMint} from "src/interfaces/IBeanHeadsMint.sol";
 import {OracleLib} from "src/libraries/OracleLib.sol";
 import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
+import {console} from "forge-std/console.sol";
 
 contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     using SafeERC20 for IERC20;
@@ -26,6 +27,18 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     modifier tokenExists(uint256 tokenId) {
         if (!_exists(tokenId)) {
             _revert(IBeanHeadsMint__TokenDoesNotExist.selector);
+        }
+        _;
+    }
+
+    /// @notice Modifier to allow only bridge access
+    modifier onlyBridge() {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        console.log("msg.sender: %s", msg.sender);
+        console.log("ds.authorizedBridges[msg.sender]: %s", ds.authorizedBridges[msg.sender]);
+
+        if (!ds.authorizedBridges[msg.sender]) {
+            _revert(IBeanHeadsMint__UnauthorizedBridge.selector);
         }
         _;
     }
@@ -67,6 +80,53 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
         }
 
         emit MintedGenesis(_to, _tokenId);
+    }
+
+    /// @inheritdoc IBeanHeadsMint
+    function mintBridgeToken(address _to, uint256 _tokenId, Genesis.SVGParams calldata _params) external onlyBridge {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        if (_exists(_tokenId)) {
+            // If token already exists, contract will unlock and transfer it
+            if (!ds.lockedTokens[_tokenId]) {
+                _revert(IBeanHeadsMint__NotLocked.selector);
+            }
+
+            // Transfer the token to the new owner
+            address currentOwner = _ownerOf(_tokenId);
+            if (currentOwner != address(0)) {
+                _safeTransfer(currentOwner, _to, _tokenId, "");
+            }
+
+            emit ReturnedToOrigin(_to, _tokenId);
+            return;
+        }
+
+        uint256 originChainId = block.chainid;
+
+        // mint the token on destination chain
+        _mintWithId(_to, _tokenId);
+        ds.tokenIdToParams[_tokenId] = _params;
+        ds.tokenIdToOrigin[_tokenId] = originChainId;
+
+        emit MintedGenesis(_to, _tokenId);
+    }
+
+    /// @inheritdoc IBeanHeadsMint
+    function unlockToken(uint256 _tokenId) external onlyBridge {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        if (!_exists(_tokenId)) _revert(IBeanHeadsMint__TokenDoesNotExist.selector);
+        if (!ds.lockedTokens[_tokenId]) _revert(IBeanHeadsMint__NotLocked.selector);
+
+        ds.lockedTokens[_tokenId] = false; // Unlock the token
+    }
+
+    /// @inheritdoc IBeanHeadsMint
+    function lockToken(uint256 _tokenId) external onlyBridge {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        if (!_exists(_tokenId)) _revert(IBeanHeadsMint__TokenDoesNotExist.selector);
+        if (ds.lockedTokens[_tokenId]) _revert(IBeanHeadsMint__AlreadyLocked.selector);
+
+        ds.lockedTokens[_tokenId] = true; // Lock the token
     }
 
     /// @inheritdoc ERC721AUpgradeable
@@ -114,5 +174,15 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     /// @inheritdoc ERC721AUpgradeable
     function balanceOf(address owner) public view override(IBeanHeadsMint, ERC721AUpgradeable) returns (uint256) {
         return ERC721AUpgradeable.balanceOf(owner);
+    }
+
+    /// @inheritdoc IBeanHeadsMint
+    function getNextTokenId() external view returns (uint256) {
+        return _nextTokenId();
+    }
+
+    /// @inheritdoc IBeanHeadsMint
+    function getOwnerOf(uint256 _tokenId) external view tokenExists(_tokenId) returns (address) {
+        return _ownerOf(_tokenId);
     }
 }

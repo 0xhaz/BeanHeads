@@ -79,4 +79,15 @@ contract BeanHeadsAdminFacet is ERC721AUpgradeable, IBeanHeadsAdmin {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         ds.authorizedBreeders[_breeder] = true;
     }
+
+    /// @inheritdoc IBeanHeadsAdmin
+    function setRemoteBridge(uint64 _chainSelector, address _bridge) external onlyOwner {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        if (_bridge == address(0)) _revert(IBeanHeadsAdmin__InvalidAddress.selector);
+
+        ds.remoteBridges[_chainSelector] = _bridge;
+        ds.authorizedBridges[_bridge] = true;
+
+        emit AuthorizedBridgesAdded(_bridge);
+    }
 }

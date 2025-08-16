@@ -74,6 +74,16 @@ interface IERC721AUpgradeable {
      */
     error OwnershipNotInitializedForExtraData();
 
+    /**
+     * The `tokenId` is invalid.
+     */
+    error InvalidTokenId();
+
+    /**
+     * The `tokenId` already exists.
+     */
+    error TokenAlreadyExists();
+
     // =============================================================
     //                            STRUCTS
     // =============================================================
