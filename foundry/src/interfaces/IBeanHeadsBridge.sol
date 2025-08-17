@@ -27,7 +27,8 @@ interface IBeanHeadsBridge {
         SELL,
         BUY,
         CANCEL,
-        TRANSFER
+        TRANSFER_TO_MIRROR,
+        TRANSFER_TO_ORIGIN
     }
 
     /// @notice Emitted when the remote bridge address is updated.

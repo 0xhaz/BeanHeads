@@ -28,7 +28,6 @@ contract DeployBeanHeadsBridge is Script {
             revert("Unsupported network");
         }
 
-        console.log("Converting deployerAddress to address type");
         address deployerAddress = vm.addr(config.deployerKey);
         console.log("Deployer address:", deployerAddress);
 

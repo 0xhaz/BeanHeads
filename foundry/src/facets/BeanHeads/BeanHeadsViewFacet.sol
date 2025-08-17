@@ -88,8 +88,15 @@ contract BeanHeadsViewFacet is ERC721AUpgradeable, IBeanHeadsView {
         return ds.remoteBridges[chainSelector] == bridge;
     }
 
+    /// @inheritdoc IBeanHeadsView
     function isTokenLocked(uint256 _tokenId) external view tokenExists(_tokenId) returns (bool) {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         return ds.lockedTokens[_tokenId];
+    }
+
+    /// @inheritdoc IBeanHeadsView
+    function getOriginChainId(uint256 _tokenId) external view tokenExists(_tokenId) returns (uint256) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.tokenIdToOrigin[_tokenId];
     }
 }

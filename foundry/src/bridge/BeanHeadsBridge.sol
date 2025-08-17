@@ -220,30 +220,32 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     {
         if (_receiver == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
 
-        uint256 originChainId = block.chainid;
-
-        // Transfer NFT to the bridge contract
-        IERC721A(address(i_beanHeadsContract)).safeTransferFrom(msg.sender, address(this), _tokenId);
-
-        // Lock the token to prevent re-entrancy
-        IBeanHeads(i_beanHeadsContract).lockToken(_tokenId);
-
-        // Fetch the token attributes to recreate the token on the destination chain
+        uint256 originChainId = IBeanHeads(i_beanHeadsContract).getOriginChainId(_tokenId);
         Genesis.SVGParams memory params = IBeanHeads(i_beanHeadsContract).getAttributesByTokenId(_tokenId);
 
-        bytes memory encodeTransferPayload = abi.encode(_receiver, _tokenId, params, originChainId);
-        bytes memory transferCalldata = abi.encode(ActionType.TRANSFER, encodeTransferPayload);
+        bytes memory transferCalldata;
+        IERC721A(i_beanHeadsContract).safeTransferFrom(msg.sender, address(this), _tokenId);
+
+        if (block.chainid == originChainId) {
+            // Origin chain sending → lock + send mirror
+            IBeanHeads(i_beanHeadsContract).lockToken(_tokenId);
+
+            bytes memory payload = abi.encode(_receiver, _tokenId, params, originChainId);
+            transferCalldata = abi.encode(ActionType.TRANSFER_TO_MIRROR, payload);
+        } else {
+            // Non-origin chain sending → unlock + burn on mirror
+            IBeanHeads(i_beanHeadsContract).burnToken(_tokenId);
+
+            bytes memory payload = abi.encode(_receiver, _tokenId);
+            transferCalldata = abi.encode(ActionType.TRANSFER_TO_ORIGIN, payload);
+        }
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(s_remoteBridge),
             data: transferCalldata,
-            tokenAmounts: new Client.EVMTokenAmount[](0), // No token transfers in this message
+            tokenAmounts: new Client.EVMTokenAmount[](0),
             feeToken: address(s_linkToken),
-            extraArgs: Client._argsToBytes(
-                Client.EVMExtraArgsV1({
-                    gasLimit: 500_000 // Set a default gas limit for the callback
-                })
-            )
+            extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 500_000}))
         });
 
         messageId = _sendCCIP(_destinationChainSelector, message);
@@ -277,12 +279,14 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         if (sender != s_remoteBridge) revert IBeanHeadsBridge__UnauthorizedSender(sender);
 
         // Decode the action type from the message data
-        (ActionType action, bytes memory rest) = abi.decode(message.data, (ActionType, bytes));
+        (ActionType action, bytes memory payload) = abi.decode(message.data, (ActionType, bytes));
+
+        IBeanHeads beans = IBeanHeads(i_beanHeadsContract);
 
         if (action == ActionType.MINT) {
             /// @notice Decode the message data for minting a Genesis token.
             (address receiver, Genesis.SVGParams memory params, uint256 quantity) =
-                abi.decode(rest, (address, Genesis.SVGParams, uint256));
+                abi.decode(payload, (address, Genesis.SVGParams, uint256));
 
             address bridgedToken = message.destTokenAmounts[0].token;
             uint256 bridgedAmount = message.destTokenAmounts[0].amount;
@@ -291,7 +295,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             IERC20(bridgedToken).safeApprove(i_beanHeadsContract, 0);
             IERC20(bridgedToken).safeApprove(i_beanHeadsContract, bridgedAmount);
 
-            IBeanHeads(i_beanHeadsContract).mintGenesis(receiver, params, quantity, bridgedToken);
+            beans.mintGenesis(receiver, params, quantity, bridgedToken);
 
             emit TokenMintedCrossChain(receiver, params, quantity);
         }
@@ -299,9 +303,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         if (action == ActionType.SELL) {
             /// @notice Decode the message data for selling a token.
             (PermitTypes.Sell memory s, bytes memory sellSig, uint256 permitDeadline, bytes memory permitSig) =
-                abi.decode(rest, (PermitTypes.Sell, bytes, uint256, bytes));
-
-            IBeanHeads beans = IBeanHeads(i_beanHeadsContract);
+                abi.decode(payload, (PermitTypes.Sell, bytes, uint256, bytes));
 
             // Call facet
             beans.sellTokenWithPermit(
@@ -317,7 +319,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         if (action == ActionType.BUY) {
             /// @notice Decode the message data for buying a token.
             (address buyer, uint256 buyTokenId, address paymentToken, uint256 price) =
-                abi.decode(rest, (address, uint256, address, uint256));
+                abi.decode(payload, (address, uint256, address, uint256));
 
             price = message.destTokenAmounts[0].amount;
             paymentToken = message.destTokenAmounts[0].token;
@@ -325,43 +327,36 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             IERC20(paymentToken).safeApprove(i_beanHeadsContract, 0);
             IERC20(paymentToken).safeApprove(i_beanHeadsContract, price);
 
-            IBeanHeads(i_beanHeadsContract).buyToken(buyer, buyTokenId, paymentToken);
-
-            // IERC721A(i_beanHeadsContract).transferFrom(address(this), buyer, buyTokenId);
+            beans.buyToken(buyer, buyTokenId, paymentToken);
 
             emit TokenBoughtCrossChain(buyer, buyTokenId);
         }
 
         if (action == ActionType.CANCEL) {
             /// @notice Decode the message data for canceling a token sale.
-            (PermitTypes.Cancel memory c, bytes memory cancelSig) = abi.decode(rest, (PermitTypes.Cancel, bytes));
-
-            IBeanHeads beans = IBeanHeads(i_beanHeadsContract);
+            (PermitTypes.Cancel memory c, bytes memory cancelSig) = abi.decode(payload, (PermitTypes.Cancel, bytes));
 
             beans.cancelTokenSaleWithPermit(c, cancelSig);
 
             emit TokenSaleCancelled(c.seller, c.tokenId);
         }
 
-        if (action == ActionType.TRANSFER) {
+        if (action == ActionType.TRANSFER_TO_MIRROR) {
+            // Token is being sent to a **non-origin chain** → mint mirror token
             (address receiver, uint256 tokenId, Genesis.SVGParams memory params, uint256 originChainId) =
-                abi.decode(rest, (address, uint256, Genesis.SVGParams, uint256));
+                abi.decode(payload, (address, uint256, Genesis.SVGParams, uint256));
 
-            if (block.chainid != originChainId) {
-                // Mint the mirror token on the destination chain
-                IBeanHeads(i_beanHeadsContract).mintBridgeToken(receiver, tokenId, params);
+            beans.mintBridgeToken(receiver, tokenId, params, originChainId);
 
-                emit TokenMirroredOnDestinationChain(receiver, tokenId, params, originChainId);
-            } else {
-                returnToSourceChain(tokenId);
+            emit TokenMirroredOnDestinationChain(receiver, tokenId, params, originChainId);
+        }
 
-                // If the token is from the same chain, transfer it directly
-                IERC721A(i_beanHeadsContract).safeTransferFrom(address(this), receiver, tokenId);
+        if (action == ActionType.TRANSFER_TO_ORIGIN) {
+            // Token is being sent to **origin chain** → burn on mirror and transfer original
+            (address receiver, uint256 tokenId) = abi.decode(payload, (address, uint256));
 
-                IBeanHeads(i_beanHeadsContract).unlockToken(tokenId);
-
-                emit TokenReturnedToSourceChain(tokenId);
-            }
+            beans.unlockToken(tokenId); // Unlock the token on origin chain
+            IERC721A(i_beanHeadsContract).safeTransferFrom(address(this), receiver, tokenId);
 
             emit TokenTransferredCrossChain(receiver, tokenId);
         }
@@ -415,20 +410,6 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     function _checkPaymentTokenAllowanceAndBalance(IERC20 token, uint256 amount) internal view {
         if (token.allowance(msg.sender, address(this)) < amount) revert IBeanHeadsBridge__InsufficientAllowance();
         if (token.balanceOf(msg.sender) < amount) revert IBeanHeadsBridge__InsufficientPayment();
-    }
-
-    function _approveDigest(bytes32 hash) internal {
-        s_approvedDigests[hash] = true;
-    }
-
-    function _clearDigest(bytes32 hash) internal {
-        s_approvedDigests[hash] = false;
-    }
-
-    function returnToSourceChain(uint256 tokenId) internal {
-        IBeanHeads beans = IBeanHeads(i_beanHeadsContract);
-
-        beans.burn(tokenId);
     }
 
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {

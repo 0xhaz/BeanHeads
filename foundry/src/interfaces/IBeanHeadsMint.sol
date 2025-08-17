@@ -29,12 +29,19 @@ interface IBeanHeadsMint {
     error IBeanHeadsMint__NotLocked();
     /// @notice Error if the token is already locked
     error IBeanHeadsMint__AlreadyLocked();
+    /// @notice Error if user wants to mint a token that is already minted on another chain
+    error IBeanHeadsMint__MultiHopNotAllowed();
+    /// @notice Error when user tries to burn the source token
+    error IBeanHeadsMint__CannotBurnOriginToken();
 
     /// @notice Emitted when a new Genesis NFT is minted
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
 
     /// @notice Emitted when locked token is return to the owner
-    event ReturnedToOrigin(address indexed owner, uint256 indexed tokenId);
+    event ReturnedToSource(address indexed owner, uint256 indexed tokenId);
+
+    /// @notice Emitted when mirrored token is burned
+    event TokenBurned(address indexed owner, uint256 indexed tokenId);
 
     /**
      * @notice Mints a new Genesis NFT with the provided SVG parameters
@@ -99,7 +106,8 @@ interface IBeanHeadsMint {
      * @param _params The SVG parameters for the token to be minted
      * @dev _tokenId is use to retain the token ID across chains
      */
-    function mintBridgeToken(address _to, uint256 _tokenId, Genesis.SVGParams calldata _params) external;
+    function mintBridgeToken(address _to, uint256 _tokenId, Genesis.SVGParams calldata _params, uint256 _originChainId)
+        external;
 
     /**
      * @notice Unlocks a token, allowing it to be transferred or modified
@@ -114,4 +122,10 @@ interface IBeanHeadsMint {
      * @param _tokenId The ID of the token to lock
      */
     function lockToken(uint256 _tokenId) external;
+
+    /**
+     * @notice Burns a token, permanently removing it from circulation
+     * @param _tokenId The ID of the token to burn
+     */
+    function burnToken(uint256 _tokenId) external;
 }

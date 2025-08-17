@@ -69,4 +69,11 @@ interface IBeanHeadsView {
      * @return True if the token is locked, false otherwise
      */
     function isTokenLocked(uint256 tokenId) external view returns (bool);
+
+    /**
+     * @notice Returns the origin chain ID of a token
+     * @param tokenId The ID of the token
+     * @return The origin chain ID as a uint256
+     */
+    function getOriginChainId(uint256 tokenId) external view returns (uint256);
 }

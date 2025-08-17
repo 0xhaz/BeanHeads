@@ -34,8 +34,6 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     /// @notice Modifier to allow only bridge access
     modifier onlyBridge() {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        console.log("msg.sender: %s", msg.sender);
-        console.log("ds.authorizedBridges[msg.sender]: %s", ds.authorizedBridges[msg.sender]);
 
         if (!ds.authorizedBridges[msg.sender]) {
             _revert(IBeanHeadsMint__UnauthorizedBridge.selector);
@@ -77,13 +75,18 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
             // Set the payment token and generation
             ds.tokenIdToPaymentToken[currentTokenId] = _paymentToken;
             ds.tokenIdToGeneration[currentTokenId] = 1;
+
+            ds.tokenIdToOrigin[currentTokenId] = block.chainid; // Set the origin chain ID
         }
 
         emit MintedGenesis(_to, _tokenId);
     }
 
     /// @inheritdoc IBeanHeadsMint
-    function mintBridgeToken(address _to, uint256 _tokenId, Genesis.SVGParams calldata _params) external onlyBridge {
+    function mintBridgeToken(address _to, uint256 _tokenId, Genesis.SVGParams calldata _params, uint256 _originChainId)
+        external
+        onlyBridge
+    {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         if (_exists(_tokenId)) {
             // If token already exists, contract will unlock and transfer it
@@ -91,22 +94,32 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
                 _revert(IBeanHeadsMint__NotLocked.selector);
             }
 
+            ds.lockedTokens[_tokenId] = false;
+
             // Transfer the token to the new owner
             address currentOwner = _ownerOf(_tokenId);
             if (currentOwner != address(0)) {
                 _safeTransfer(currentOwner, _to, _tokenId, "");
             }
 
-            emit ReturnedToOrigin(_to, _tokenId);
+            emit ReturnedToSource(_to, _tokenId);
             return;
         }
 
-        uint256 originChainId = block.chainid;
+        uint256 existingOrigin = ds.tokenIdToOrigin[_tokenId];
+
+        if (existingOrigin != 0 && existingOrigin != _originChainId) {
+            // If the token is already minted on another chain, revert
+            _revert(IBeanHeadsMint__MultiHopNotAllowed.selector);
+        }
+
+        if (existingOrigin == 0) {
+            ds.tokenIdToOrigin[_tokenId] = _originChainId;
+        }
 
         // mint the token on destination chain
         _mintWithId(_to, _tokenId);
         ds.tokenIdToParams[_tokenId] = _params;
-        ds.tokenIdToOrigin[_tokenId] = originChainId;
 
         emit MintedGenesis(_to, _tokenId);
     }
@@ -184,5 +197,26 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     /// @inheritdoc IBeanHeadsMint
     function getOwnerOf(uint256 _tokenId) external view tokenExists(_tokenId) returns (address) {
         return _ownerOf(_tokenId);
+    }
+
+    function burnToken(uint256 _tokenId) external tokenExists(_tokenId) onlyBridge {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        if (msg.sender != ownerOf(_tokenId)) {
+            _revert(IBeanHeadsMint__NotOwner.selector);
+        }
+
+        if (ds.tokenIdToOrigin[_tokenId] == block.chainid) {
+            _revert(IBeanHeadsMint__CannotBurnOriginToken.selector);
+        }
+
+        _burn(_tokenId, true);
+
+        delete ds.tokenIdToParams[_tokenId];
+        delete ds.tokenIdToListing[_tokenId];
+        delete ds.tokenIdToPaymentToken[_tokenId];
+        delete ds.tokenIdToOrigin[_tokenId];
+        delete ds.lockedTokens[_tokenId];
+
+        emit TokenBurned(msg.sender, _tokenId);
     }
 }
