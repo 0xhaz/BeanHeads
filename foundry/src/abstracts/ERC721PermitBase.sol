@@ -44,6 +44,16 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
                                 EIP-712 
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Returns the EIP-712 domain separator for this contract
+     * @return fields The fields of the domain
+     * @return name The name of the contract
+     * @return version The version of the contract
+     * @return chainId The chain ID of the current network
+     * @return verifyingContract The address of this contract
+     * @return salt A salt value (not used)
+     * @return extensions An empty array (no extensions)
+     */
     function eip712Domain()
         public
         view
@@ -68,6 +78,10 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
         );
     }
 
+    /**
+     * @notice Returns the domain separator for the current chain
+     * @return The bytes32 representation of the domain separator
+     */
     function DOMAIN_SEPARATOR() external view returns (bytes32) {
         return _domainSeparatorV4();
     }

@@ -142,6 +142,28 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
         ds.lockedTokens[_tokenId] = true; // Lock the token
     }
 
+    /// @inheritdoc IBeanHeadsMint
+    function burnToken(uint256 _tokenId) external tokenExists(_tokenId) onlyBridge {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        if (msg.sender != ownerOf(_tokenId)) {
+            _revert(IBeanHeadsMint__NotOwner.selector);
+        }
+
+        if (ds.tokenIdToOrigin[_tokenId] == block.chainid) {
+            _revert(IBeanHeadsMint__CannotBurnOriginToken.selector);
+        }
+
+        _burn(_tokenId, true);
+
+        delete ds.tokenIdToParams[_tokenId];
+        delete ds.tokenIdToListing[_tokenId];
+        delete ds.tokenIdToPaymentToken[_tokenId];
+        delete ds.tokenIdToOrigin[_tokenId];
+        delete ds.lockedTokens[_tokenId];
+
+        emit TokenBurned(msg.sender, _tokenId);
+    }
+
     /// @inheritdoc ERC721AUpgradeable
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data)
         public
@@ -197,26 +219,5 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     /// @inheritdoc IBeanHeadsMint
     function getOwnerOf(uint256 _tokenId) external view tokenExists(_tokenId) returns (address) {
         return _ownerOf(_tokenId);
-    }
-
-    function burnToken(uint256 _tokenId) external tokenExists(_tokenId) onlyBridge {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        if (msg.sender != ownerOf(_tokenId)) {
-            _revert(IBeanHeadsMint__NotOwner.selector);
-        }
-
-        if (ds.tokenIdToOrigin[_tokenId] == block.chainid) {
-            _revert(IBeanHeadsMint__CannotBurnOriginToken.selector);
-        }
-
-        _burn(_tokenId, true);
-
-        delete ds.tokenIdToParams[_tokenId];
-        delete ds.tokenIdToListing[_tokenId];
-        delete ds.tokenIdToPaymentToken[_tokenId];
-        delete ds.tokenIdToOrigin[_tokenId];
-        delete ds.lockedTokens[_tokenId];
-
-        emit TokenBurned(msg.sender, _tokenId);
     }
 }

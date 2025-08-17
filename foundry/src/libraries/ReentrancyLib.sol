@@ -11,6 +11,10 @@ library ReentrancyLib {
     uint256 private constant NOT_ENTERED = 1;
     uint256 private constant ENTERED = 2;
 
+    /**
+     * @notice Returns the ReentrancyStorage instance
+     * @return rs The ReentrancyStorage instance
+     */
     function reentrancyStorage() private pure returns (ReentrancyStorage storage rs) {
         bytes32 position = REENTRANCY_STORAGE_POSITION;
         assembly {
@@ -18,6 +22,10 @@ library ReentrancyLib {
         }
     }
 
+    /**
+     * @notice Enforces that the function is not re-entered
+     * @dev This function should be called at the beginning of any function that needs to be protected against re-entrancy
+     */
     function enforceNotEntered() internal {
         ReentrancyStorage storage rs = reentrancyStorage();
         require(rs.status != ENTERED, "ReentrancyLib: reentrant call");
@@ -25,11 +33,19 @@ library ReentrancyLib {
         rs.status = ENTERED;
     }
 
+    /**
+     * @notice Resets the re-entrancy status to not entered
+     * @dev This function should be called at the end of any function that was protected against re-entrancy
+     */
     function resetStatus() internal {
         ReentrancyStorage storage rs = reentrancyStorage();
         rs.status = NOT_ENTERED;
     }
 
+    /**
+     * @notice Initializes the re-entrancy guard
+     * @dev This function should be called once during contract initialization
+     */
     function initReentrancyGuard() internal {
         ReentrancyStorage storage rs = reentrancyStorage();
         rs.status = NOT_ENTERED;

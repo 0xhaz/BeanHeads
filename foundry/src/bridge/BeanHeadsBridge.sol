@@ -28,6 +28,10 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     using SafeERC20 for IERC20;
     using OracleLib for AggregatorV3Interface;
 
+    /*//////////////////////////////////////////////////////////////
+                             GLOBAL STATES
+    //////////////////////////////////////////////////////////////*/
+
     IRouterClient private immutable i_router;
     address public s_remoteBridge;
     IERC20 private s_linkToken;
@@ -40,8 +44,16 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     uint256 private constant GAS_LIMIT_BUY = 200_000;
     uint256 private constant GAS_LIMIT_SELL = 300_000;
 
+    /*//////////////////////////////////////////////////////////////
+                                MAPPINGS
+    //////////////////////////////////////////////////////////////*/
+
     /// @notice Mapping to track the remote bridge address
     mapping(address remoteBridge => bool isRegistered) public remoteBridgeAddresses;
+
+    /*//////////////////////////////////////////////////////////////
+                               MODIFIERS
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice Modifier to ensure that the remote bridge is registered
     modifier onlyRegisteredRemoteBridge() {
@@ -51,6 +63,9 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         _;
     }
 
+    /*//////////////////////////////////////////////////////////////
+                              CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
     constructor(address router, address remote, address initialOwner, address linkToken, address beanHeads)
         CCIPReceiver(router)
         Ownable(initialOwner)
@@ -61,15 +76,9 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         i_beanHeadsContract = beanHeads;
     }
 
-    /// @inheritdoc IBeanHeadsBridge
-    function setRemoteBridge(address _newRemoteBridge) external onlyOwner {
-        if (_newRemoteBridge == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
-        s_remoteBridge = _newRemoteBridge;
-        remoteBridgeAddresses[_newRemoteBridge] = true;
-
-        emit RemoteBridgeUpdated(_newRemoteBridge);
-    }
-
+    /*//////////////////////////////////////////////////////////////
+                           EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     /// @inheritdoc IBeanHeadsBridge
     function sendMintTokenRequest(
         uint64 _destinationChainSelector,
@@ -203,7 +212,19 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit SentTransferTokenRequest(messageId, _destinationChainSelector, _receiver, _tokenId);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                                 ADMIN
+    //////////////////////////////////////////////////////////////*/
     /// @inheritdoc IBeanHeadsBridge
+    function setRemoteBridge(address _newRemoteBridge) external onlyOwner {
+        if (_newRemoteBridge == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
+        s_remoteBridge = _newRemoteBridge;
+        remoteBridgeAddresses[_newRemoteBridge] = true;
+
+        emit RemoteBridgeUpdated(_newRemoteBridge);
+    }
+    /// @inheritdoc IBeanHeadsBridge
+
     function depositLink(uint256 amount) external onlyOwner {
         if (amount == 0) revert IBeanHeadsBridge__InvalidAmount();
         s_linkToken.transferFrom(msg.sender, address(this), amount);
@@ -217,6 +238,9 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         s_linkToken.safeTransfer(msg.sender, amount);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           CALLBACK FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     function _ccipReceive(Client.Any2EVMMessage memory message) internal override {
         address sender = abi.decode(message.sender, (address));
 
@@ -304,6 +328,10 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             emit TokenTransferredCrossChain(receiver, tokenId);
         }
     }
+
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Sends a CCIP message to the destination chain
@@ -435,6 +463,10 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             payload = abi.encode(receiver, tokenId);
         }
     }
+
+    /*//////////////////////////////////////////////////////////////
+                           INTERFACE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector; // Return the selector for ERC721Received

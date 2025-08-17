@@ -57,6 +57,12 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
         }
     }
 
+    /**
+     * @notice Removes a tokenId from the owner's tokens list
+     * @param ds The BeanHeadsStorage instance
+     * @param owner The address of the token owner
+     * @param tokenId The ID of the token to remove
+     */
     function _removeFromOwnerTokens(BHStorage.BeanHeadsStorage storage ds, address owner, uint256 tokenId) internal {
         uint256[] storage tokens = ds.ownerTokens[owner];
         uint256 len = tokens.length;

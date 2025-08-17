@@ -4,8 +4,11 @@ pragma solidity ^0.8.24;
 import {Genesis} from "src/types/Genesis.sol";
 
 interface IBeanHeadsView {
+    /// @notice Error thrown when a token does not exist
     error IBeanHeadsView__TokenDoesNotExist();
+    /// @notice Error thrown when the caller is not the owner of the token
     error IBeanHeadsView__NotOwner();
+    /// @notice Error thrown when the token is not for sale
     error IBeanHeadsView__TokenNotForSale();
 
     /**
