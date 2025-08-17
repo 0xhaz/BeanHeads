@@ -7,7 +7,10 @@ import {BHStorage} from "src/libraries/BHStorage.sol";
 contract OwnershipFacet is IERC173 {
     function transferOwnership(address _newOwner) external override {
         BHStorage.enforceContractOwner();
-        BHStorage.setContractOwner(_newOwner);
+        address previousOwner = BHStorage.contractOwner();
+        BHStorage.diamondStorage().owner = _newOwner;
+
+        emit OwnershipTransferred(previousOwner, _newOwner);
     }
 
     function owner() external view override returns (address) {

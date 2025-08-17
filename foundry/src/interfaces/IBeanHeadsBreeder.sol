@@ -2,19 +2,33 @@
 pragma solidity ^0.8.24;
 
 interface IBeanHeadsBreeder {
+    /// @notice Error thrown when the request ID is invalid
     error IBeanHeadsBreeder__InvalidRequestId();
+    /// @notice Error thrown when user tries to breed the same BeanHead
     error IBeanHeadsBreeder__CannotBreedSameBeanHead();
+    /// @notice Error thrown when the token is not escrowed by the sender
     error IBeanHeadsBreeder__TokensNotEscrowedBySender();
+    /// @notice Error thrown when the cooldown period has not passed
     error IBeanHeadsBreeder__CoolDownNotPassed();
+    /// @notice Error thrown when the payment is insufficient
     error IBeanHeadsBreeder__InsufficientPayment();
+    /// @notice Error thrown when the breeding limit is reached
     error IBeanHeadsBreeder__BreedLimitReached();
+    /// @notice Error thrown when the token ID is invalid
     error IBeanHeadsBreeder__InvalidTokenId();
+    /// @notice Error thrown when the owner is not the caller
     error IBeanHeadsBreeder__NotOwner();
+    /// @notice Error thrown when a transfer fails
     error IBeanHeadsBreeder__TransferFailed();
+    /// @notice Error thrown when the allowance for the payment token is insufficient
     error IBeanHeadsBreeder__InsufficientAllowance();
+    /// @notice Error thrown when the payment token balance is insufficient
     error IBeanHeadsBreeder__InsufficientBalance();
+    /// @notice Error thrown when the oracle price is invalid
     error IBeanHeadsBreeder__InvalidOraclePrice();
+    /// @notice Error thrown when invalid token is provided
     error IBeanHeadsBreeder__InvalidToken();
+    /// @notice Error thrown when the request is already fulfilled
     error IBeanHeadsBreeder__RequestAlreadyFulfilled();
 
     /**

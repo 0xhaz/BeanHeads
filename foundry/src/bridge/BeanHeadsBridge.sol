@@ -362,6 +362,12 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         }
     }
 
+    /**
+     * @notice Sends a CCIP message to the destination chain
+     * @param destChain The destination chain selector
+     * @param message The EVM2AnyMessage to send
+     * @return messageId The ID of the sent message
+     */
     function _sendCCIP(uint64 destChain, Client.EVM2AnyMessage memory message) internal returns (bytes32) {
         uint256 ccipFee = i_router.getFee(destChain, message);
 

@@ -5,21 +5,37 @@ import {Genesis} from "src/types/Genesis.sol";
 import {PermitTypes} from "src/types/PermitTypes.sol";
 
 interface IBeanHeadsBridge {
+    /// @notice Error thrown when the remote bridge address is invalid
     error IBeanHeadsBridge__InvalidRemoteAddress();
+    /// @notice Error thrown when the LINK balance is insufficient
     error IBeanHeadsBridge__InsufficientLinkBalance(uint256 amount);
+    /// @notice Error thrown when the amount is invalid
     error IBeanHeadsBridge__InvalidAmount();
+    /// @notice Error thrown when the sender is not authorized
     error IBeanHeadsBridge__UnauthorizedSender(address sender);
+    /// @notice Error thrown when the token is not deposited
     error IBeanHeadsBridge__TokenNotDeposited(uint256 tokenId);
+    /// @notice Error thrown when the payment is insufficient
     error IBeanHeadsBridge__InsufficientPayment();
+    /// @notice Error thrown when the token is not locked
     error IBeanHeadsBridge__InvalidTokenReceived();
+    /// @notice Error thrown when the token is not allowed for minting
     error IBeanHeadsBridge__InvalidToken();
+    /// @notice Error thrown when the oracle price is invalid
     error IBeanHeadsBridge__InvalidOraclePrice();
+    /// @notice Error thrown when the token is not set for sale
     error IBeanHeadsBridge__TokenNotAllowed(address token);
+    /// @notice Error thrown when the token is not for sale
     error IBeanHeadsBridge__TokenIsNotForSale();
+    /// @notice Error thrown when the allowance for the payment token is insufficient
     error IBeanHeadsBridge__InsufficientAllowance();
+    /// @notice Error thrown when there's an invalid nonce
     error IBeanHeadsBridge__InvalidNonce();
+    /// @notice Error thrown when the message length is invalid
     error IBeanHeadsBridge__InvalidLength();
+    /// @notice Error thrown when the token does not exist
     error IBeanHeadsBridge__InvalidPaymentToken(address received, address expected);
+    /// @notice Error thrown when the price exceeds the maximum allowed value
     error IBeanHeadsBridge__PriceExceedsMax();
 
     enum ActionType {
