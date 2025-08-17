@@ -119,6 +119,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         sepoliaHelpers = new Helpers();
 
+        console.log("Deploying BeanHeadsBridge on Sepolia...");
         DeployBeanHeadsBridge deploySepoliaBeanHeadsBridge = new DeployBeanHeadsBridge();
         (address sepoliaBeanHeadsBridgeAddr, address sepoliaBeanHeadsAddress, address deployerSepoliaAddress) =
             deploySepoliaBeanHeadsBridge.run();
@@ -152,6 +153,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         arbHelpers = new Helpers();
 
+        console.log("Deploying BeanHeadsBridge on Arbitrum...");
         DeployBeanHeadsBridge deployArbBeanHeadsBridge = new DeployBeanHeadsBridge();
         (address arbBeanHeadsBridgeAddr, address arbBeanHeadsAddress, address deployerArbitrumAddress) =
             deployArbBeanHeadsBridge.run();
@@ -184,21 +186,10 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(sepoliaTokenPool));
 
-        // mockSepoliaToken.transfer(address(sepoliaTokenPool), 10_000 ether);
-        // mockSepoliaToken.transfer(address(sepoliaBeanHeadsBridge), 10_000 ether);
-
         sepoliaBeanHeadsBridge.setRemoteBridge(address(arbBeanHeadsBridge));
         ccipSimulatorSepolia.requestLinkFromFaucet(address(sepoliaBeanHeadsBridge), 10 ether);
         assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
         vm.stopPrank();
-
-        vm.startPrank(ownerSepolia);
-        sepoliaBeanHeads.setAllowedToken(address(mockSepoliaToken), true);
-        // sepoliaBeanHeads.setAllowedToken(address(sepoliaLinkToken), true);
-        // sepoliaBeanHeads.setAllowedToken(address(mockArbToken), true);
-        sepoliaBeanHeads.addPriceFeed(address(mockSepoliaToken), address(priceFeedSepolia));
-        // sepoliaBeanHeads.addPriceFeed(address(mockArbToken), address(priceFeedArbitrum));
-        sepoliaBeanHeads.setMintPrice(MINT_PRICE);
 
         vm.mockCall(
             address(priceFeedSepolia),
@@ -224,21 +215,10 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(arbTokenPool));
 
-        // mockArbToken.transfer(address(arbTokenPool), 10_000 ether);
-        // mockArbToken.transfer(address(arbBeanHeadsBridge), 10_000 ether);
-
         arbBeanHeadsBridge.setRemoteBridge(address(sepoliaBeanHeadsBridge));
         ccipSimulatorArbitrum.requestLinkFromFaucet(address(arbBeanHeadsBridge), 10 ether);
         assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
         vm.stopPrank();
-
-        vm.startPrank(ownerArbitrum);
-        arbBeanHeads.setAllowedToken(address(mockArbToken), true);
-        // arbBeanHeads.setAllowedToken(address(arbLinkToken), true);
-        // arbBeanHeads.setAllowedToken(address(mockSepoliaToken), true);
-        arbBeanHeads.addPriceFeed(address(mockArbToken), address(priceFeedArbitrum));
-        // arbBeanHeads.addPriceFeed(address(mockSepoliaToken), address(priceFeedSepolia));
-        arbBeanHeads.setMintPrice(MINT_PRICE);
 
         vm.mockCall(
             address(priceFeedArbitrum),
@@ -260,8 +240,6 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         // Accept role on Sepolia
         console.log("Accepting role on Sepolia");
         TokenAdminRegistry tokenAdminRegistry = TokenAdminRegistry(sepoliaNetworkDetails.tokenAdminRegistryAddress);
-        // tokenAdminRegistry.transferAdminRole(address(mockSepoliaToken), ownerSepolia);
-        // tokenAdminRegistry.proposeAdministrator(address(mockSepoliaToken), ownerSepolia);
         tokenAdminRegistry.acceptAdminRole(address(mockSepoliaToken));
 
         // Link token to pool in the token admin registry
@@ -283,8 +261,6 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         // Accept role on Arbitrum
         console.log("Accepting role on Arbitrum");
         TokenAdminRegistry tokenAdminRegistryArb = TokenAdminRegistry(arbNetworkDetails.tokenAdminRegistryAddress);
-        // tokenAdminRegistryArb.transferAdminRole(address(mockArbToken), ownerArbitrum);
-        // tokenAdminRegistryArb.proposeAdministrator(address(mockArbToken), ownerArbitrum);
         tokenAdminRegistryArb.acceptAdminRole(address(mockArbToken));
 
         // Link token to pool in the token admin registry
@@ -294,26 +270,34 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.stopPrank();
 
+        console.log("Setting up BeanHeads contracts...");
         vm.selectFork(sepoliaFork);
         vm.startPrank(ownerSepolia);
+        sepoliaBeanHeads.setAllowedToken(address(mockSepoliaToken), true);
         sepoliaBeanHeads.setAllowedToken(address(mockArbToken), true);
+        sepoliaBeanHeads.addPriceFeed(address(mockSepoliaToken), address(priceFeedSepolia));
         sepoliaBeanHeads.addPriceFeed(address(mockArbToken), address(priceFeedArbitrum));
         sepoliaBeanHeads.setRemoteBridge(arbNetworkDetails.chainSelector, address(sepoliaBeanHeadsBridge));
         assertEq(
             sepoliaBeanHeads.isBridgeAuthorized(arbNetworkDetails.chainSelector, address(sepoliaBeanHeadsBridge)), true
         );
+        sepoliaBeanHeads.setMintPrice(MINT_PRICE);
         vm.stopPrank();
 
         vm.selectFork(arbFork);
         vm.startPrank(ownerArbitrum);
+        arbBeanHeads.setAllowedToken(address(mockArbToken), true);
         arbBeanHeads.setAllowedToken(address(mockSepoliaToken), true);
+        arbBeanHeads.addPriceFeed(address(mockArbToken), address(priceFeedArbitrum));
         arbBeanHeads.addPriceFeed(address(mockSepoliaToken), address(priceFeedSepolia));
         arbBeanHeads.setRemoteBridge(sepoliaNetworkDetails.chainSelector, address(arbBeanHeadsBridge));
         assertEq(
             arbBeanHeads.isBridgeAuthorized(sepoliaNetworkDetails.chainSelector, address(arbBeanHeadsBridge)), true
         );
+        arbBeanHeads.setMintPrice(MINT_PRICE);
         vm.stopPrank();
 
+        console.log("Setting up token pools and user balance...");
         vm.selectFork(sepoliaFork);
         vm.startPrank(USER);
         vm.deal(USER, 1 ether);

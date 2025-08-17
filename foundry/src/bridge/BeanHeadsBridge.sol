@@ -24,7 +24,7 @@ import {OracleLib} from "src/libraries/OracleLib.sol";
 import {PermitTypes} from "src/types/PermitTypes.sol";
 import {console} from "forge-std/console.sol";
 
-contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyGuard, IERC1271 {
+contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using OracleLib for AggregatorV3Interface;
 
@@ -35,12 +35,13 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
     uint256 private constant PRECISION = 1e18;
+    uint256 private constant GAS_LIMIT_TRANSFER = 500_000;
+    uint256 private constant GAS_LIMIT_MINT = 500_000;
+    uint256 private constant GAS_LIMIT_BUY = 200_000;
+    uint256 private constant GAS_LIMIT_SELL = 300_000;
 
     /// @notice Mapping to track the remote bridge address
     mapping(address remoteBridge => bool isRegistered) public remoteBridgeAddresses;
-
-    /// @notice Allowlist of digests that this bridge approves once
-    mapping(bytes32 digest => bool isApproved) private s_approvedDigests;
 
     /// @notice Modifier to ensure that the remote bridge is registered
     modifier onlyRegisteredRemoteBridge() {
@@ -88,23 +89,11 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         token.safeTransferFrom(msg.sender, address(this), mintPayment);
 
         bytes memory encodeMintPayload = abi.encode(_receiver, _params, _amount);
-        bytes memory mintGenesisCalldata = abi.encode(ActionType.MINT, encodeMintPayload);
 
-        Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
-        Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({token: _paymentToken, amount: mintPayment});
-        tokenAmounts[0] = tokenAmount;
+        Client.EVMTokenAmount[] memory tokenAmounts = _wrapToken(_paymentToken, mintPayment);
 
-        Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
-            receiver: abi.encode(s_remoteBridge),
-            data: mintGenesisCalldata,
-            tokenAmounts: tokenAmounts,
-            feeToken: address(s_linkToken),
-            extraArgs: Client._argsToBytes(
-                Client.EVMExtraArgsV1({
-                    gasLimit: 500_000 // Set a default gas limit for the callback
-                })
-            )
-        });
+        Client.EVM2AnyMessage memory message =
+            _buildCCIPMessage(ActionType.MINT, encodeMintPayload, tokenAmounts, GAS_LIMIT_MINT);
 
         // Approve router to spend the tokens
         token.safeApprove(address(i_router), mintPayment);
@@ -125,19 +114,13 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         if (s.price == 0) revert IBeanHeadsBridge__InvalidAmount();
 
         bytes memory encodeSellPayload = abi.encode(s, sellSig, permitDeadline, permitSig);
-        bytes memory sellTokenCalldata = abi.encode(ActionType.SELL, encodeSellPayload);
 
-        Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
-            receiver: abi.encode(s_remoteBridge),
-            data: sellTokenCalldata,
-            tokenAmounts: new Client.EVMTokenAmount[](0), // No token transfers in this message
-            feeToken: address(s_linkToken),
-            extraArgs: Client._argsToBytes(
-                Client.EVMExtraArgsV1({
-                    gasLimit: 300_000 // Set a default gas limit for the callback
-                })
-            )
-        });
+        Client.EVM2AnyMessage memory message = _buildCCIPMessage(
+            ActionType.SELL,
+            encodeSellPayload,
+            new Client.EVMTokenAmount[](0), // No token transfers in this message
+            GAS_LIMIT_SELL
+        );
 
         messageId = _sendCCIP(_destinationChainSelector, message);
 
@@ -160,23 +143,11 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         token.safeTransferFrom(msg.sender, address(this), _price);
 
         bytes memory encodeBuyPayload = abi.encode(msg.sender, _tokenId, _price, _paymentToken);
-        bytes memory buyTokenCalldata = abi.encode(ActionType.BUY, encodeBuyPayload);
 
-        Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
-        Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({token: _paymentToken, amount: _price});
-        tokenAmounts[0] = tokenAmount;
+        Client.EVMTokenAmount[] memory tokenAmounts = _wrapToken(_paymentToken, _price);
 
-        Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
-            receiver: abi.encode(s_remoteBridge),
-            data: buyTokenCalldata,
-            tokenAmounts: tokenAmounts,
-            feeToken: address(s_linkToken),
-            extraArgs: Client._argsToBytes(
-                Client.EVMExtraArgsV1({
-                    gasLimit: 200_000 // Set a default gas limit for the callback
-                })
-            )
-        });
+        Client.EVM2AnyMessage memory message =
+            _buildCCIPMessage(ActionType.BUY, encodeBuyPayload, tokenAmounts, GAS_LIMIT_BUY);
 
         // Approve router to spend the tokens
         token.safeApprove(address(i_router), _price);
@@ -193,19 +164,13 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         bytes calldata cancelSig
     ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
         bytes memory encodeCancelPayload = abi.encode(c, cancelSig);
-        bytes memory cancelTokenCalldata = abi.encode(ActionType.CANCEL, encodeCancelPayload);
 
-        Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
-            receiver: abi.encode(s_remoteBridge),
-            data: cancelTokenCalldata,
-            tokenAmounts: new Client.EVMTokenAmount[](0), // No token transfers in this message
-            feeToken: address(s_linkToken),
-            extraArgs: Client._argsToBytes(
-                Client.EVMExtraArgsV1({
-                    gasLimit: 200_000 // Set a default gas limit for the callback
-                })
-            )
-        });
+        Client.EVM2AnyMessage memory message = _buildCCIPMessage(
+            ActionType.CANCEL,
+            encodeCancelPayload,
+            new Client.EVMTokenAmount[](0), // No token transfers in this message
+            GAS_LIMIT_SELL
+        );
 
         messageId = _sendCCIP(_destinationChainSelector, message);
 
@@ -220,43 +185,22 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     {
         if (_receiver == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
 
-        uint256 originChainId = IBeanHeads(i_beanHeadsContract).getOriginChainId(_tokenId);
         Genesis.SVGParams memory params = IBeanHeads(i_beanHeadsContract).getAttributesByTokenId(_tokenId);
 
-        bytes memory transferCalldata;
         IERC721A(i_beanHeadsContract).safeTransferFrom(msg.sender, address(this), _tokenId);
 
-        if (block.chainid == originChainId) {
-            // Origin chain sending → lock + send mirror
-            IBeanHeads(i_beanHeadsContract).lockToken(_tokenId);
+        (ActionType action, bytes memory transferCalldata) = _getTransferAction(_tokenId, _receiver, params);
 
-            bytes memory payload = abi.encode(_receiver, _tokenId, params, originChainId);
-            transferCalldata = abi.encode(ActionType.TRANSFER_TO_MIRROR, payload);
-        } else {
-            // Non-origin chain sending → unlock + burn on mirror
-            IBeanHeads(i_beanHeadsContract).burnToken(_tokenId);
-
-            bytes memory payload = abi.encode(_receiver, _tokenId);
-            transferCalldata = abi.encode(ActionType.TRANSFER_TO_ORIGIN, payload);
-        }
-
-        Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
-            receiver: abi.encode(s_remoteBridge),
-            data: transferCalldata,
-            tokenAmounts: new Client.EVMTokenAmount[](0),
-            feeToken: address(s_linkToken),
-            extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 500_000}))
-        });
+        Client.EVM2AnyMessage memory message = _buildCCIPMessage(
+            action,
+            transferCalldata,
+            new Client.EVMTokenAmount[](0), // No token transfers in this message
+            GAS_LIMIT_TRANSFER
+        );
 
         messageId = _sendCCIP(_destinationChainSelector, message);
 
         emit SentTransferTokenRequest(messageId, _destinationChainSelector, _receiver, _tokenId);
-    }
-
-    function isValidSignature(bytes32 hash, bytes calldata) external view override returns (bytes4) {
-        if (msg.sender != i_beanHeadsContract) return bytes4(0);
-
-        return s_approvedDigests[hash] ? IERC1271.isValidSignature.selector : bytes4(0);
     }
 
     /// @inheritdoc IBeanHeadsBridge
@@ -292,8 +236,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             uint256 bridgedAmount = message.destTokenAmounts[0].amount;
 
             // Approve the BeanHeads contract to spend the bridged token
-            IERC20(bridgedToken).safeApprove(i_beanHeadsContract, 0);
-            IERC20(bridgedToken).safeApprove(i_beanHeadsContract, bridgedAmount);
+            _safeApproveTokens(IERC20(bridgedToken), bridgedAmount);
 
             beans.mintGenesis(receiver, params, quantity, bridgedToken);
 
@@ -324,8 +267,8 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             price = message.destTokenAmounts[0].amount;
             paymentToken = message.destTokenAmounts[0].token;
 
-            IERC20(paymentToken).safeApprove(i_beanHeadsContract, 0);
-            IERC20(paymentToken).safeApprove(i_beanHeadsContract, price);
+            // Approve the BeanHeads contract to spend the bridged token
+            _safeApproveTokens(IERC20(paymentToken), price);
 
             beans.buyToken(buyer, buyTokenId, paymentToken);
 
@@ -416,6 +359,81 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     function _checkPaymentTokenAllowanceAndBalance(IERC20 token, uint256 amount) internal view {
         if (token.allowance(msg.sender, address(this)) < amount) revert IBeanHeadsBridge__InsufficientAllowance();
         if (token.balanceOf(msg.sender) < amount) revert IBeanHeadsBridge__InsufficientPayment();
+    }
+
+    /**
+     * @notice Safely approves the router to spend tokens
+     * @param token The ERC20 token to approve
+     * @param amount The amount to approve
+     */
+    function _safeApproveTokens(IERC20 token, uint256 amount) internal {
+        // Reset approval to 0 first to prevent issues with some tokens
+        token.safeApprove(address(i_router), 0);
+        token.safeApprove(address(i_router), amount);
+    }
+
+    /**
+     * @notice Wraps a token and amount into an EVMTokenAmount array for CCIP
+     * @param token The ERC20 token address to wrap
+     * @param amount The amount of the token to wrap
+     * @return wrapped An array containing the wrapped token and amount
+     */
+    function _wrapToken(address token, uint256 amount) internal pure returns (Client.EVMTokenAmount[] memory wrapped) {
+        wrapped = new Client.EVMTokenAmount[](1);
+        wrapped[0] = Client.EVMTokenAmount({token: token, amount: amount});
+    }
+
+    /**
+     * @notice Builds a CCIP message for sending to the destination chain
+     * @param action The action type for the message
+     * @param payload The payload data for the action
+     * @param tokenAmounts The token amounts to include in the message
+     * @param gasLimit The gas limit for the callback on the destination chain
+     * @return message The constructed EVM2AnyMessage ready for sending
+     */
+    function _buildCCIPMessage(
+        ActionType action,
+        bytes memory payload,
+        Client.EVMTokenAmount[] memory tokenAmounts,
+        uint256 gasLimit
+    ) internal view returns (Client.EVM2AnyMessage memory) {
+        return Client.EVM2AnyMessage({
+            receiver: abi.encode(s_remoteBridge),
+            data: abi.encode(action, payload),
+            tokenAmounts: tokenAmounts,
+            feeToken: address(s_linkToken),
+            extraArgs: Client._argsToBytes(
+                Client.EVMExtraArgsV1({
+                    gasLimit: gasLimit // Set a default gas limit for the callback
+                })
+            )
+        });
+    }
+
+    /**
+     * @notice Determines the action type and payload for transferring a token
+     * @param tokenId The ID of the token being transferred
+     * @param receiver The address receiving the token
+     * @param params The SVG parameters for the token
+     * @return action The action type for the transfer
+     * @return payload The encoded payload for the transfer action
+     */
+    function _getTransferAction(uint256 tokenId, address receiver, Genesis.SVGParams memory params)
+        internal
+        returns (ActionType action, bytes memory payload)
+    {
+        uint256 originChainId = IBeanHeads(i_beanHeadsContract).getOriginChainId(tokenId);
+        if (block.chainid == originChainId) {
+            // Origin chain sending → lock + send mirror
+            IBeanHeads(i_beanHeadsContract).lockToken(tokenId);
+            action = ActionType.TRANSFER_TO_MIRROR;
+            payload = abi.encode(receiver, tokenId, params, originChainId);
+        } else {
+            // Non-origin chain sending → unlock + burn on mirror
+            IBeanHeads(i_beanHeadsContract).burnToken(tokenId);
+            action = ActionType.TRANSFER_TO_ORIGIN;
+            payload = abi.encode(receiver, tokenId);
+        }
     }
 
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
