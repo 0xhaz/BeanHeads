@@ -669,6 +669,72 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         assertEq(sepoliaBeanHeads.isTokenLocked(tokenId), false);
     }
 
+    modifier mintedMultipleTokens() {
+        vm.selectFork(sepoliaFork);
+        vm.startPrank(MINTER);
+        uint256 tokenAmount = 3;
+        sepoliaBeanHeads.mintGenesis(MINTER, params, tokenAmount, address(mockSepoliaToken));
+        assertEq(sepoliaBeanHeads.balanceOf(MINTER), tokenAmount);
+        assertEq(sepoliaBeanHeads.getTotalSupply(), tokenAmount);
+        vm.stopPrank();
+
+        _;
+    }
+
+    function test_sendBatchSellTokenRequest() public mintedMultipleTokens {
+        uint256[] memory tokenIds = new uint256[](3);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        tokenIds[2] = 2;
+
+        uint256 price = 10 ether;
+        address owner = MINTER;
+        uint64 sellDeadline = uint64(block.timestamp + 1 hours);
+        address spender = address(sepoliaBeanHeads);
+        bytes32 domainSeparator = sepoliaBeanHeads.DOMAIN_SEPARATOR();
+
+        PermitTypes.Sell[] memory sellPermits = new PermitTypes.Sell[](tokenIds.length);
+        bytes[] memory sellSigs = new bytes[](tokenIds.length);
+        uint256[] memory permitDeadlines = new uint256[](tokenIds.length);
+        uint256[] memory permitNonces = new uint256[](tokenIds.length);
+
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            uint256 nonce = getTokenNonce(tokenId);
+            sellPermits[i] =
+                PermitTypes.Sell({owner: owner, tokenId: tokenId, price: price, nonce: nonce, deadline: sellDeadline});
+            sellSigs[i] = _signSellPermit(sellPermits[i], domainSeparator, MINTER_PK);
+            permitDeadlines[i] = block.timestamp + 1 hours;
+            permitNonces[i] = nonce + 1;
+        }
+
+        bytes[] memory permitSigs = _signERC721Permits(
+            domainSeparator, spender, tokenIds, permitNonces, toUint64Array(permitDeadlines), MINTER_PK
+        );
+
+        // send signal from ARB
+        vm.selectFork(arbFork);
+        vm.startPrank(owner);
+        mockArbToken.approve(address(arbBeanHeadsBridge), type(uint256).max);
+        arbBeanHeadsBridge.sendBatchSellTokenRequest(
+            sepoliaNetworkDetails.chainSelector, sellPermits, sellSigs, permitDeadlines, permitSigs
+        );
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 20 minutes);
+        ccipSimulatorArbitrum.switchChainAndRouteMessage(sepoliaFork);
+
+        vm.selectFork(sepoliaFork);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            uint256 newTokenPrice = sepoliaBeanHeads.getTokenSalePrice(tokenId);
+            assertEq(newTokenPrice, price);
+            assertEq(sepoliaBeanHeads.isTokenForSale(tokenId), true);
+            assertEq(sepoliaBeanHeads.getTokenSalePrice(tokenId), price);
+            assertEq(sepoliaBeanHeads.getOwnerOf(tokenId), owner);
+        }
+    }
+
     // sanity check on the facet selector
     function testFacetSelector() public {
         vm.selectFork(sepoliaFork);
@@ -712,6 +778,38 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         return abi.encodePacked(r, s_, v);
     }
 
+    function _signERC721Permits(
+        bytes32 domainSeparator,
+        address spender,
+        uint256[] memory tokenIds,
+        uint256[] memory nonces,
+        uint64[] memory deadlines,
+        uint256 privateKey
+    ) internal pure returns (bytes[] memory sigs) {
+        require(tokenIds.length == nonces.length && tokenIds.length == deadlines.length, "Mismatched lengths");
+
+        sigs = new bytes[](tokenIds.length);
+
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            bytes32 structHash = keccak256(
+                abi.encode(
+                    keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)"),
+                    spender,
+                    tokenIds[i],
+                    nonces[i],
+                    deadlines[i]
+                )
+            );
+
+            bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
+
+            sigs[i] = abi.encodePacked(r, s, v);
+        }
+
+        return sigs;
+    }
+
     function _signCancelPermit(PermitTypes.Cancel memory c, bytes32 domainSeparator, uint256 privateKey)
         internal
         pure
@@ -722,5 +820,12 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
         (uint8 v, bytes32 r, bytes32 s_) = vm.sign(privateKey, digest);
         return abi.encodePacked(r, s_, v);
+    }
+
+    function toUint64Array(uint256[] memory input) internal pure returns (uint64[] memory output) {
+        output = new uint64[](input.length);
+        for (uint256 i = 0; i < input.length; i++) {
+            output[i] = uint64(input[i]);
+        }
     }
 }

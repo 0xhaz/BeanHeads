@@ -19,7 +19,6 @@ import {ReentrancyLib} from "src/libraries/ReentrancyLib.sol";
 
 contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
     using SafeERC20 for IERC20;
-
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
     //////////////////////////////////////////////////////////////*/
@@ -54,6 +53,15 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         ds.tokenIdToListing[_tokenId] = BHStorage.Listing({seller: msg.sender, price: _price, isActive: true});
 
         emit SetTokenPrice(msg.sender, _tokenId, _price);
+    }
+
+    /// @inheritdoc IBeanHeadsMarketplace
+    function batchSellTokens(uint256[] calldata _tokenIds, uint256[] calldata _prices) external {
+        if (_tokenIds.length != _prices.length) _revert(IBeanHeadsMarketplace__MismatchedArrayLengths.selector);
+
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
+            _sellToken(_tokenIds[i], _prices[i], msg.sender);
+        }
     }
 
     /// @inheritdoc IBeanHeadsMarketplace
@@ -99,9 +107,26 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
     }
 
     /// @inheritdoc IBeanHeadsMarketplace
-    function cancelTokenSale(uint256 _tokenId) external tokenExists(_tokenId) {
+    function batchBuyTokens(address _buyer, uint256[] calldata _tokenIds, address _paymentToken)
+        external
+        nonReentrant
+    {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        BHStorage.Listing storage listing = ds.tokenIdToListing[_tokenId];
+        if (!ds.allowedTokens[_paymentToken]) _revert(IBeanHeadsMarketplace__TokenNotAllowed.selector);
+
+        (uint256[] memory adjustedPrices, uint256 totalPrice) = _validateAndCalculatePrices(_tokenIds, _paymentToken);
+
+        _checkPaymentTokenAllowanceAndBalance(IERC20(_paymentToken), totalPrice);
+
+        // Transfer tokens from buyer to contract
+        IERC20(_paymentToken).safeTransferFrom(msg.sender, address(this), totalPrice);
+
+        _processBatchTransfer(_buyer, _tokenIds, _paymentToken, adjustedPrices);
+    }
+
+    /// @inheritdoc IBeanHeadsMarketplace
+    function cancelTokenSale(uint256 _tokenId) external tokenExists(_tokenId) {
+        BHStorage.Listing storage listing = _getListing(_tokenId);
 
         if (msg.sender != listing.seller) _revert(IBeanHeadsMarketplace__NotOwner.selector);
         if (!listing.isActive) _revert(IBeanHeadsMarketplace__TokenNotForSale.selector);
@@ -117,10 +142,15 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         emit TokenSaleCancelled(msg.sender, _tokenId);
     }
 
+    function batchCancelTokenSales(uint256[] calldata _tokenIds, address _seller) external {
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
+            _cancelToken(_tokenIds[i], _seller);
+        }
+    }
+
     /// @inheritdoc IBeanHeadsMarketplace
     function getTokenSalePrice(uint256 _tokenId) external view tokenExists(_tokenId) returns (uint256) {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        BHStorage.Listing storage listing = ds.tokenIdToListing[_tokenId];
+        BHStorage.Listing storage listing = _getListing(_tokenId);
 
         if (!listing.isActive) {
             _revert(IBeanHeadsMarketplace__TokenNotForSale.selector);
@@ -148,28 +178,8 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         tokenExists(_tokenId)
         returns (address seller, uint256 price, bool isActive)
     {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        BHStorage.Listing storage listing = ds.tokenIdToListing[_tokenId];
+        BHStorage.Listing storage listing = _getListing(_tokenId);
         return (listing.seller, listing.price, listing.isActive);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            ROYALTY FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-    /**
-     * @notice Returns the royalty information for a sale
-     * @param salePrice The sale price of the token
-     * @return receiver The address that will receive the royalty
-     * @return royaltyAmount The amount of royalty to be paid
-     */
-    function _royaltyInfo(uint256 tokenId, uint256 salePrice)
-        private
-        view
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-
-        return IERC2981(ds.royaltyContract).royaltyInfo(tokenId, salePrice);
     }
 
     /// @notice Inherits from IERC721Receiver interface

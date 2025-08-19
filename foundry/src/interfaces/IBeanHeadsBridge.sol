@@ -37,6 +37,8 @@ interface IBeanHeadsBridge {
     error IBeanHeadsBridge__InvalidPaymentToken(address received, address expected);
     /// @notice Error thrown when the price exceeds the maximum allowed value
     error IBeanHeadsBridge__PriceExceedsMax();
+    /// @notice Error thrown when the token length does not match the price length
+    error IBeanHeadsBridge__MismatchedArrayLengths();
 
     enum ActionType {
         MINT,
@@ -44,7 +46,10 @@ interface IBeanHeadsBridge {
         BUY,
         CANCEL,
         TRANSFER_TO_MIRROR,
-        TRANSFER_TO_ORIGIN
+        TRANSFER_TO_ORIGIN,
+        BATCH_BUY,
+        BATCH_SELL,
+        BATCH_CANCEL
     }
 
     /// @notice Emitted when the remote bridge address is updated.
@@ -64,6 +69,9 @@ interface IBeanHeadsBridge {
         uint256 price
     );
 
+    /// @notice Emitted when a batch sell tokens request is sent.
+    event SentBatchSellTokensRequest(PermitTypes.Sell[] sellRequests);
+
     /// @notice Emitted when a buy token request is sent.
     event SentBuyTokenRequest(
         bytes32 indexed messageId,
@@ -71,6 +79,11 @@ interface IBeanHeadsBridge {
         address indexed receiver,
         uint256 tokenId,
         uint256 price
+    );
+
+    /// @notice Emitted when a batch buy tokens request is sent.
+    event SentBatchBuyTokensRequest(
+        bytes32 indexed messageId, uint64 indexed destinationChainSelector, address indexed receiver
     );
 
     /// @notice Emitted when a token transfer request is sent.
@@ -83,8 +96,14 @@ interface IBeanHeadsBridge {
         bytes32 indexed messageId, uint64 indexed destinationChainSelector, address indexed receiver, uint256 tokenId
     );
 
+    /// @notice Emitted when a batch cancel token sales request is sent.
+    event CancelBatchSellTokenRequest(PermitTypes.Cancel[] cancelRequests);
+
     /// @notice Emitted when a token is bought cross-chain.
     event TokenBoughtCrossChain(address indexed buyer, uint256 tokenId);
+
+    /// @notice Emitted when a token is bought in batch cross-chain.
+    event BatchTokenBoughtCrossChain(address indexed buyer, address indexed paymentToken);
 
     /// @notice Emitted when a token is minted cross-chain.
     event TokenMintedCrossChain(address indexed receiver, Genesis.SVGParams params, uint256 amount);
@@ -92,11 +111,17 @@ interface IBeanHeadsBridge {
     /// @notice Emitted when a token is listed for sale cross-chain.
     event TokenListedCrossChain(address indexed seller, uint256 tokenId, uint256 price);
 
+    /// @notice Emitted when a batch of tokens is listed for sale cross-chain.
+    event BatchTokensListedCrossChain(PermitTypes.Sell[] sellRequests);
+
     /// @notice Emitted when a token sale is cancelled cross-chain.
     event TokenSaleCancelled(address indexed owner, uint256 tokenId);
 
     /// @notice Emitted when a token is transferred cross-chain.
     event TokenTransferredCrossChain(address indexed receiver, uint256 tokenId);
+
+    /// @notice Emitted when a batch of tokens is cancelled cross-chain.
+    event BatchTokenSaleCancelledCrossChain(PermitTypes.Cancel[] cancelRequests);
 
     /// @notice Emitted when the token return to the source chain.
     event TokenReturnedToSourceChain(uint256 tokenId);

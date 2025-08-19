@@ -26,6 +26,8 @@ interface IBeanHeadsMarketplaceSig {
     error IBeanHeadsMarketplaceSig__TokenNotForSale();
     /// @notice Error thrown when the sale price exceeds the maximum allowed price
     error IBeanHeadsMarketplaceSig__PriceExceedsMax();
+    /// @notice Error thrown when the token length does not match the price length
+    error IBeanHeadsMarketplaceSig__MismatchedArrayLengths();
 
     /// @notice Emitted when a seller sets a price for a token
     event TokenListedCrossChain(address indexed owner, uint256 indexed tokenId, uint256 price);
@@ -56,6 +58,20 @@ interface IBeanHeadsMarketplaceSig {
     ) external;
 
     /**
+     * @notice Sells multiple tokens with custom prices using permits
+     * @param sellRequests The sell requests containing token IDs and prices
+     * @param sellSigs The signatures for the sell permits
+     * @param permitDeadlines The deadlines for the permits
+     * @param permitSigs The signatures for the permits
+     */
+    function batchSellTokensWithPermit(
+        PermitTypes.Sell[] calldata sellRequests,
+        bytes[] calldata sellSigs,
+        uint256[] calldata permitDeadlines,
+        bytes[] calldata permitSigs
+    ) external;
+
+    /**
      * @notice Buys a token currently on sale with a permit
      * @param b The buy parameters
      * @param buySig The signature for the buy permit
@@ -81,4 +97,12 @@ interface IBeanHeadsMarketplaceSig {
      * @param cancelSig The signature for the cancel permit
      */
     function cancelTokenSaleWithPermit(PermitTypes.Cancel calldata c, bytes calldata cancelSig) external;
+
+    /**
+     * @notice Cancels the sale of multiple tokens with permits
+     * @param cancelRequests The cancel requests containing token IDs
+     * @param cancelSigs The signatures for the cancel permits
+     */
+    function batchCancelTokenSalesWithPermit(PermitTypes.Cancel[] calldata cancelRequests, bytes[] calldata cancelSigs)
+        external;
 }

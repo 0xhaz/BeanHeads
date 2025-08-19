@@ -42,7 +42,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     uint256 private constant GAS_LIMIT_TRANSFER = 500_000;
     uint256 private constant GAS_LIMIT_MINT = 500_000;
     uint256 private constant GAS_LIMIT_BUY = 200_000;
-    uint256 private constant GAS_LIMIT_SELL = 300_000;
+    uint256 private constant GAS_LIMIT_SELL = 500_000;
 
     /*//////////////////////////////////////////////////////////////
                                 MAPPINGS
@@ -136,6 +136,34 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit SentSellTokenRequest(messageId, _destinationChainSelector, s.owner, s.tokenId, s.price);
     }
 
+    function sendBatchSellTokenRequest(
+        uint64 _destinationChainSelector,
+        PermitTypes.Sell[] calldata _sellRequests,
+        bytes[] calldata _sellSigs,
+        uint256[] calldata _permitDeadlines,
+        bytes[] calldata _permitSigs
+    ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
+        if (
+            _sellRequests.length != _sellSigs.length || _sellRequests.length != _permitDeadlines.length
+                || _sellRequests.length != _permitSigs.length
+        ) {
+            revert IBeanHeadsBridge__MismatchedArrayLengths();
+        }
+
+        bytes memory encodeBatchSellPayload = abi.encode(_sellRequests, _sellSigs, _permitDeadlines, _permitSigs);
+
+        Client.EVM2AnyMessage memory message = _buildCCIPMessage(
+            ActionType.BATCH_SELL,
+            encodeBatchSellPayload,
+            new Client.EVMTokenAmount[](0), // No token transfers in this message
+            GAS_LIMIT_SELL
+        );
+
+        messageId = _sendCCIP(_destinationChainSelector, message);
+
+        emit SentBatchSellTokensRequest(_sellRequests);
+    }
+
     /// @inheritdoc IBeanHeadsBridge
     function sendBuyTokenRequest(
         uint64 _destinationChainSelector,
@@ -166,6 +194,46 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         emit SentBuyTokenRequest(messageId, _destinationChainSelector, msg.sender, _tokenId, _price);
     }
 
+    function sendBatchBuyTokenRequest(
+        uint64 _destinationChainSelector,
+        uint256[] calldata _tokenIds,
+        uint256[] calldata _prices,
+        address _paymentToken
+    ) external onlyRegisteredRemoteBridge nonReentrant returns (bytes32 messageId) {
+        if (_tokenIds.length != _prices.length) {
+            revert IBeanHeadsBridge__MismatchedArrayLengths();
+        }
+        if (_tokenIds.length == 0) {
+            revert IBeanHeadsBridge__InvalidAmount();
+        }
+
+        IERC20 token = IERC20(_paymentToken);
+        uint256 totalPrice = 0;
+
+        for (uint256 i = 0; i < _prices.length; i++) {
+            totalPrice += _prices[i];
+        }
+
+        _checkPaymentTokenAllowanceAndBalance(token, totalPrice);
+
+        // Transfer the token to the bridge contract
+        token.safeTransferFrom(msg.sender, address(this), totalPrice);
+
+        bytes memory encodeBuyPayload = abi.encode(msg.sender, _tokenIds, _prices, _paymentToken);
+
+        Client.EVMTokenAmount[] memory tokenAmounts = _wrapToken(_paymentToken, totalPrice);
+
+        Client.EVM2AnyMessage memory message =
+            _buildCCIPMessage(ActionType.BATCH_BUY, encodeBuyPayload, tokenAmounts, GAS_LIMIT_BUY);
+
+        // Approve router to spend the tokens
+        token.safeApprove(address(i_router), totalPrice);
+
+        messageId = _sendCCIP(_destinationChainSelector, message);
+
+        emit SentBatchBuyTokensRequest(messageId, _destinationChainSelector, msg.sender);
+    }
+
     /// @inheritdoc IBeanHeadsBridge
     function sendCancelTokenSaleRequest(
         uint64 _destinationChainSelector,
@@ -184,6 +252,29 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         messageId = _sendCCIP(_destinationChainSelector, message);
 
         emit CancelSellTokenRequest(messageId, _destinationChainSelector, c.seller, c.tokenId);
+    }
+
+    function sendBatchCancelTokenSaleRequest(
+        uint64 _destinationChainSelector,
+        PermitTypes.Cancel[] calldata _cancelRequests,
+        bytes[] calldata _cancelSigs
+    ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
+        if (_cancelRequests.length != _cancelSigs.length) {
+            revert IBeanHeadsBridge__MismatchedArrayLengths();
+        }
+
+        bytes memory encodeBatchCancelPayload = abi.encode(_cancelRequests, _cancelSigs);
+
+        Client.EVM2AnyMessage memory message = _buildCCIPMessage(
+            ActionType.BATCH_CANCEL,
+            encodeBatchCancelPayload,
+            new Client.EVMTokenAmount[](0), // No token transfers in this message
+            GAS_LIMIT_SELL
+        );
+
+        messageId = _sendCCIP(_destinationChainSelector, message);
+
+        emit CancelBatchSellTokenRequest(_cancelRequests);
     }
 
     /// @inheritdoc IBeanHeadsBridge
@@ -326,6 +417,60 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
             IERC721A(i_beanHeadsContract).safeTransferFrom(address(this), receiver, tokenId);
 
             emit TokenTransferredCrossChain(receiver, tokenId);
+        }
+
+        if (action == ActionType.BATCH_BUY) {
+            /// @notice Decode the message data for batch buying tokens.
+            (address buyer, uint256[] memory tokenIds, uint256[] memory prices, address paymentToken) =
+                abi.decode(payload, (address, uint256[], uint256[], address));
+
+            if (tokenIds.length != prices.length) revert IBeanHeadsBridge__MismatchedArrayLengths();
+
+            for (uint256 i = 0; i < tokenIds.length; i++) {
+                // Approve the BeanHeads contract to spend the bridged token
+                _safeApproveTokens(IERC20(paymentToken), prices[i]);
+                beans.buyToken(buyer, tokenIds[i], paymentToken);
+            }
+
+            emit BatchTokenBoughtCrossChain(buyer, paymentToken);
+        }
+
+        if (action == ActionType.BATCH_SELL) {
+            /// @notice Decode the message data for batch selling tokens.
+            (
+                PermitTypes.Sell[] memory sellRequests,
+                bytes[] memory sellSigs,
+                uint256[] memory permitDeadlines,
+                bytes[] memory permitSigs
+            ) = abi.decode(payload, (PermitTypes.Sell[], bytes[], uint256[], bytes[]));
+
+            if (
+                sellRequests.length != sellSigs.length || sellRequests.length != permitDeadlines.length
+                    || sellRequests.length != permitSigs.length
+            ) {
+                revert IBeanHeadsBridge__MismatchedArrayLengths();
+            }
+
+            beans.batchSellTokensWithPermit(
+                sellRequests,
+                sellSigs, // sellSigs
+                permitDeadlines,
+                permitSigs
+            );
+
+            emit BatchTokensListedCrossChain(sellRequests);
+        }
+
+        if (action == ActionType.BATCH_CANCEL) {
+            /// @notice Decode the message data for batch canceling token sales.
+            (PermitTypes.Cancel[] memory cancelRequests, bytes[] memory cancelSigs) =
+                abi.decode(payload, (PermitTypes.Cancel[], bytes[]));
+
+            if (cancelRequests.length != cancelSigs.length) revert IBeanHeadsBridge__MismatchedArrayLengths();
+
+            beans.batchCancelTokenSalesWithPermit(cancelRequests, cancelSigs);
+
+            emit BatchTokenSaleCancelledCrossChain(cancelRequests);
         }
     }
 

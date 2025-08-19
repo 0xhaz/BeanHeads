@@ -67,6 +67,54 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
     }
 
     /// @inheritdoc IBeanHeadsMarketplaceSig
+    function batchSellTokensWithPermit(
+        PermitTypes.Sell[] calldata sellRequests,
+        bytes[] calldata sellSigs,
+        uint256[] calldata permitDeadlines,
+        bytes[] calldata permitSigs
+    ) external nonReentrant {
+        if (
+            sellRequests.length != sellSigs.length || sellRequests.length != permitDeadlines.length
+                || sellRequests.length != permitSigs.length
+        ) {
+            _revert(IBeanHeadsMarketplaceSig__MismatchedArrayLengths.selector);
+        }
+
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+
+        for (uint256 i = 0; i < sellRequests.length; i++) {
+            PermitTypes.Sell calldata s = sellRequests[i];
+            BHStorage.Listing storage listing = ds.tokenIdToListing[s.tokenId];
+
+            if (!_exists(s.tokenId)) continue;
+
+            if (listing.isActive) continue;
+            if (block.timestamp > s.deadline) continue;
+            if (s.price <= 0) continue;
+            if (ds.tokenNonces[s.tokenId] != s.nonce) continue;
+
+            _verifySellSig(s, sellSigs[i]);
+
+            unchecked {
+                ds.tokenNonces[s.tokenId]++;
+            }
+
+            IERC721Permit(address(this)).permit(address(this), s.tokenId, permitDeadlines[i], permitSigs[i]);
+        }
+
+        for (uint256 i = 0; i < sellRequests.length; i++) {
+            PermitTypes.Sell calldata s = sellRequests[i];
+            if (!_exists(s.tokenId)) continue;
+
+            // escrow and list
+            IERC721A(address(this)).transferFrom(s.owner, address(this), s.tokenId);
+            ds.tokenIdToListing[s.tokenId] = BHStorage.Listing({seller: s.owner, price: s.price, isActive: true});
+
+            emit TokenListedCrossChain(s.owner, s.tokenId, s.price);
+        }
+    }
+
+    /// @inheritdoc IBeanHeadsMarketplaceSig
     function buyTokenWithPermit(
         PermitTypes.Buy calldata b,
         bytes calldata buySig,
@@ -124,12 +172,7 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         if (listing.seller != c.seller) _revert(IBeanHeadsMarketplaceSig__NotOwner.selector);
         if (ds.tokenNonces[c.tokenId] != c.listingNonce) _revert(IPermit__InvalidNonce.selector);
 
-        bytes32 structHash =
-            keccak256(abi.encode(PermitTypes.CANCEL_TYPEHASH, c.seller, c.tokenId, c.listingNonce, c.deadline));
-        bytes32 digest = _hashTypedDataV4(structHash);
-        (address signer,,) = ECDSA.tryRecover(digest, cancelSig);
-        bool ok = signer == c.seller || _isValidContractERC1271Signature(c.seller, digest, cancelSig);
-        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
+        _verifyCancelSig(c, cancelSig);
 
         _safeTransfer(address(this), c.seller, c.tokenId, "");
         listing.isActive = false;
@@ -143,23 +186,34 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         }
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            ROYALTY FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-    /**
-     * @notice Returns the royalty information for a sale
-     * @param salePrice The sale price of the token
-     * @return receiver The address that will receive the royalty
-     * @return royaltyAmount The amount of royalty to be paid
-     */
-    function _royaltyInfo(uint256 tokenId, uint256 salePrice)
-        private
-        view
-        returns (address receiver, uint256 royaltyAmount)
+    /// @inheritdoc IBeanHeadsMarketplaceSig
+    function batchCancelTokenSalesWithPermit(PermitTypes.Cancel[] calldata cancelRequests, bytes[] calldata cancelSigs)
+        external
     {
+        if (cancelRequests.length != cancelSigs.length) {
+            _revert(IBeanHeadsMarketplaceSig__MismatchedArrayLengths.selector);
+        }
+
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
 
-        return IERC2981(ds.royaltyContract).royaltyInfo(tokenId, salePrice);
+        for (uint256 i = 0; i < cancelRequests.length; i++) {
+            PermitTypes.Cancel calldata c = cancelRequests[i];
+            BHStorage.Listing storage listing = ds.tokenIdToListing[c.tokenId];
+
+            if (!_exists(c.tokenId)) continue;
+            if (!listing.isActive) continue;
+            if (ds.tokenNonces[c.tokenId] != c.listingNonce) continue;
+
+            if (listing.seller != c.seller) continue;
+
+            _verifyCancelSig(c, cancelSigs[i]);
+
+            _executeCancelWithPermit(c, cancelSigs[i]);
+
+            unchecked {
+                ds.tokenNonces[c.tokenId] = c.listingNonce + 1;
+            }
+        }
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -175,120 +229,5 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
     /// @dev This function is called when a contract is the recipient of an ERC721 transfer
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector; // Return the selector for ERC721Received
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            HELPER FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    function _verifySellSig(PermitTypes.Sell calldata s, bytes calldata sellSig) internal view {
-        bytes32 structHash =
-            keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
-        bytes32 digest = _hashTypedDataV4(structHash);
-        (address signer,,) = ECDSA.tryRecover(digest, sellSig);
-        bool ok = signer == s.owner || _isValidContractERC1271Signature(s.owner, digest, sellSig);
-        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
-    }
-
-    /**
-     * @notice Verifies the buy signature
-     * @param b The buy parameters
-     * @param buySig  The signature for the buy permit
-     */
-    function _verifyBuySig(PermitTypes.Buy calldata b, bytes calldata buySig) internal view {
-        bytes32 structHash = keccak256(
-            abi.encode(
-                PermitTypes.BUY_TYPEHASH,
-                b.buyer,
-                b.paymentToken,
-                b.recipient,
-                b.tokenId,
-                b.maxPriceUsd,
-                b.listingNonce,
-                b.deadline
-            )
-        );
-        bytes32 digest = _hashTypedDataV4(structHash);
-        (address signer,,) = ECDSA.tryRecover(digest, buySig);
-        bool ok = signer == b.buyer || _isValidContractERC1271Signature(b.buyer, digest, buySig);
-        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
-    }
-
-    /**
-     * @notice Tries to permit or checks the allowance and balance of the payment token
-     * @param permitToken The token that supports ERC-20 permits
-     * @param token The token to check the allowance and balance for
-     * @param owner The owner of the tokens
-     * @param value The value for the permit
-     * @param deadline The deadline for the permit
-     * @param v The v component of the ECDSA signature
-     * @param r The r component of the ECDSA signature
-     * @param s The s component of the ECDSA signature
-     * @param amountToSpend The amount to spend from the token
-     */
-    function _tryPermitOrCheck(
-        IERC20Permit permitToken,
-        IERC20 token,
-        address owner,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s,
-        uint256 amountToSpend
-    ) internal {
-        try permitToken.permit(owner, address(this), value, deadline, v, r, s) {
-            // Permit was successful, continue
-        } catch {
-            _checkPaymentPermitTokenAllowanceAndBalance(token, owner, amountToSpend);
-        }
-    }
-
-    function _calculatePaymentInfo(PermitTypes.Buy calldata b, uint256 priceUsd)
-        internal
-        view
-        returns (PermitTypes.BuyLocals memory L)
-    {
-        if (priceUsd > b.maxPriceUsd) {
-            _revert(IBeanHeadsMarketplaceSig__PriceExceedsMax.selector);
-        }
-
-        L.priceUsd = priceUsd;
-        L.adjustedPrice = _getTokenAmountFromUsd(b.paymentToken, priceUsd);
-        (L.royaltyReceiver, L.royaltyUsd) = _royaltyInfo(b.tokenId, priceUsd);
-        L.royaltyAmount = _getTokenAmountFromUsd(b.paymentToken, L.royaltyUsd);
-        L.sellerAmount = L.adjustedPrice - L.royaltyAmount;
-
-        return L;
-    }
-
-    function _handlePaymentAndPermit(
-        PermitTypes.Buy calldata b,
-        uint256 permitValue,
-        uint256 permitDeadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s,
-        PermitTypes.BuyLocals memory L
-    ) internal {
-        IERC20 token = IERC20(b.paymentToken);
-        uint256 bal = token.balanceOf(address(this));
-
-        if (bal < L.adjustedPrice) {
-            uint256 need = L.adjustedPrice - bal;
-
-            _tryPermitOrCheck(IERC20Permit(b.paymentToken), token, b.buyer, permitValue, permitDeadline, v, r, s, need);
-
-            token.safeTransferFrom(b.buyer, address(this), need);
-        }
-    }
-
-    function _distributePayment(IERC20 token, address seller, PermitTypes.BuyLocals memory L) internal {
-        if (L.royaltyAmount > 0) {
-            token.safeTransfer(L.royaltyReceiver, L.royaltyAmount);
-            emit RoyaltyPaidCrossChain(L.royaltyReceiver, L.priceUsd, L.priceUsd, L.royaltyAmount);
-        }
-
-        token.safeTransfer(seller, L.sellerAmount);
     }
 }

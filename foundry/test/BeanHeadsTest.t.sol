@@ -445,6 +445,91 @@ contract BeanHeadsTest is Test, Helpers {
         assertEq(beanHeads.getMintPrice(), MINT_PRICE);
     }
 
+    function test_BatchSellTokens_Success() public {
+        vm.startPrank(USER);
+        uint256 tokenId1 = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
+        console2.log("Token ID 1:", tokenId1);
+        uint256 tokenId2 = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
+        console2.log("Token ID 2:", tokenId2);
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = tokenId1;
+        tokenIds[1] = tokenId2;
+        uint256[] memory prices = new uint256[](2);
+        prices[0] = 1 ether;
+        prices[1] = 2 ether;
+
+        beanHeads.batchSellTokens(tokenIds, prices);
+
+        (address seller, uint256 price, bool isActive) = beanHeads.getTokenSaleInfo(tokenId1);
+        assertEq(seller, USER);
+        assertEq(price, prices[0]);
+        assertTrue(isActive);
+
+        (address seller2, uint256 price2, bool isActive2) = beanHeads.getTokenSaleInfo(tokenId2);
+        assertEq(seller2, USER);
+        assertEq(price2, prices[1]);
+        assertTrue(isActive2);
+
+        assertTrue(beanHeads.isTokenForSale(tokenId1));
+        assertTrue(beanHeads.isTokenForSale(tokenId2));
+        assertEq(beanHeads.getTokenSalePrice(tokenId1), prices[0]);
+        assertEq(beanHeads.getTokenSalePrice(tokenId2), prices[1]);
+
+        vm.stopPrank();
+    }
+
+    function test_batchBuyTokens_Success() public {
+        vm.startPrank(USER);
+        uint256 tokenId1 = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
+        uint256 tokenId2 = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = tokenId1;
+        tokenIds[1] = tokenId2;
+        uint256[] memory prices = new uint256[](2);
+        prices[0] = 1 ether;
+        prices[1] = 2 ether;
+
+        beanHeads.batchSellTokens(tokenIds, prices);
+        vm.stopPrank();
+
+        vm.deal(USER2, 10 ether);
+        vm.startPrank(USER2);
+        mockERC20.approve(address(beanHeads), type(uint256).max);
+        mockERC20.mint(USER2, 100 ether);
+
+        beanHeads.batchBuyTokens(USER2, tokenIds, address(mockERC20));
+
+        assertEq(beanHeads.getOwnerOf(tokenId1), USER2);
+        assertEq(beanHeads.getOwnerOf(tokenId2), USER2);
+        assertTrue(!beanHeads.isTokenForSale(tokenId1));
+        assertTrue(!beanHeads.isTokenForSale(tokenId2));
+
+        vm.stopPrank();
+    }
+
+    function test_batchCancelTokenSales_Success() public {
+        vm.startPrank(USER);
+        uint256 tokenId1 = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
+        uint256 tokenId2 = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = tokenId1;
+        tokenIds[1] = tokenId2;
+        uint256 price = 1 ether;
+
+        beanHeads.sellToken(tokenId1, price);
+        beanHeads.sellToken(tokenId2, price);
+
+        assertTrue(beanHeads.isTokenForSale(tokenId1));
+        assertTrue(beanHeads.isTokenForSale(tokenId2));
+
+        beanHeads.batchCancelTokenSales(tokenIds, USER);
+
+        assertTrue(!beanHeads.isTokenForSale(tokenId1));
+        assertTrue(!beanHeads.isTokenForSale(tokenId2));
+
+        vm.stopPrank();
+    }
+
     function test_setRoyaltyInfo_FailWithRevert() public {
         vm.startPrank(deployerAddress);
         vm.expectRevert(BeanHeadsRoyalty.BeanHeadsRoyalty__InvalidRoyaltyFee.selector);

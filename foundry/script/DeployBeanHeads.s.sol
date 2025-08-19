@@ -76,7 +76,7 @@ contract DeployBeanHeads is Script {
         // ---------------------- Marketplace Facet ----------------------
         {
             BeanHeadsMarketplaceFacet facet = new BeanHeadsMarketplaceFacet();
-            bytes4[] memory selectors = new bytes4[](8);
+            bytes4[] memory selectors = new bytes4[](11);
             selectors[0] = facet.sellToken.selector;
             selectors[1] = facet.buyToken.selector;
             selectors[2] = facet.cancelTokenSale.selector;
@@ -85,12 +85,15 @@ contract DeployBeanHeads is Script {
             selectors[5] = facet.isTokenForSale.selector;
             selectors[6] = facet.isTokenAllowed.selector;
             selectors[7] = facet.getTokenSaleInfo.selector;
+            selectors[8] = facet.batchBuyTokens.selector;
+            selectors[9] = facet.batchSellTokens.selector;
+            selectors[10] = facet.batchCancelTokenSales.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
         // ---------------------- Marketplace With Signature Facet ----------------------
         {
             BeanHeadsMarketplaceSigFacet facet = new BeanHeadsMarketplaceSigFacet();
-            bytes4[] memory selectors = new bytes4[](7);
+            bytes4[] memory selectors = new bytes4[](9);
             selectors[0] = facet.sellTokenWithPermit.selector;
             selectors[1] = facet.buyTokenWithPermit.selector;
             selectors[2] = facet.cancelTokenSaleWithPermit.selector;
@@ -98,6 +101,8 @@ contract DeployBeanHeads is Script {
             selectors[4] = facet.nonces.selector;
             selectors[5] = facet.eip712Domain.selector;
             selectors[6] = facet.DOMAIN_SEPARATOR.selector;
+            selectors[7] = facet.batchSellTokensWithPermit.selector;
+            selectors[8] = facet.batchCancelTokenSalesWithPermit.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
 

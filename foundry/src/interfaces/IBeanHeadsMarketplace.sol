@@ -20,6 +20,8 @@ interface IBeanHeadsMarketplace {
     error IBeanHeadsMarketplace__InsufficientAllowance();
     /// @notice Error thrown when the price is higher than the maximum allowed price
     error IBeanHeadsMarketplace__PriceExceedsMax();
+    /// @notice Error when token's length is not equal to the price's length
+    error IBeanHeadsMarketplace__MismatchedArrayLengths();
 
     /// @notice Emitted when a seller sets a price for a token
     event SetTokenPrice(address indexed owner, uint256 indexed tokenId, uint256 price);
@@ -80,4 +82,26 @@ interface IBeanHeadsMarketplace {
      * @return isActive Whether the token is currently for sale.
      */
     function getTokenSaleInfo(uint256 _tokenId) external view returns (address seller, uint256 price, bool isActive);
+
+    /**
+     * @notice Bulk purchase of tokens
+     * @dev This function allows a buyer to purchase multiple tokens in a single transaction.
+     * @param _buyer  The address of the buyer
+     * @param _tokenIds  The array of token IDs to purchase
+     * @param paymentToken  The address of the payment token
+     */
+    function batchBuyTokens(address _buyer, uint256[] calldata _tokenIds, address paymentToken) external;
+
+    /**
+     * @notice Batch sell tokens with custom prices
+     * @param _tokenIds The array of token IDs to sell
+     * @param _prices The array of prices for each token ID
+     */
+    function batchSellTokens(uint256[] calldata _tokenIds, uint256[] calldata _prices) external;
+
+    /**
+     * @notice Batch cancel token sales
+     * @param _tokenIds The array of token IDs to cancel sales for
+     */
+    function batchCancelTokenSales(uint256[] calldata _tokenIds, address _seller) external;
 }

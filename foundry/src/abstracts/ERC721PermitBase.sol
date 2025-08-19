@@ -8,18 +8,25 @@ import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {IERC721Permit} from "src/interfaces/IERC721Permit.sol";
 import {IERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
-
+import {SafeERC20} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC721A} from "ERC721A/interfaces/IERC721A.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {ERC721AUpgradeable} from "src/ERC721A/ERC721AUpgradeable.sol";
 import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
 import {PermitTypes} from "src/types/PermitTypes.sol";
 import {BHStorage} from "src/libraries/BHStorage.sol";
+import {IBeanHeads, IBeanHeadsMarketplaceSig} from "src/interfaces/IBeanHeads.sol";
 
 /**
  * @dev Implementation of ERC721 Permit extension allowing approvals to be made via signatures.
  * as defined in https://eips.ethereum.org/EIPS/eip-2612[EIP-2612].
  */
 abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
+    using SafeERC20 for IERC20;
+
     /// @dev Permit deadline has expired
+
     error IPermit__ERC2612ExpiredSignature(uint256 deadline);
     /// @dev Mismatched signature
     error IPermit__ERC2612InvalidSigner(address signer, address owner);
@@ -211,5 +218,195 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
         if (token.balanceOf(owner) < amount) {
             _revert(IBeanHeadsBase__InsufficientPayment.selector);
         }
+    }
+
+    /**
+     * @notice Executes the sell with permit logic
+     * @param s The sell parameters
+     * @param permitDeadline The deadline for the permit
+     * @param permitSig The signature for the permit
+     */
+    function _executeSellWithPermit(PermitTypes.Sell calldata s, uint256 permitDeadline, bytes calldata permitSig)
+        internal
+    {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+
+        IERC721A(address(this)).transferFrom(s.owner, address(this), s.tokenId);
+
+        ds.tokenIdToListing[s.tokenId] = BHStorage.Listing({seller: s.owner, price: s.price, isActive: true});
+
+        emit IBeanHeadsMarketplaceSig.TokenListedCrossChain(s.owner, s.tokenId, s.price);
+    }
+
+    function _executeCancelWithPermit(PermitTypes.Cancel calldata c, bytes calldata cancelSig) internal {
+        if (block.timestamp > c.deadline) _revert(IPermit__ERC2612ExpiredSignature.selector);
+
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+
+        unchecked {
+            ds.tokenNonces[c.tokenId]++;
+        }
+
+        IERC721Permit(address(this)).permit(address(this), c.tokenId, c.deadline, cancelSig);
+
+        IERC721A(address(this)).transferFrom(address(this), c.seller, c.tokenId);
+
+        ds.tokenIdToListing[c.tokenId] = BHStorage.Listing({seller: address(0), price: 0, isActive: false});
+
+        emit IBeanHeadsMarketplaceSig.TokenSaleCancelledCrossChain(c.seller, c.tokenId);
+    }
+
+    /**
+     * @notice Verifies the sell signature
+     * @param s The sell parameters
+     * @param sellSig The signature for the sell permit
+     */
+    function _verifySellSig(PermitTypes.Sell calldata s, bytes calldata sellSig) internal view {
+        bytes32 structHash =
+            keccak256(abi.encode(PermitTypes.SELL_TYPEHASH, s.owner, s.tokenId, s.price, s.nonce, s.deadline));
+        bytes32 digest = _hashTypedDataV4(structHash);
+        (address signer,,) = ECDSA.tryRecover(digest, sellSig);
+        bool ok = signer == s.owner || _isValidContractERC1271Signature(s.owner, digest, sellSig);
+        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
+    }
+
+    /**
+     * @notice Verifies the buy signature
+     * @param b The buy parameters
+     * @param buySig  The signature for the buy permit
+     */
+    function _verifyBuySig(PermitTypes.Buy calldata b, bytes calldata buySig) internal view {
+        bytes32 structHash = keccak256(
+            abi.encode(
+                PermitTypes.BUY_TYPEHASH,
+                b.buyer,
+                b.paymentToken,
+                b.recipient,
+                b.tokenId,
+                b.maxPriceUsd,
+                b.listingNonce,
+                b.deadline
+            )
+        );
+        bytes32 digest = _hashTypedDataV4(structHash);
+        (address signer,,) = ECDSA.tryRecover(digest, buySig);
+        bool ok = signer == b.buyer || _isValidContractERC1271Signature(b.buyer, digest, buySig);
+        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
+    }
+
+    /**
+     * @notice Verifies the cancel signature
+     * @param c The cancel parameters
+     * @param cancelSig The signature for the cancel permit
+     */
+    function _verifyCancelSig(PermitTypes.Cancel calldata c, bytes calldata cancelSig) internal view {
+        bytes32 structHash =
+            keccak256(abi.encode(PermitTypes.CANCEL_TYPEHASH, c.seller, c.tokenId, c.listingNonce, c.deadline));
+        bytes32 digest = _hashTypedDataV4(structHash);
+        (address signer,,) = ECDSA.tryRecover(digest, cancelSig);
+        bool ok = signer == c.seller || _isValidContractERC1271Signature(c.seller, digest, cancelSig);
+        if (!ok) _revert(IPermit__ERC2612InvalidSigner.selector);
+    }
+
+    /**
+     * @notice Tries to permit or checks the allowance and balance of the payment token
+     * @param permitToken The token that supports ERC-20 permits
+     * @param token The token to check the allowance and balance for
+     * @param owner The owner of the tokens
+     * @param value The value for the permit
+     * @param deadline The deadline for the permit
+     * @param v The v component of the ECDSA signature
+     * @param r The r component of the ECDSA signature
+     * @param s The s component of the ECDSA signature
+     * @param amountToSpend The amount to spend from the token
+     */
+    function _tryPermitOrCheck(
+        IERC20Permit permitToken,
+        IERC20 token,
+        address owner,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        uint256 amountToSpend
+    ) internal {
+        try permitToken.permit(owner, address(this), value, deadline, v, r, s) {
+            // Permit was successful, continue
+        } catch {
+            _checkPaymentPermitTokenAllowanceAndBalance(token, owner, amountToSpend);
+        }
+    }
+
+    /**
+     * @notice Calculates the payment information for a buy request
+     * @param b The buy parameters
+     * @param priceUsd The price in USD
+     * @return L The calculated payment information
+     */
+    function _calculatePaymentInfo(PermitTypes.Buy calldata b, uint256 priceUsd)
+        internal
+        view
+        returns (PermitTypes.BuyLocals memory L)
+    {
+        if (priceUsd > b.maxPriceUsd) {
+            _revert(IBeanHeadsMarketplaceSig.IBeanHeadsMarketplaceSig__PriceExceedsMax.selector);
+        }
+
+        L.priceUsd = priceUsd;
+        L.adjustedPrice = _getTokenAmountFromUsd(b.paymentToken, priceUsd);
+        (L.royaltyReceiver, L.royaltyUsd) = _royaltyInfo(b.tokenId, priceUsd);
+        L.royaltyAmount = _getTokenAmountFromUsd(b.paymentToken, L.royaltyUsd);
+        L.sellerAmount = L.adjustedPrice - L.royaltyAmount;
+
+        return L;
+    }
+
+    /**
+     * @notice Handles the payment and permit for a buy request
+     * @param b The buy parameters
+     * @param permitValue The value for the permit
+     * @param permitDeadline The deadline for the permit
+     * @param v The v component of the ECDSA signature
+     * @param r The r component of the ECDSA signature
+     * @param s The s component of the ECDSA signature
+     * @param L The calculated payment information
+     */
+    function _handlePaymentAndPermit(
+        PermitTypes.Buy calldata b,
+        uint256 permitValue,
+        uint256 permitDeadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        PermitTypes.BuyLocals memory L
+    ) internal {
+        IERC20 token = IERC20(b.paymentToken);
+        uint256 bal = token.balanceOf(address(this));
+
+        if (bal < L.adjustedPrice) {
+            uint256 need = L.adjustedPrice - bal;
+
+            _tryPermitOrCheck(IERC20Permit(b.paymentToken), token, b.buyer, permitValue, permitDeadline, v, r, s, need);
+
+            token.safeTransferFrom(b.buyer, address(this), need);
+        }
+    }
+
+    /**
+     * @notice Distributes the payment to the seller and royalty receiver
+     * @param token The payment token
+     * @param seller The address of the seller
+     * @param L The calculated payment information
+     */
+    function _distributePayment(IERC20 token, address seller, PermitTypes.BuyLocals memory L) internal {
+        if (L.royaltyAmount > 0) {
+            token.safeTransfer(L.royaltyReceiver, L.royaltyAmount);
+            emit IBeanHeadsMarketplaceSig.RoyaltyPaidCrossChain(
+                L.royaltyReceiver, L.priceUsd, L.priceUsd, L.royaltyAmount
+            );
+        }
+
+        token.safeTransfer(seller, L.sellerAmount);
     }
 }
