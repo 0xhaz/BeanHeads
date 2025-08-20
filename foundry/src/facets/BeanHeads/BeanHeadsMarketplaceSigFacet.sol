@@ -87,7 +87,6 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
             BHStorage.Listing storage listing = ds.tokenIdToListing[s.tokenId];
 
             if (!_exists(s.tokenId)) continue;
-
             if (listing.isActive) continue;
             if (block.timestamp > s.deadline) continue;
             if (s.price <= 0) continue;
@@ -168,7 +167,6 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         BHStorage.Listing storage listing = ds.tokenIdToListing[c.tokenId];
 
         if (!listing.isActive) _revert(IBeanHeadsMarketplaceSig__TokenNotForSale.selector);
-
         if (listing.seller != c.seller) _revert(IBeanHeadsMarketplaceSig__NotOwner.selector);
         if (ds.tokenNonces[c.tokenId] != c.listingNonce) _revert(IPermit__InvalidNonce.selector);
 
@@ -202,13 +200,18 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
 
             if (!_exists(c.tokenId)) continue;
             if (!listing.isActive) continue;
+            if (block.timestamp > c.deadline) continue;
             if (ds.tokenNonces[c.tokenId] != c.listingNonce) continue;
-
             if (listing.seller != c.seller) continue;
 
             _verifyCancelSig(c, cancelSigs[i]);
 
-            _executeCancelWithPermit(c, cancelSigs[i]);
+            _safeTransfer(address(this), c.seller, c.tokenId, "");
+            listing.isActive = false;
+            listing.price = 0;
+            listing.seller = address(0);
+
+            emit TokenSaleCancelledCrossChain(c.seller, c.tokenId);
 
             unchecked {
                 ds.tokenNonces[c.tokenId] = c.listingNonce + 1;

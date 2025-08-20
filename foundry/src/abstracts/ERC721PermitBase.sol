@@ -220,25 +220,7 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
         }
     }
 
-    /**
-     * @notice Executes the sell with permit logic
-     * @param s The sell parameters
-     * @param permitDeadline The deadline for the permit
-     * @param permitSig The signature for the permit
-     */
-    function _executeSellWithPermit(PermitTypes.Sell calldata s, uint256 permitDeadline, bytes calldata permitSig)
-        internal
-    {
-        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-
-        IERC721A(address(this)).transferFrom(s.owner, address(this), s.tokenId);
-
-        ds.tokenIdToListing[s.tokenId] = BHStorage.Listing({seller: s.owner, price: s.price, isActive: true});
-
-        emit IBeanHeadsMarketplaceSig.TokenListedCrossChain(s.owner, s.tokenId, s.price);
-    }
-
-    function _executeCancelWithPermit(PermitTypes.Cancel calldata c, bytes calldata cancelSig) internal {
+    function _executeCancelWithPermit(PermitTypes.Cancel calldata c) internal {
         if (block.timestamp > c.deadline) _revert(IPermit__ERC2612ExpiredSignature.selector);
 
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
@@ -246,8 +228,6 @@ abstract contract ERC721PermitBase is IERC721Permit, BeanHeadsBase {
         unchecked {
             ds.tokenNonces[c.tokenId]++;
         }
-
-        IERC721Permit(address(this)).permit(address(this), c.tokenId, c.deadline, cancelSig);
 
         IERC721A(address(this)).transferFrom(address(this), c.seller, c.tokenId);
 

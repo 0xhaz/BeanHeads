@@ -41,7 +41,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
     uint256 private constant PRECISION = 1e18;
     uint256 private constant GAS_LIMIT_TRANSFER = 500_000;
     uint256 private constant GAS_LIMIT_MINT = 500_000;
-    uint256 private constant GAS_LIMIT_BUY = 200_000;
+    uint256 private constant GAS_LIMIT_BUY = 500_000;
     uint256 private constant GAS_LIMIT_SELL = 500_000;
 
     /*//////////////////////////////////////////////////////////////
@@ -219,7 +219,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
         // Transfer the token to the bridge contract
         token.safeTransferFrom(msg.sender, address(this), totalPrice);
 
-        bytes memory encodeBuyPayload = abi.encode(msg.sender, _tokenIds, _prices, _paymentToken);
+        bytes memory encodeBuyPayload = abi.encode(msg.sender, _tokenIds, _prices, _paymentToken, totalPrice);
 
         Client.EVMTokenAmount[] memory tokenAmounts = _wrapToken(_paymentToken, totalPrice);
 
@@ -421,16 +421,26 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
 
         if (action == ActionType.BATCH_BUY) {
             /// @notice Decode the message data for batch buying tokens.
-            (address buyer, uint256[] memory tokenIds, uint256[] memory prices, address paymentToken) =
-                abi.decode(payload, (address, uint256[], uint256[], address));
+            (
+                address buyer,
+                uint256[] memory tokenIds,
+                uint256[] memory prices,
+                address paymentToken,
+                uint256 totalPrice
+            ) = abi.decode(payload, (address, uint256[], uint256[], address, uint256));
 
             if (tokenIds.length != prices.length) revert IBeanHeadsBridge__MismatchedArrayLengths();
 
-            for (uint256 i = 0; i < tokenIds.length; i++) {
-                // Approve the BeanHeads contract to spend the bridged token
-                _safeApproveTokens(IERC20(paymentToken), prices[i]);
-                beans.buyToken(buyer, tokenIds[i], paymentToken);
+            paymentToken = message.destTokenAmounts[0].token;
+            uint256 bridgedAmount = message.destTokenAmounts[0].amount;
+
+            if (bridgedAmount != totalPrice) {
+                revert IBeanHeadsBridge__InvalidAmount();
             }
+
+            _safeApproveTokens(IERC20(paymentToken), type(uint256).max);
+
+            beans.batchBuyTokens(buyer, tokenIds, paymentToken);
 
             emit BatchTokenBoughtCrossChain(buyer, paymentToken);
         }
@@ -451,12 +461,7 @@ contract BeanHeadsBridge is CCIPReceiver, Ownable, IBeanHeadsBridge, ReentrancyG
                 revert IBeanHeadsBridge__MismatchedArrayLengths();
             }
 
-            beans.batchSellTokensWithPermit(
-                sellRequests,
-                sellSigs, // sellSigs
-                permitDeadlines,
-                permitSigs
-            );
+            beans.batchSellTokensWithPermit(sellRequests, sellSigs, permitDeadlines, permitSigs);
 
             emit BatchTokensListedCrossChain(sellRequests);
         }
