@@ -78,11 +78,6 @@ contract BeanHeadsViewFacet is ERC721AUpgradeable, IBeanHeadsView {
     }
 
     /// @inheritdoc IBeanHeadsView
-    function getTotalSupply() external view returns (uint256) {
-        return _totalMinted();
-    }
-
-    /// @inheritdoc IBeanHeadsView
     function isBridgeAuthorized(uint64 chainSelector, address bridge) external view returns (bool) {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         return ds.remoteBridges[chainSelector] == bridge;

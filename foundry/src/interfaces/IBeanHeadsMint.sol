@@ -128,4 +128,10 @@ interface IBeanHeadsMint {
      * @param _tokenId The ID of the token to burn
      */
     function burnToken(uint256 _tokenId) external;
+
+    /**
+     * @notice Returns the total supply of tokens.
+     * @return The total number of tokens minted.
+     */
+    function getTotalSupply() external view returns (uint256);
 }

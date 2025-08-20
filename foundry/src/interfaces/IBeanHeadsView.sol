@@ -53,12 +53,6 @@ interface IBeanHeadsView {
     function getOwnerTokensCount(address owner) external view returns (uint256);
 
     /**
-     * @notice Returns the total supply of tokens.
-     * @return The total number of tokens minted.
-     */
-    function getTotalSupply() external view returns (uint256);
-
-    /**
      * @notice Checks if a bridge is authorized for cross-chain operations
      * @param chainSelector The chain selector for the remote bridge
      * @param bridge The address of the remote bridge contract

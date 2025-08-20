@@ -220,4 +220,9 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     function getOwnerOf(uint256 _tokenId) external view tokenExists(_tokenId) returns (address) {
         return _ownerOf(_tokenId);
     }
+
+    /// @inheritdoc IBeanHeadsMint
+    function getTotalSupply() external view returns (uint256) {
+        return _totalMinted();
+    }
 }

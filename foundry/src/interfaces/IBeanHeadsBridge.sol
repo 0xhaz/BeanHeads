@@ -173,6 +173,22 @@ interface IBeanHeadsBridge {
     ) external returns (bytes32 messageId);
 
     /**
+     * @notice Sends a batch sell tokens request to the remote bridge.
+     * @param sellRequests The array of sell requests containing token IDs and prices.
+     * @param sellSigs The signatures for the sell permits.
+     * @param permitDeadlines The deadlines for the permits.
+     * @param permitSigs The signatures for the permits.
+     * @return messageId The ID of the sent message.
+     */
+    function sendBatchSellTokenRequest(
+        uint64 _destinationChainSelector,
+        PermitTypes.Sell[] calldata sellRequests,
+        bytes[] calldata sellSigs,
+        uint256[] calldata permitDeadlines,
+        bytes[] calldata permitSigs
+    ) external returns (bytes32 messageId);
+
+    /**
      * @notice Send the buyToken request to the remote bridge.
      * @param _destinationChainSelector The target chain selector for the buy request.
      * @param _tokenId The ID of the token to be bought.
@@ -186,6 +202,21 @@ interface IBeanHeadsBridge {
     ) external returns (bytes32 messageId);
 
     /**
+     * @notice Sends a batch buy tokens request to the remote bridge.
+     * @param _destinationChainSelector The target chain selector for the buy request.
+     * @param _tokenIds The array of token IDs to purchase.
+     * @param _prices The array of prices for each token ID.
+     * @param _paymentToken The address of the payment token.
+     * @return messageId The ID of the sent message.
+     */
+    function sendBatchBuyTokenRequest(
+        uint64 _destinationChainSelector,
+        uint256[] calldata _tokenIds,
+        uint256[] calldata _prices,
+        address _paymentToken
+    ) external returns (bytes32 messageId);
+
+    /**
      * @notice Sends a cancel token sale request to the remote bridge.
      * @param _destinationChainSelector The target chain selector for the cancel request.
      * @param c The struct containing the cancel parameters.
@@ -196,6 +227,19 @@ interface IBeanHeadsBridge {
         uint64 _destinationChainSelector,
         PermitTypes.Cancel calldata c,
         bytes calldata cancelSig
+    ) external returns (bytes32 messageId);
+
+    /**
+     * @notice Sends a batch cancel token sales request to the remote bridge.
+     * @param _destinationChainSelector The target chain selector for the cancel request.
+     * @param cancelRequests The array of cancel requests containing token IDs.
+     * @param cancelSigs The signatures for the cancel permits.
+     * @return messageId The ID of the sent message.
+     */
+    function sendBatchCancelTokenSaleRequest(
+        uint64 _destinationChainSelector,
+        PermitTypes.Cancel[] calldata cancelRequests,
+        bytes[] calldata cancelSigs
     ) external returns (bytes32 messageId);
 
     /**
