@@ -7,7 +7,6 @@ import {AggregatorV3Interface} from
 import {Genesis} from "src/types/Genesis.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {IDiamondCut} from "src/interfaces/IDiamondCut.sol";
-import {console} from "forge-std/console.sol";
 
 library BHStorage {
     error BHDLib__NotContractOwner(address caller, address owner);

@@ -14,7 +14,7 @@ import {Genesis} from "src/types/Genesis.sol";
 import {IBeanHeadsMint} from "src/interfaces/IBeanHeadsMint.sol";
 import {OracleLib} from "src/libraries/OracleLib.sol";
 import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
-import {console} from "forge-std/console.sol";
+
 
 contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     using SafeERC20 for IERC20;

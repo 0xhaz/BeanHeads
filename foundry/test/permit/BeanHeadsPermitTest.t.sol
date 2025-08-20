@@ -130,7 +130,7 @@ contract BeanHeadsPermitTest is Test, ERC721PermitBase, Helpers {
 
         // snap balances (keep locals minimal)
         (address royaltyReceiver, uint256 royaltyUsd) = royalty.royaltyInfo(TOKEN_ID, PRICE);
-        uint256 buyerBefore = mockERC20.balanceOf(bob);
+
         uint256 sellerBefore = mockERC20.balanceOf(alice);
 
         // buy (isolated stack)
@@ -144,7 +144,6 @@ contract BeanHeadsPermitTest is Test, ERC721PermitBase, Helpers {
         assertEq(p, 0);
         assertFalse(isActive);
 
-        uint256 buyerAfter = mockERC20.balanceOf(bob);
         uint256 sellerAfter = mockERC20.balanceOf(alice);
 
         uint256 sellerGain = sellerAfter - sellerBefore;
