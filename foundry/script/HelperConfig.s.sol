@@ -42,6 +42,9 @@ contract HelperConfig is Script {
     int256 public MOCK_WEI_PER_UINT_LINK = 4e15;
     uint64 public constant OP_SEPOLIA_CHAIN_SELECTOR = 5224473277236331295;
 
+    // Sepolia Details
+    address public constant SEPOLIA_USDC = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238;
+
     NetworkConfig public activeNetworkConfig;
 
     VRFCoordinatorV2_5Mock public vrfCoordinatorMock;
