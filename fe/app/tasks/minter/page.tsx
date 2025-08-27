@@ -2,13 +2,12 @@ import CircularMenu from "@/components/CircularMenu";
 import { Button } from "@/components/ui/button";
 
 const pages = [
-  ["Utils", "/icons/utils.svg"],
-  ["Face", "/icons/face.svg"],
-  ["Hair", "/icons/hair.svg"],
-  ["Skin", "/icons/skin.svg"],
-  ["Clothing", "/icons/clothing.svg"],
-  ["Accessories", "/icons/accessories.svg"],
+  ["Hair Styles", "/icons/hair.svg"],
   ["Body", "/icons/body.svg"],
+  ["Clothes", "/icons/clothing.svg"],
+  ["Facials", "/icons/face.svg"],
+  ["Accessories", "/icons/accessories.svg"],
+  ["Misc", "/icons/utils.svg"],
 ];
 
 const MintPage = () => {

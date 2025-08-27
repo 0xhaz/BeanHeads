@@ -71,3 +71,55 @@ export const recentSessions = [
     color: "#C8FFDF",
   },
 ];
+
+export const mainTasks = [
+  {
+    id: "minter",
+    title: "Mint",
+    image: "/images/mint.svg",
+    description: "Create your own custom NFT like a true artist",
+    color: "#ffda6e",
+  },
+  {
+    id: "breeder",
+    title: "Breeder",
+    image: "/images/breeder.svg",
+    description: "Breed your BeanHeads and gain unique traits",
+    color: "#e5d0ff",
+  },
+  {
+    id: "bridge",
+    title: "Bridge",
+    image: "/images/bridge.svg",
+    description: "Bridge your NFTs to your preferred network",
+    color: "#bde7ff",
+  },
+  {
+    id: "marketplace",
+    title: "Marketplace",
+    image: "/images/marketplace.svg",
+    description: "Trade your NFTs with your peers",
+    color: "#ffcccb",
+  },
+  {
+    id: "my-collections",
+    title: "My Collections",
+    image: "/images/wallet.svg",
+    description: "View and manage your NFT collections",
+    color: "#f4c6c2",
+  },
+  {
+    id: "transactions",
+    title: "Transactions",
+    image: "/images/coding.svg",
+    description: "View transaction history and details",
+    color: "#c8ffdf",
+  },
+  {
+    id: "admin",
+    title: "Admin",
+    image: "/images/admin.svg",
+    description: "Manage the platform and its users",
+    color: "#f6c2f8",
+  },
+];

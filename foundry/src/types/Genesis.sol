@@ -728,6 +728,12 @@ library Genesis {
         return attributes;
     }
 
+    /**
+     * @notice Builds the SVG string for shapes, hair back, hair front, body, clothes, hair, clothing graphic,
+     *         eyes, facial hair, hat, mouth, eyebrows, accessory, face mask, and lashes.
+     * @param p Other parameters including shapes and face mask.
+     * @return shapeSVG The SVG string for shapes.
+     */
     function buildShapes(OtherParams memory p) private pure returns (string memory) {
         (string memory shapeSVG,) = isShapesOn(p.shapes, p.shapeColor);
         return shapeSVG;
