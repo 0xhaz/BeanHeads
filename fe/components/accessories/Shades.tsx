@@ -1,6 +1,6 @@
 import { useTheme } from "@/utils/themeContext";
 
-const Shades = () => {
+export const Shades = () => {
   const { colors } = useTheme();
   return (
     <>
@@ -78,5 +78,3 @@ const Shades = () => {
     </>
   );
 };
-
-export default Shades;

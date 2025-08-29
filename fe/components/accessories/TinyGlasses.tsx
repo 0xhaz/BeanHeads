@@ -1,6 +1,6 @@
 import { useTheme } from "@/utils/themeContext";
 
-const TinyGlasses = () => {
+export const TinyGlasses = () => {
   const { colors } = useTheme();
   return (
     <>
@@ -76,5 +76,3 @@ const TinyGlasses = () => {
     </>
   );
 };
-
-export default TinyGlasses;

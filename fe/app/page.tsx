@@ -21,13 +21,6 @@ const Page = () => {
           />
         ))}
       </section>
-      <section className="home-section">
-        <TransactionList
-          title="Recent Transactions"
-          transactions={[]}
-          classNames="w-full"
-        />
-      </section>
     </div>
   );
 };

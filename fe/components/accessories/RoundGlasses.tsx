@@ -1,6 +1,6 @@
 import { useTheme } from "@/utils/themeContext";
 
-const RoundGlasses = () => {
+export const RoundGlasses = () => {
   const { colors } = useTheme();
   return (
     <>
@@ -73,5 +73,3 @@ const RoundGlasses = () => {
     </>
   );
 };
-
-export default RoundGlasses;

@@ -106,7 +106,7 @@ export const mainTasks = [
     title: "My Collections",
     image: "/images/wallet.svg",
     description: "View and manage your NFT collections",
-    color: "#f4c6c2",
+    color: "#eaf2d7",
   },
   {
     id: "transactions",
@@ -120,6 +120,13 @@ export const mainTasks = [
     title: "Admin",
     image: "/images/admin.svg",
     description: "Manage the platform and its users",
-    color: "#f6c2f8",
+    color: "#ff8fa3",
+  },
+  {
+    id: "faucet",
+    title: "Faucet",
+    image: "/images/faucet.svg",
+    description: "Get free USDC for your wallet",
+    color: "#cbc0d3",
   },
 ];
