@@ -1,4 +1,4 @@
-import React from "react";
+"use client";
 import { useTheme } from "@/utils/themeContext";
 import { Noop } from "@/utils/Noop";
 

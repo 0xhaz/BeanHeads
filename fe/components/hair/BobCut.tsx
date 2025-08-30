@@ -1,3 +1,4 @@
+"use client";
 import { useTheme } from "@/utils/themeContext";
 import { HairProps } from "./types";
 

@@ -1,3 +1,4 @@
+"use client";
 import { useTheme } from "@/utils/themeContext";
 import { ClothingProps } from "../clothing/types";
 import { HatProps } from "./types";
