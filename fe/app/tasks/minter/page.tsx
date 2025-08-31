@@ -2,10 +2,10 @@ import CircularMenu from "@/components/CircularMenu";
 import { Button } from "@/components/ui/button";
 
 const pages = [
-  ["Hair Styles", "/icons/hair.svg"],
+  ["Hair", "/icons/hair.svg"],
   ["Body", "/icons/body.svg"],
   ["Clothes", "/icons/clothing.svg"],
-  ["Facials", "/icons/face.svg"],
+  ["Facial", "/icons/face.svg"],
   ["Accessories", "/icons/accessories.svg"],
   ["Misc", "/icons/utils.svg"],
 ];

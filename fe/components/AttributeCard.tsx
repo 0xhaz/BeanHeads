@@ -35,8 +35,8 @@ const TRAIT_MAP = {
   },
   accessories: {
     accessory: ACCESSORIES,
-    hatStyles: HAT_STYLES,
-    hatColors: Object.keys(colors.clothing),
+    hat: HAT_STYLES,
+    hatColor: Object.keys(colors.clothing),
   },
   misc: {
     faceMask: [true, false],
@@ -46,6 +46,15 @@ const TRAIT_MAP = {
     shape: [true, false],
     shapeColor: Object.keys(colors.bgColors),
   },
+};
+
+export const CATEGORY_MAP: Record<string, keyof typeof TRAIT_MAP> = {
+  Hair: "hair",
+  Body: "body",
+  Clothes: "clothing",
+  Facial: "facialFeatures",
+  Accessories: "accessories",
+  Misc: "misc",
 };
 
 interface AttributeCardProps {
@@ -58,7 +67,7 @@ interface AttributeCardProps {
   category?: string;
 }
 
-const AttributeCard = ({
+export const AttributeCard = ({
   title,
   onClose,
   className,
@@ -66,9 +75,8 @@ const AttributeCard = ({
   setSelectedAttributes,
   category,
 }: AttributeCardProps) => {
-  const traits = category
-    ? TRAIT_MAP[category.toLowerCase() as keyof typeof TRAIT_MAP]
-    : null;
+  const categoryKey = category ? CATEGORY_MAP[category] : null;
+  const traits = categoryKey ? TRAIT_MAP[categoryKey] : null;
 
   const handleChange = (traitKey: string, value: string) => {
     if (!setSelectedAttributes || !category) return;
@@ -84,19 +92,18 @@ const AttributeCard = ({
       typeof options[0] === "object" &&
       "id" in options[0]
     ) {
-      const match =
-        Array.isArray(options) && options.length > 0
-          ? (options as any[]).find((opt: any) => opt.label === value)
-          : undefined;
-      if (match) newValue = match;
-    } else if (value === "true" || value === "false") {
+      newValue = Number(value);
+    }
+
+    if (value === "true" || value === "false") {
       newValue = value === "true";
     }
 
+    if (!categoryKey) return;
     setSelectedAttributes((prev: any) => ({
       ...prev,
-      [category]: {
-        ...prev[category],
+      [categoryKey]: {
+        ...prev[categoryKey],
         [traitKey]: newValue,
       },
     }));
@@ -125,12 +132,13 @@ const AttributeCard = ({
         <div className="flex flex-col gap-4">
           {Object.entries(traits).map(([traitKey, options]) => {
             const selected =
-              (category && selectedAttributes?.[category]?.[traitKey]) ??
-              selectedAttributes?.[traitKey];
+              categoryKey && selectedAttributes
+                ? selectedAttributes[categoryKey]?.[traitKey]
+                : undefined;
             const selectedValue =
               typeof selected === "object" && selected?.id
                 ? selected.id
-                : selected?.toString() ?? "";
+                : (selected ?? "").toString();
 
             return (
               <div key={traitKey}>

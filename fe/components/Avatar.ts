@@ -1,0 +1,10 @@
+export type HairStyleId = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type BodyTypeId = 0 | 1;
+export type FacialHairId = 0 | 1 | 2;
+export type ClothingStyleId = 0 | 1 | 2 | 3 | 4 | 5;
+export type HatStyleId = 0 | 1 | 2;
+export type EyebrowShapeId = 0 | 1 | 2 | 3 | 4;
+export type EyeShapeId = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type MouthShapeId = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type AccessoryId = 0 | 1 | 2 | 3;
+export type ClothingGraphicId = 0 | 1 | 2 | 3 | 4 | 5;
