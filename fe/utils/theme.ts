@@ -100,9 +100,11 @@ export const colors = {
     },
   },
   bgColors: {
+    white: "#FFFFFF",
     blue: "#85c5e5",
-    // green: '#89D86F',
-    // red: '#ED9191',
+    black: "#633749",
+    green: "#89D86F",
+    red: " 0xD67070",
   },
   outline: "#592d3d",
   white: "#ffffff",

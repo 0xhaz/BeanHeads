@@ -183,22 +183,22 @@ contract DeployBeanHeads is Script {
 
         BeanHeadsAdminFacet adminFacet = BeanHeadsAdminFacet(address(diamond));
 
-        if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
-            adminFacet.setAllowedToken(config.linkToken, true);
-            adminFacet.setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
-            adminFacet.addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
-        } else if (block.chainid == helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID()) {
-            adminFacet.setAllowedToken(config.linkToken, true);
-            adminFacet.setAllowedToken(helperConfig.OP_SEPOLIA_USDC(), true);
-            adminFacet.addPriceFeed(helperConfig.OP_SEPOLIA_USDC(), config.usdPriceFeed);
-        } else if (block.chainid == helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID()) {
-            adminFacet.setAllowedToken(config.linkToken, true);
-            adminFacet.setAllowedToken(helperConfig.ARBITRUM_SEPOLIA_USDC(), true);
-            adminFacet.addPriceFeed(helperConfig.ARBITRUM_SEPOLIA_USDC(), config.usdPriceFeed);
-        }
-        adminFacet.setAllowedToken(config.linkToken, true);
-        adminFacet.setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
-        adminFacet.addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
+        // if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
+        //     adminFacet.setAllowedToken(config.linkToken, true);
+        //     adminFacet.setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
+        //     adminFacet.addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
+        // } else if (block.chainid == helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID()) {
+        //     adminFacet.setAllowedToken(config.linkToken, true);
+        //     adminFacet.setAllowedToken(helperConfig.OP_SEPOLIA_USDC(), true);
+        //     adminFacet.addPriceFeed(helperConfig.OP_SEPOLIA_USDC(), config.usdPriceFeed);
+        // } else if (block.chainid == helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID()) {
+        //     adminFacet.setAllowedToken(config.linkToken, true);
+        //     adminFacet.setAllowedToken(helperConfig.ARBITRUM_SEPOLIA_USDC(), true);
+        //     adminFacet.addPriceFeed(helperConfig.ARBITRUM_SEPOLIA_USDC(), config.usdPriceFeed);
+        // }
+        // adminFacet.setAllowedToken(config.linkToken, true);
+        // adminFacet.setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
+        // adminFacet.addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
 
         return (address(diamond), address(royalty));
     }

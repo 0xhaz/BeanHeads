@@ -71,11 +71,11 @@ export const Base = React.forwardRef<SVGSVGElement, BaseProps>(
 
       hairColor = "brown",
       clothingColor = "blue",
-      circleColor = "blue",
+      circleColor,
       lipColor = "red",
       hatColor = "blue",
       faceMaskColor = "blue",
-      mask,
+      mask = true,
       faceMask,
       lashes,
       shape,
@@ -97,7 +97,7 @@ export const Base = React.forwardRef<SVGSVGElement, BaseProps>(
       <svg ref={ref} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 990">
         {mask && <Mask id="mask" />}
         <g mask={mask ? `url(#mask)` : undefined}>
-          {shape && <BgCircle circleColor={circleColor} />}
+          {shape && <BgCircle circleColor={circleColor ?? "white"} />}
           <BackHat color={hatColor} scale={hatScale} />
           <BackHair hairColor={hairColor} hasHat={FrontHat !== Noop} />
           <path

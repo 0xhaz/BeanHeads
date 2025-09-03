@@ -41,18 +41,20 @@ const TRAIT_MAP = {
   misc: {
     faceMask: [true, false],
     faceMaskColor: Object.keys(colors.clothing),
-    mask: [true, false],
     lashes: [true, false],
     shape: [true, false],
     shapeColor: Object.keys(colors.bgColors),
-  },
+  }, // mask not included as user-selectable
 };
 
 export const CATEGORY_MAP: Record<string, keyof typeof TRAIT_MAP> = {
   Hair: "hair",
+  "Hair Styles": "hair",
   Body: "body",
+  Clothing: "clothing",
   Clothes: "clothing",
   Facial: "facialFeatures",
+  Facials: "facialFeatures",
   Accessories: "accessories",
   Misc: "misc",
 };
@@ -75,7 +77,16 @@ export const AttributeCard = ({
   setSelectedAttributes,
   category,
 }: AttributeCardProps) => {
-  const categoryKey = category ? CATEGORY_MAP[category] : null;
+  const normalizedCategory = category?.replace(/\s+/g, "").toLowerCase();
+  const categoryKey = category
+    ? CATEGORY_MAP[category] ||
+      {
+        hairstyles: "hair",
+        clothes: "clothing",
+        facials: "facialFeatures",
+      }[normalizedCategory as string] ||
+      null
+    : null;
   const traits = categoryKey ? TRAIT_MAP[categoryKey] : null;
 
   const handleChange = (traitKey: string, value: string) => {
@@ -137,7 +148,7 @@ export const AttributeCard = ({
                 : undefined;
             const selectedValue =
               typeof selected === "object" && selected?.id
-                ? selected.id
+                ? selected.id.toString()
                 : (selected ?? "").toString();
 
             return (
@@ -153,7 +164,7 @@ export const AttributeCard = ({
                   {(options ?? []).map((option: any) => {
                     const val =
                       typeof option === "object" && "id" in option
-                        ? option.id
+                        ? option.id.toString()
                         : option.toString();
                     const label =
                       typeof option === "object" && "label" in option
@@ -171,7 +182,9 @@ export const AttributeCard = ({
           })}
         </div>
       ) : (
-        <p className="text-white/60">No category selected</p>
+        <p className="text-white/60">
+          No category selected (category: {category})
+        </p>
       )}
     </div>
   );

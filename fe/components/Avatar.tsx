@@ -61,7 +61,7 @@ import {
   AccessoryId,
   ClothingGraphicId,
   EyeShapeId,
-} from "./Avatar";
+} from "@/types/GenesisIndex";
 import React from "react";
 
 export const HAIR_STYLES = [
