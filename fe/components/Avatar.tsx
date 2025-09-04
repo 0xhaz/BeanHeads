@@ -37,7 +37,7 @@ import { ConcernedEyebrows } from "./eyebrows/ConcernedEyebrows";
 import { Shades } from "./accessories/Shades";
 import { TankTop } from "./clothing/TankTop";
 import { SimpleEyes } from "./eyes/SimpleEyes";
-import { Vue as VueGrpahics } from "./clothingGraphic/Vue";
+import { Vue as VueGraphics } from "./clothingGraphic/Vue";
 import { DizzyEyes } from "./eyes/DizzyEyes";
 import { WinkEyes } from "./eyes/Wink";
 import { HeartEyes } from "./eyes/HeartEyes";
@@ -49,19 +49,6 @@ import { VNeck } from "./clothing/VNeck";
 import { GraphQLGraphic } from "./clothingGraphic/GraphQL";
 import { Tongue } from "./mouths/Tongue";
 import { DressShirt } from "./clothing/DressShirt";
-
-import {
-  HairStyleId,
-  BodyTypeId,
-  FacialHairId,
-  ClothingStyleId,
-  HatStyleId,
-  EyebrowShapeId,
-  MouthShapeId,
-  AccessoryId,
-  ClothingGraphicId,
-  EyeShapeId,
-} from "@/types/GenesisIndex";
 import React from "react";
 
 export const HAIR_STYLES = [
@@ -101,7 +88,7 @@ export const CLOTHING_GRAPHICS = [
   { id: 2, label: "GraphQL", Component: GraphQLGraphic },
   { id: 3, label: "React", Component: ReactGraphic },
   { id: 4, label: "Redwood", Component: RedwoodGraphic },
-  { id: 5, label: "Vue", Component: VueGrpahics },
+  { id: 5, label: "Vue", Component: VueGraphics },
 ];
 
 export const HAT_STYLES = [
@@ -147,25 +134,68 @@ export const ACCESSORIES = [
   { id: 3, label: "Tiny Glasses", Component: TinyGlasses },
 ];
 
-export interface AvatarProps {
-  hairStyle: HairStyleId;
-  hairColor: keyof typeof colors.hair;
-  body: BodyTypeId;
-  facialHair: FacialHairId;
-  clothingStyle: ClothingStyleId;
-  clothingColor: keyof typeof colors.clothing;
-  hat: HatStyleId;
-  eyebrows: EyebrowShapeId;
-  eyes: EyeShapeId;
-  mouthShape: MouthShapeId;
-  mouthColor?: keyof typeof colors.lipColors;
-  accessory: AccessoryId;
-  skinColor: keyof typeof colors.skin;
-  circleColor?: keyof typeof colors.bgColors;
-  hatColor: keyof typeof colors.clothing;
-  graphic?: ClothingGraphicId;
-  faceMaskColor?: keyof typeof colors.clothing;
+// Define color arrays with indices
+export const HAIR_COLORS = [
+  { id: 0, label: "Blonde", base: "#FEDC58", shadow: "#EDBF2E" },
+  { id: 1, label: "Orange", base: "#D96E27", shadow: "#C65C22" },
+  { id: 2, label: "Black", base: "#592d3d", shadow: "#592d3d" },
+  { id: 3, label: "White", base: "#ffffff", shadow: "#E2E2E2" },
+  { id: 4, label: "Brown", base: "#A56941", shadow: "#8D5638" },
+  { id: 5, label: "Blue", base: "#85c5e5", shadow: "#67B7D6" },
+  { id: 6, label: "Pink", base: "#D69AC7", shadow: "#C683B4" },
+];
 
+export const CLOTHING_COLORS = [
+  { id: 0, label: "White", base: "#FFFFFF", shadow: "#E2E2E2" },
+  { id: 1, label: "Blue", base: "#85c5e5", shadow: "#67B7D6" },
+  { id: 2, label: "Black", base: "#633749", shadow: "#5E3244" },
+  { id: 3, label: "Green", base: "#89D86F", shadow: "#7DC462" },
+  { id: 4, label: "Red", base: "#D67070", shadow: "#C46565" },
+];
+
+export const LIP_COLORS = [
+  { id: 0, label: "Red", base: "#DD3E3E", shadow: "#C43333" },
+  { id: 1, label: "Purple", base: "#B256A1", shadow: "#9C4490" },
+  { id: 2, label: "Pink", base: "#D69AC7", shadow: "#C683B4" },
+  { id: 3, label: "Turquoise", base: "#5CCBF1", shadow: "#49B5CD" },
+  { id: 4, label: "Green", base: "#4AB749", shadow: "#3CA047" },
+];
+
+export const BG_COLORS = [
+  { id: 0, label: "White", value: "#FFFFFF" },
+  { id: 1, label: "Blue", value: "#85c5e5" },
+  { id: 2, label: "Black", value: "#633749" },
+  { id: 3, label: "Green", value: "#89D86F" },
+  { id: 4, label: "Red", value: "#D67070" }, // Fixed typo "0xD67070"
+];
+
+export const SKIN_COLORS = [
+  { id: 0, label: "Light", base: "#fdd2b2", shadow: "#f3ab98" },
+  { id: 1, label: "Yellow", base: "#FBE8B3", shadow: "#EDD494" },
+  { id: 2, label: "Brown", base: "#D8985D", shadow: "#C6854E" },
+  { id: 3, label: "Dark", base: "#A56941", shadow: "#8D5638" },
+  { id: 4, label: "Red", base: "#CC734C", shadow: "#B56241" },
+  { id: 5, label: "Black", base: "#754437", shadow: "#6B3D34" },
+];
+
+export interface AvatarProps {
+  hairStyle: number;
+  hairColor: number;
+  body: number;
+  facialHair: number;
+  clothingStyle: number;
+  clothingColor: number;
+  hat: number;
+  eyebrows: number;
+  eyes: number;
+  mouthShape: number;
+  mouthColor: number;
+  accessory: number;
+  skinColor: number;
+  circleColor: number;
+  hatColor: number;
+  graphic: number;
+  faceMaskColor: number;
   mask?: boolean;
   faceMask?: boolean;
   lashes?: boolean;
@@ -178,37 +208,23 @@ export function selectRandom<T>(arr: T[]): T {
 
 export function generateRandomAvatarAttributes(): any {
   const flatAttrs: AvatarProps = {
-    hairStyle: selectRandom(HAIR_STYLES).id as HairStyleId,
-    hairColor: selectRandom(
-      Object.keys(colors.hair) as (keyof typeof colors.hair)[]
-    ),
-    body: selectRandom(BODY_TYPES).id as BodyTypeId,
-    facialHair: selectRandom(FACIAL_HAIR_STYLES).id as FacialHairId,
-    clothingStyle: selectRandom(CLOTHING_STYLES).id as ClothingStyleId,
-    clothingColor: selectRandom(
-      Object.keys(colors.clothing) as (keyof typeof colors.clothing)[]
-    ),
-    hat: selectRandom(HAT_STYLES).id as HatStyleId,
-    eyebrows: selectRandom(EYEBROW_SHAPES).id as EyebrowShapeId,
-    eyes: selectRandom(EYE_SHAPES).id as EyeShapeId,
-    mouthShape: selectRandom(MOUTH_SHAPES).id as MouthShapeId,
-    mouthColor: selectRandom(
-      Object.keys(colors.lipColors) as (keyof typeof colors.lipColors)[]
-    ),
-    accessory: selectRandom(ACCESSORIES).id as AccessoryId,
-    skinColor: selectRandom(
-      Object.keys(colors.skin) as (keyof typeof colors.skin)[]
-    ),
-    hatColor: selectRandom(
-      Object.keys(colors.clothing) as (keyof typeof colors.clothing)[]
-    ),
-    graphic: selectRandom(CLOTHING_GRAPHICS).id as ClothingGraphicId,
-    faceMaskColor: selectRandom(
-      Object.keys(colors.clothing) as (keyof typeof colors.clothing)[]
-    ),
-    circleColor: selectRandom(
-      Object.keys(colors.bgColors) as (keyof typeof colors.bgColors)[]
-    ),
+    hairStyle: selectRandom(HAIR_STYLES).id,
+    hairColor: selectRandom(HAIR_COLORS).id,
+    body: selectRandom(BODY_TYPES).id,
+    facialHair: selectRandom(FACIAL_HAIR_STYLES).id,
+    clothingStyle: selectRandom(CLOTHING_STYLES).id,
+    clothingColor: selectRandom(CLOTHING_COLORS).id,
+    hat: selectRandom(HAT_STYLES).id,
+    eyebrows: selectRandom(EYEBROW_SHAPES).id,
+    eyes: selectRandom(EYE_SHAPES).id,
+    mouthShape: selectRandom(MOUTH_SHAPES).id,
+    mouthColor: selectRandom(LIP_COLORS).id,
+    accessory: selectRandom(ACCESSORIES).id,
+    skinColor: selectRandom(SKIN_COLORS).id,
+    hatColor: selectRandom(CLOTHING_COLORS).id,
+    graphic: selectRandom(CLOTHING_GRAPHICS).id,
+    faceMaskColor: selectRandom(CLOTHING_COLORS).id,
+    circleColor: selectRandom(BG_COLORS).id,
     mask: selectRandom([true, false]),
     faceMask: selectRandom([true, false]),
     lashes: selectRandom([true, false]),
@@ -276,22 +292,27 @@ export const Avatar = React.forwardRef<SVGSVGElement, AvatarProps>(
       faceMask,
       lashes,
       shape,
-
       ...rest
     },
     ref
   ) => {
-    const skin = colors.skin[skinColor];
-    const Eyes = EYE_SHAPES[eyes as number]?.Component;
-    const Eyebrows = EYEBROW_SHAPES[eyebrows as number]?.Component;
-    const Mouth = MOUTH_SHAPES[mouthShape as number]?.Component;
-    const Hair = HAIR_STYLES[hairStyle as number];
-    const FacialHair = FACIAL_HAIR_STYLES[facialHair as number]?.Component;
-    const Clothing = CLOTHING_STYLES[clothingStyle as number];
-    const Accessory = ACCESSORIES[accessory as number]?.Component;
-    const Graphic = CLOTHING_GRAPHICS[graphic as number];
-    const Hat = HAT_STYLES[hat as number];
-    const Body = BODY_TYPES[body as number]?.Component;
+    const skin = SKIN_COLORS[skinColor]?.base
+      ? {
+          base: SKIN_COLORS[skinColor].base,
+          shadow: SKIN_COLORS[skinColor].shadow,
+        }
+      : SKIN_COLORS[0];
+    const Eyes = EYE_SHAPES[eyes]?.Component;
+    const Eyebrows = EYEBROW_SHAPES[eyebrows]?.Component;
+    const Mouth = MOUTH_SHAPES[mouthShape]?.Component;
+    const Hair = HAIR_STYLES[hairStyle];
+    const FacialHair = FACIAL_HAIR_STYLES[facialHair]?.Component;
+    const Clothing = CLOTHING_STYLES[clothingStyle];
+    const Accessory = ACCESSORIES[accessory]?.Component;
+    const Graphic = CLOTHING_GRAPHICS[graphic]?.Component;
+    const Hat = HAT_STYLES[hat];
+    const Body = BODY_TYPES[body]?.Component;
+
     return (
       <ThemeContext.Provider value={{ colors, skin }}>
         <Base
@@ -303,19 +324,43 @@ export const Avatar = React.forwardRef<SVGSVGElement, AvatarProps>(
           facialHair={FacialHair}
           clothing={Clothing}
           accessory={Accessory}
-          graphic={Graphic?.Component}
+          graphic={Graphic}
           hat={Hat}
           body={Body}
-          hatColor={hatColor}
-          hairColor={hairColor}
-          clothingColor={clothingColor}
-          lipColor={mouthColor}
+          hatColor={
+            CLOTHING_COLORS[
+              hatColor
+            ]?.label.toLowerCase() as keyof typeof colors.clothing
+          }
+          hairColor={
+            HAIR_COLORS[
+              hairColor
+            ]?.label.toLowerCase() as keyof typeof colors.hair
+          }
+          clothingColor={
+            CLOTHING_COLORS[
+              clothingColor
+            ]?.label.toLowerCase() as keyof typeof colors.clothing
+          }
+          lipColor={
+            LIP_COLORS[
+              mouthColor
+            ]?.label.toLowerCase() as keyof typeof colors.lipColors
+          }
           mask={mask ?? false}
           faceMask={faceMask}
-          faceMaskColor={faceMaskColor}
+          faceMaskColor={
+            CLOTHING_COLORS[
+              faceMaskColor
+            ]?.label.toLowerCase() as keyof typeof colors.clothing
+          }
           lashes={lashes}
           shape={shape}
-          circleColor={circleColor}
+          circleColor={
+            BG_COLORS[
+              circleColor
+            ]?.label.toLowerCase() as keyof typeof colors.bgColors
+          }
           {...rest}
         />
       </ThemeContext.Provider>

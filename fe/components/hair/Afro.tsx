@@ -1,11 +1,10 @@
 import { useTheme } from "@/utils/themeContext";
 import { HairProps } from "./types";
-import { getHairColorByIndex } from "@/utils/colorUtils";
 
-export const Back = ({ hairColorIndex, hasHat = false }: HairProps) => {
+export const Back = ({ hairColor }: HairProps) => {
   const { colors } = useTheme();
 
-  const { base, shadow } = getHairColorByIndex(hairColorIndex ?? 0);
+  const { base, shadow } = colors.hair[hairColor];
 
   return (
     <>
@@ -32,10 +31,10 @@ export const Back = ({ hairColorIndex, hasHat = false }: HairProps) => {
   );
 };
 
-export const Front = ({ hairColorIndex }: HairProps) => {
+export const Front = ({ hairColor }: HairProps) => {
   const { colors, skin } = useTheme();
 
-  const { base, shadow } = getHairColorByIndex(hairColorIndex ?? 0);
+  const { base, shadow } = colors.hair[hairColor];
 
   return (
     <>

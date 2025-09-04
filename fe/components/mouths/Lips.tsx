@@ -1,19 +1,30 @@
+import React from "react";
 import { useTheme } from "@/utils/themeContext";
 import { MouthProps } from "./types";
 
 export const Lips = ({ lipColor }: MouthProps) => {
   const { colors } = useTheme();
 
-  const { base, shadow } = colors.lipColors[lipColor || "red"];
+  // Define lip colors array matching LIP_COLORS from Avatar.tsx
+  const lipColors = [
+    { base: "#DD3E3E", shadow: "#C43333" }, // Red (id: 0)
+    { base: "#B256A1", shadow: "#9C4490" }, // Purple (id: 1)
+    { base: "#D69AC7", shadow: "#C683B4" }, // Pink (id: 2)
+    { base: "#5CCBF1", shadow: "#49B5CD" }, // Turquoise (id: 3)
+    { base: "#4AB749", shadow: "#3CA047" }, // Green (id: 4)
+  ];
+
+  // Use lipColor as an index, fallback to 0 (Red) if invalid
+  const colorIndex =
+    typeof lipColor === "number" && lipColor >= 0 && lipColor < lipColors.length
+      ? lipColor
+      : 0;
+  const { base, shadow } = lipColors[colorIndex];
 
   return (
     <>
-      {/* <path
-        d="M560.41,648.36l-.56-2.28C487.07,662.7,440,647.21,440,647.21l-1.83-.32a1.84,1.84,0,0,0,.49,1.78c18.05,18.05,34,30.45,61.79,30.45C529.93,679.12,542.43,666.22,560.41,648.36Z"
-        fill={skin.shadow}
-      /> */}
       <path
-        d="M558.55,642.44c-3.63,0-5.35-1.31-15.58-10.79-7.49-6.93-12.63-10.36-18.91-11.46-7.83-1.37-15.83-.88-24.36,7.68-8.53-8.56-16.52-9-24.36-7.68-6.28,1.1-11.42,4.53-18.91,11.46-10.23,9.48-11.95,10.79-15.58,10.79a1.84,1.84,0,0,0-1.3,3.14q26.25,26.25,60.15,26.28t60.15-26.28A1.84,1.84,0,0,0,558.55,642.44Z"
+        d="M558.55,642.44c-3.63,0-5.35-1.31-15.58-10.79-7.49-6.93-12.53-11.29-18.91-11.46-11.21-.3-19.15,6.12-24.76,6.12s-10.45-7.53-24-6.12c-6.34.66-11.42,4.53-18.91,11.46-10.23,9.48-11.95,10.79-15.58,10.79a1.84,1.84,0,0,0-1.3,3.14q26.25,26.25,60.15,26.28t60.15-26.28A1.84,1.84,0,0,0,558.55,642.44Z"
         fill={base}
       />
       <path

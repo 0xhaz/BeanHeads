@@ -1,4 +1,3 @@
-import { colors } from "@/utils/theme";
 import {
   HAIR_STYLES,
   BODY_TYPES,
@@ -10,20 +9,25 @@ import {
   MOUTH_SHAPES,
   ACCESSORIES,
   CLOTHING_GRAPHICS,
+  HAIR_COLORS,
+  CLOTHING_COLORS,
+  LIP_COLORS,
+  BG_COLORS,
+  SKIN_COLORS,
 } from "./Avatar";
 
 const TRAIT_MAP = {
   hair: {
     style: HAIR_STYLES,
-    color: Object.keys(colors.hair),
+    color: HAIR_COLORS,
   },
   body: {
     style: BODY_TYPES,
-    color: Object.keys(colors.skin),
+    color: SKIN_COLORS,
   },
   clothing: {
     style: CLOTHING_STYLES,
-    color: Object.keys(colors.clothing),
+    color: CLOTHING_COLORS,
     graphic: CLOTHING_GRAPHICS,
   },
   facialFeatures: {
@@ -31,25 +35,24 @@ const TRAIT_MAP = {
     eyes: EYE_SHAPES,
     facialHair: FACIAL_HAIR_STYLES,
     mouth: MOUTH_SHAPES,
-    lipColor: Object.keys(colors.lipColors),
+    lipColor: LIP_COLORS,
   },
   accessories: {
     accessory: ACCESSORIES,
     hat: HAT_STYLES,
-    hatColor: Object.keys(colors.clothing),
+    hatColor: CLOTHING_COLORS,
   },
   misc: {
     faceMask: [true, false],
-    faceMaskColor: Object.keys(colors.clothing),
+    faceMaskColor: CLOTHING_COLORS,
     lashes: [true, false],
     shape: [true, false],
-    shapeColor: Object.keys(colors.bgColors),
+    shapeColor: BG_COLORS,
   }, // mask not included as user-selectable
 };
 
 export const CATEGORY_MAP: Record<string, keyof typeof TRAIT_MAP> = {
   Hair: "hair",
-  "Hair Styles": "hair",
   Body: "body",
   Clothing: "clothing",
   Clothes: "clothing",
@@ -90,7 +93,7 @@ export const AttributeCard = ({
   const traits = categoryKey ? TRAIT_MAP[categoryKey] : null;
 
   const handleChange = (traitKey: string, value: string) => {
-    if (!setSelectedAttributes || !category) return;
+    if (!setSelectedAttributes || !categoryKey) return;
 
     const options = traits?.[
       traitKey as keyof typeof traits
@@ -103,14 +106,11 @@ export const AttributeCard = ({
       typeof options[0] === "object" &&
       "id" in options[0]
     ) {
-      newValue = Number(value);
+      newValue = Number(value); // Convert to number for IDs (styles and colors)
+    } else if (value === "true" || value === "false") {
+      newValue = value === "true"; // Handle boolean values
     }
 
-    if (value === "true" || value === "false") {
-      newValue = value === "true";
-    }
-
-    if (!categoryKey) return;
     setSelectedAttributes((prev: any) => ({
       ...prev,
       [categoryKey]: {
