@@ -42,8 +42,10 @@ contract HelperConfig is Script {
     int256 public MOCK_WEI_PER_UINT_LINK = 4e15;
     uint64 public constant OP_SEPOLIA_CHAIN_SELECTOR = 5224473277236331295;
 
-    // Sepolia Details
+    // USDC Details
     address public constant SEPOLIA_USDC = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238;
+    address public constant OP_SEPOLIA_USDC = 0x5fd84259d66Cd46123540766Be93DFE6D43130D7;
+    address public constant ARBITRUM_SEPOLIA_USDC = 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d;
 
     NetworkConfig public activeNetworkConfig;
 

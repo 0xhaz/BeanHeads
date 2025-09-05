@@ -36,6 +36,11 @@ sepolia-eth = "${SEPOLIA_RPC_URL}"
 arb-sepolia = "${ARBITRUM_SEPOLIA_RPC_URL}"
 base-sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
+arbitrum-sepolia = { key = "${ABISCAN_API_KEY}" }
+optimism-sepolia = { key = "${OPTIMISM_API_KEY}", url = "https://api-optimistic.etherscan.io"}
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 

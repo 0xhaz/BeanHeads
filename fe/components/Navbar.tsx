@@ -1,6 +1,7 @@
 import NavItems from "./NavItems";
 import Image from "next/image";
 import Link from "next/link";
+import { ConnectButton } from "thirdweb/react";
 
 const Navbar = () => {
   return (

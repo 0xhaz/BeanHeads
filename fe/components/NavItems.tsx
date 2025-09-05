@@ -2,6 +2,11 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ConnectButton } from "thirdweb/react";
+import { inAppWallet, createWallet } from "thirdweb/wallets";
+import { client, wallets } from "@/provider/client";
+import { arbitrumSepolia, optimismSepolia, sepolia } from "thirdweb/chains";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -9,11 +14,13 @@ const navItems = [
   { name: "Contact", href: "/contact" },
 ];
 
+const queryClient = new QueryClient();
+
 const NavItems = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="flex space-x-4">
+    <nav className="flex  space-x-4">
       {navItems.map(item => (
         <div key={item.name}>
           <Link
@@ -26,6 +33,18 @@ const NavItems = () => {
           </Link>
         </div>
       ))}
+      <QueryClientProvider client={queryClient}>
+        <ConnectButton
+          client={client}
+          wallets={wallets}
+          chains={[sepolia, arbitrumSepolia, optimismSepolia]}
+          // accountAbstraction={{
+          //   chain: sepolia,
+          //   sponsorGas: true,
+          // }}
+          connectModal={{ size: "wide" }}
+        />
+      </QueryClientProvider>
     </nav>
   );
 };

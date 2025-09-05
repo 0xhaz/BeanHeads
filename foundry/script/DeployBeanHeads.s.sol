@@ -183,22 +183,30 @@ contract DeployBeanHeads is Script {
 
         BeanHeadsAdminFacet adminFacet = BeanHeadsAdminFacet(address(diamond));
 
-        // if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
-        //     adminFacet.setAllowedToken(config.linkToken, true);
-        //     adminFacet.setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
-        //     adminFacet.addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
-        // } else if (block.chainid == helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID()) {
-        //     adminFacet.setAllowedToken(config.linkToken, true);
-        //     adminFacet.setAllowedToken(helperConfig.OP_SEPOLIA_USDC(), true);
-        //     adminFacet.addPriceFeed(helperConfig.OP_SEPOLIA_USDC(), config.usdPriceFeed);
-        // } else if (block.chainid == helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID()) {
-        //     adminFacet.setAllowedToken(config.linkToken, true);
-        //     adminFacet.setAllowedToken(helperConfig.ARBITRUM_SEPOLIA_USDC(), true);
-        //     adminFacet.addPriceFeed(helperConfig.ARBITRUM_SEPOLIA_USDC(), config.usdPriceFeed);
-        // }
-        // adminFacet.setAllowedToken(config.linkToken, true);
-        // adminFacet.setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
-        // adminFacet.addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
+        if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
+            adminFacet.setAllowedToken(config.linkToken, true);
+            console.log("Link token allowed:", config.linkToken);
+            adminFacet.setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
+            console.log("Sepolia USDC allowed:", helperConfig.SEPOLIA_USDC());
+            adminFacet.addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
+            console.log("Sepolia USDC price feed added:", config.usdPriceFeed);
+        } else if (block.chainid == helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID()) {
+            adminFacet.setAllowedToken(config.linkToken, true);
+            console.log("Link token allowed:", config.linkToken);
+            adminFacet.setAllowedToken(helperConfig.OP_SEPOLIA_USDC(), true);
+            console.log("Optimism Sepolia USDC allowed:", helperConfig.OP_SEPOLIA_USDC());
+            adminFacet.addPriceFeed(helperConfig.OP_SEPOLIA_USDC(), config.usdPriceFeed);
+            console.log("Optimism Sepolia USDC price feed added:", config.usdPriceFeed);
+        } else if (block.chainid == helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID()) {
+            adminFacet.setAllowedToken(config.linkToken, true);
+            console.log("Link token allowed:", config.linkToken);
+            adminFacet.setAllowedToken(helperConfig.ARBITRUM_SEPOLIA_USDC(), true);
+            console.log("Arbitrum Sepolia USDC allowed:", helperConfig.ARBITRUM_SEPOLIA_USDC());
+            adminFacet.addPriceFeed(helperConfig.ARBITRUM_SEPOLIA_USDC(), config.usdPriceFeed);
+            console.log("Arbitrum Sepolia USDC price feed added:", config.usdPriceFeed);
+        }
+
+        vm.stopBroadcast();
 
         return (address(diamond), address(royalty));
     }
