@@ -12,7 +12,7 @@ import {
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { sepolia, arbitrumSepolia, optimismSepolia } from "thirdweb/chains";
 import { BEANHEADS_ADDRESS } from "@/constants/contract";
-import beanHeadsDiamond from "@/contracts/BeanHeadsDiamond.json";
+import beanHeadsDiamond from "@/app/contracts/BeanHeadsDiamond.json";
 // Ensure ABI is typed as readonly for thirdweb
 const BeanHeadsABI = beanHeadsDiamond.abi;
 
@@ -115,5 +115,46 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error fetching attributes:", error);
     }
+  }
+
+  async function exists(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "function exists(uint256 tokenId) view returns (bool)",
+      params: [tokenId],
+    }) as Promise<boolean>;
+  }
+
+  async function getOwnerTokensCount(owner: `0x${string}`) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method:
+        "function getOwnerTokensCount(address owner) view returns (uint256)",
+      params: [owner],
+    }) as Promise<bigint>;
+  }
+
+  async function isBridgeAuthorized(
+    chainId: bigint,
+    bridgeAddress: `0x${string}`
+  ) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method:
+        "function isBridgeAuthorized(uint256 chainId, address bridgeAddress) view returns (bool)",
+      params: [chainId, bridgeAddress],
+    }) as Promise<boolean>;
+  }
+
+  async function isTokenLocked(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "function isTokenLocked(uint256 tokenId) view returns (bool)",
+      params: [tokenId],
+    }) as Promise<boolean>;
   }
 }
