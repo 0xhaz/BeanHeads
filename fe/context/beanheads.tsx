@@ -13,6 +13,23 @@ import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { sepolia, arbitrumSepolia, optimismSepolia } from "thirdweb/chains";
 import { BEANHEADS_ADDRESS } from "@/constants/contract";
 import beanHeadsDiamond from "@/app/contracts/BeanHeadsDiamond.json";
+import {
+  ACCESSORIES,
+  BG_COLORS,
+  BODY_TYPES,
+  CLOTHING_COLORS,
+  CLOTHING_GRAPHICS,
+  CLOTHING_STYLES,
+  EYE_SHAPES,
+  EYEBROW_SHAPES,
+  FACIAL_HAIR_STYLES,
+  HAIR_COLORS,
+  HAIR_STYLES,
+  HAT_STYLES,
+  LIP_COLORS,
+  MOUTH_SHAPES,
+  SKIN_COLORS,
+} from "@/components/Avatar";
 // Ensure ABI is typed as readonly for thirdweb
 const BeanHeadsABI = beanHeadsDiamond.abi;
 
@@ -43,7 +60,7 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
   }, [chain, address]);
 
   /*//////////////////////////////////////////////////////////////
-                              VIEW FACETS
+                              VIEW FACET
     //////////////////////////////////////////////////////////////*/
   async function totalSupply() {
     if (!contract) throw new Error("Contract not initialized");
@@ -157,4 +174,213 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
       params: [tokenId],
     }) as Promise<boolean>;
   }
+
+  /*//////////////////////////////////////////////////////////////
+                               MINT FACET
+    //////////////////////////////////////////////////////////////*/
+
+  const hairParams = {
+    hairStyle: HAIR_STYLES,
+    hairColor: HAIR_COLORS,
+  };
+  const bodyParams = {
+    bodyType: BODY_TYPES,
+    skinColor: SKIN_COLORS,
+  };
+  const clothingParams = {
+    clothes: CLOTHING_STYLES,
+    clothingColor: CLOTHING_COLORS,
+    clothesGraphic: CLOTHING_GRAPHICS,
+  };
+  const facialFeatureParams = {
+    eyebrowShape: EYEBROW_SHAPES,
+    eyeShape: EYE_SHAPES,
+    facialHairType: FACIAL_HAIR_STYLES,
+    mouthStyle: MOUTH_SHAPES,
+    lipColor: LIP_COLORS,
+  };
+  const accessoryParams = {
+    accessoryId: ACCESSORIES,
+    hatStyle: HAT_STYLES,
+    hatColor: CLOTHING_COLORS,
+  };
+  const otherParams = {
+    faceMask: [true, false],
+    faceMaskColor: CLOTHING_COLORS,
+    shapes: [true, false],
+    shapeColor: BG_COLORS,
+    lashes: [true, false],
+  };
+  const svgParams = {
+    ...hairParams,
+    ...bodyParams,
+    ...clothingParams,
+    ...facialFeatureParams,
+    ...accessoryParams,
+    ...otherParams,
+  };
+
+  async function mintGenesis(
+    address: `0x${string}`,
+    svgParams: any,
+    amount: bigint,
+    paymentToken: `0x${string}` | null,
+    options?: BaseTransactionOptions
+  ) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method:
+        "function mintGenesis(address to, string[] memory svgParams, uint256 amount, address paymentToken) returns (uint256)",
+      params: [
+        address,
+        Object.values(svgParams) as string[],
+        amount,
+        paymentToken ?? "0x0000000000000000000000000000000000000000",
+      ],
+      value: paymentToken ? BigInt(0) : amount,
+      ...options,
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function mintBridgeToken(
+    address: `0x${string}`,
+    tokenId: bigint,
+    svgParams: any,
+    originChainId: bigint,
+    options?: BaseTransactionOptions
+  ) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method:
+        "function mintBridgeToken(address to, uint256 tokenId, string[] memory svgParams, uint256 originChainId)",
+      params: [
+        address,
+        tokenId,
+        Object.values(svgParams) as string[],
+        originChainId,
+      ],
+      ...options,
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function unlockToken(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "function unlockToken(uint256 tokenId)",
+      params: [tokenId],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function lockToken(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "function lockToken(uint256 tokenId)",
+      params: [tokenId],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  function burnToken(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = prepareContractCall({
+      contract,
+      method: "function burnToken(uint256 tokenId)",
+      params: [tokenId],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  function approve(to: `0x${string}`, tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = prepareContractCall({
+      contract,
+      method: "function approve(address to, uint256 tokenId) payable",
+      params: [to, tokenId],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  function name() {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "function name() view returns (string)",
+    }) as Promise<string>;
+  }
+
+  function symbol() {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "function symbol() view returns (string)",
+    }) as Promise<string>;
+  }
+
+  async function balanceOf(owner: `0x${string}`) {
+    if (!contract) throw new Error("Contract not initialized");
+    try {
+      const balance = await readContract({
+        contract,
+        method: "function balanceOf(address owner) view returns (uint256)",
+        params: [owner],
+      });
+      return balance as bigint;
+    } catch (error) {
+      console.error("Error fetching balanceOf:", error);
+    }
+  }
+
+  function getOwnerOf(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "function ownerOf(uint256 tokenId) view returns (address)",
+      params: [tokenId],
+    }) as Promise<`0x${string}`>;
+  }
+
+  const value: BeanHeadsCtx = {
+    chainId: chain?.id,
+    address,
+    contract,
+    totalSupply,
+    balanceOf,
+  };
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
+
+export function useBeanHeads() {
+  const context = useContext(Ctx);
+  if (!context) {
+    throw new Error("useBeanHeads must be used within a BeanHeadsProvider");
+  }
+  return context;
+}
+
+export { BeanHeadsABI };
