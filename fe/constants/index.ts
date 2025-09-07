@@ -102,7 +102,7 @@ export const mainTasks = [
     color: "#ffcccb",
   },
   {
-    id: "my-collections",
+    id: "collections",
     title: "My Collections",
     image: "/images/wallet.svg",
     description: "View and manage your NFT collections",

@@ -10,8 +10,13 @@ import {
   type BaseTransactionOptions,
 } from "thirdweb";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
-import { sepolia, arbitrumSepolia, optimismSepolia } from "thirdweb/chains";
-import { BEANHEADS_ADDRESS } from "@/constants/contract";
+import type { Abi } from "viem";
+import {
+  BEANHEADS_ADDRESS,
+  USDC_ADDRESS,
+  LINK_ADDRESS,
+} from "@/constants/contract";
+import { client } from "@/provider/client";
 import beanHeadsDiamond from "@/app/contracts/BeanHeadsDiamond.json";
 import {
   ACCESSORIES,
@@ -31,7 +36,14 @@ import {
   SKIN_COLORS,
 } from "@/components/Avatar";
 // Ensure ABI is typed as readonly for thirdweb
-const BeanHeadsABI = beanHeadsDiamond.abi;
+const rawAbi = beanHeadsDiamond.abi as any[];
+
+const BeanHeadsABI: Abi = rawAbi.map(item => {
+  if (item?.type === "function" && item.outputs === undefined) {
+    return { ...item, outputs: [] };
+  }
+  return item;
+}) as Abi;
 
 type BeanHeadsCtx = {
   chainId?: number;
@@ -39,6 +51,44 @@ type BeanHeadsCtx = {
   contract?: ReturnType<typeof getContract> | undefined;
   totalSupply: () => Promise<bigint | undefined>;
   balanceOf: (owner: `0x${string}`) => Promise<bigint | undefined>;
+  mintGenesis?: (
+    address: `0x${string}`,
+    svgParams: any,
+    amount: bigint,
+    paymentToken: `0x${string}` | null,
+    options?: BaseTransactionOptions
+  ) => Promise<PreparedTransaction>;
+  tokenURI: (tokenId: bigint) => Promise<string | undefined>;
+  getAttributesByTokenId: (tokenId: bigint) => Promise<string[] | undefined>;
+  getAttributesByOwner: (
+    owner: `0x${string}`,
+    tokenId: bigint
+  ) => Promise<string[] | undefined>;
+  getAttributes: (tokenId: bigint) => Promise<string | undefined>;
+  exists: (tokenId: bigint) => Promise<boolean | undefined>;
+  getOwnerTokensCount: (owner: `0x${string}`) => Promise<bigint | undefined>;
+  isBridgeAuthorized: (
+    chainId: bigint,
+    bridgeAddress: `0x${string}`
+  ) => Promise<boolean | undefined>;
+  isTokenLocked: (tokenId: bigint) => Promise<boolean | undefined>;
+  mintBridgeToken?: (
+    address: `0x${string}`,
+    tokenId: bigint,
+    svgParams: any,
+    originChainId: bigint,
+    options?: BaseTransactionOptions
+  ) => Promise<PreparedTransaction>;
+  unlockToken?: (tokenId: bigint) => Promise<PreparedTransaction>;
+  lockToken?: (tokenId: bigint) => Promise<PreparedTransaction>;
+  burnToken?: (tokenId: bigint) => Promise<PreparedTransaction>;
+  approve?: (
+    to: `0x${string}`,
+    tokenId: bigint
+  ) => Promise<PreparedTransaction>;
+  name: () => Promise<string>;
+  symbol: () => Promise<string>;
+  getOwnerOf: (tokenId: bigint) => Promise<`0x${string}`>;
 };
 
 const Ctx = createContext<BeanHeadsCtx | null>(null);
@@ -53,11 +103,12 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     if (!chain || !address) return undefined;
 
     return getContract({
-      client: undefined as never,
-      address: address,
+      client,
       chain,
+      address,
+      abi: BeanHeadsABI,
     });
-  }, [chain, address]);
+  }, [address, chain]);
 
   /*//////////////////////////////////////////////////////////////
                               VIEW FACET
@@ -236,7 +287,7 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
         address,
         Object.values(svgParams) as string[],
         amount,
-        paymentToken ?? "0x0000000000000000000000000000000000000000",
+        paymentToken ?? USDC_ADDRESS[chain?.id!],
       ],
       value: paymentToken ? BigInt(0) : amount,
       ...options,
@@ -370,6 +421,23 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     contract,
     totalSupply,
     balanceOf,
+    mintGenesis,
+    tokenURI,
+    getAttributesByTokenId,
+    getAttributesByOwner,
+    getAttributes,
+    exists,
+    getOwnerTokensCount,
+    isBridgeAuthorized,
+    isTokenLocked,
+    mintBridgeToken,
+    unlockToken,
+    lockToken,
+    burnToken,
+    approve,
+    name,
+    symbol,
+    getOwnerOf,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

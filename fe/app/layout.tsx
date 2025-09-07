@@ -3,6 +3,7 @@ import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { Provider } from "@/provider/client";
+import { BeanHeadsProvider } from "@/context/beanheads";
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -23,8 +24,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${bricolage.variable} antialiased`}>
         <Provider>
-          <Navbar />
-          {children}
+          <BeanHeadsProvider>
+            <Navbar />
+            {children}
+          </BeanHeadsProvider>
         </Provider>
       </body>
     </html>

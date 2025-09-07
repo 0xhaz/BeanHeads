@@ -3,7 +3,6 @@
 import { createThirdwebClient } from "thirdweb";
 import { ThirdwebProvider } from "thirdweb/react";
 import { sepolia, optimismSepolia, arbitrumSepolia } from "thirdweb/chains";
-import { ConnectButton } from "thirdweb/react";
 import { inAppWallet, createWallet } from "thirdweb/wallets";
 
 export const client = createThirdwebClient({
@@ -36,4 +35,4 @@ export const Provider = ({ children }: { children: React.ReactNode }) => {
   return <ThirdwebProvider>{children}</ThirdwebProvider>;
 };
 
-export default ThirdwebProvider;
+export default Provider;
