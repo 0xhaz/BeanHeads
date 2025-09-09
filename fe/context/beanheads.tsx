@@ -17,7 +17,8 @@ import {
   LINK_ADDRESS,
 } from "@/constants/contract";
 import { client } from "@/provider/client";
-import beanHeadsDiamond from "@/app/contracts/BeanHeadsDiamond.json";
+import beanHeads from "@/app/contracts/BeanHeadsABI.json";
+import ERC20 from "@/app/contracts/ERC20.json";
 import {
   ACCESSORIES,
   BG_COLORS,
@@ -28,6 +29,7 @@ import {
   EYE_SHAPES,
   EYEBROW_SHAPES,
   FACIAL_HAIR_STYLES,
+  generateRandomAvatarAttributes,
   HAIR_COLORS,
   HAIR_STYLES,
   HAT_STYLES,
@@ -35,15 +37,18 @@ import {
   MOUTH_SHAPES,
   SKIN_COLORS,
 } from "@/components/Avatar";
+import { SVGParams, toSVGParamsFromAvatar } from "@/utils/encode";
 // Ensure ABI is typed as readonly for thirdweb
-const rawAbi = beanHeadsDiamond.abi as any[];
+// const rawAbi = beanHeads.abi as any[];
+const BeanHeadsABI = beanHeads.abi as Abi;
+const ERC20ABI = ERC20 as Abi;
 
-const BeanHeadsABI: Abi = rawAbi.map(item => {
-  if (item?.type === "function" && item.outputs === undefined) {
-    return { ...item, outputs: [] };
-  }
-  return item;
-}) as Abi;
+// const BeanHeadsABI: Abi = rawAbi.map(item => {
+//   if (item?.type === "function" && item.outputs === undefined) {
+//     return { ...item, outputs: [] };
+//   }
+//   return item;
+// }) as Abi;
 
 type BeanHeadsCtx = {
   chainId?: number;
@@ -106,7 +111,7 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
       client,
       chain,
       address,
-      abi: BeanHeadsABI,
+      abi: BeanHeadsABI as any,
     });
   }, [address, chain]);
 
@@ -114,11 +119,12 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
                               VIEW FACET
     //////////////////////////////////////////////////////////////*/
   async function totalSupply() {
+    console.log("Contract in totalSupply:", contract);
     if (!contract) throw new Error("Contract not initialized");
     try {
       const supply = await readContract({
         contract,
-        method: "function totalSupply() view returns (uint256)",
+        method: "function getTotalSupply() view returns (uint256)",
       });
       return supply as bigint;
     } catch (error) {
@@ -230,82 +236,101 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
                                MINT FACET
     //////////////////////////////////////////////////////////////*/
 
-  const hairParams = {
-    hairStyle: HAIR_STYLES,
-    hairColor: HAIR_COLORS,
-  };
-  const bodyParams = {
-    bodyType: BODY_TYPES,
-    skinColor: SKIN_COLORS,
-  };
-  const clothingParams = {
-    clothes: CLOTHING_STYLES,
-    clothingColor: CLOTHING_COLORS,
-    clothesGraphic: CLOTHING_GRAPHICS,
-  };
-  const facialFeatureParams = {
-    eyebrowShape: EYEBROW_SHAPES,
-    eyeShape: EYE_SHAPES,
-    facialHairType: FACIAL_HAIR_STYLES,
-    mouthStyle: MOUTH_SHAPES,
-    lipColor: LIP_COLORS,
-  };
-  const accessoryParams = {
-    accessoryId: ACCESSORIES,
-    hatStyle: HAT_STYLES,
-    hatColor: CLOTHING_COLORS,
-  };
-  const otherParams = {
-    faceMask: [true, false],
-    faceMaskColor: CLOTHING_COLORS,
-    shapes: [true, false],
-    shapeColor: BG_COLORS,
-    lashes: [true, false],
-  };
-  const svgParams = {
-    ...hairParams,
-    ...bodyParams,
-    ...clothingParams,
-    ...facialFeatureParams,
-    ...accessoryParams,
-    ...otherParams,
-  };
+  async function getMintPrice() {
+    if (!contract) throw new Error("Contract not initialized");
+    try {
+      const price = await readContract({
+        contract,
+        method: "getMintPrice",
+      });
+      return price as bigint;
+    } catch (error) {
+      console.error("Error fetching mint price:", error);
+    }
+  }
+
+  async function approveToken(
+    owner: `0x${string}`,
+    spender: `0x${string}`,
+    amount: bigint,
+    chain: any
+  ) {
+    const usdc = getContract({
+      client,
+      chain,
+      address: USDC_ADDRESS[chain.id],
+      abi: ERC20ABI as any,
+    });
+
+    const allowance = (await readContract({
+      contract: usdc,
+      method: "allowance",
+      params: [owner, spender],
+    })) as bigint;
+
+    if (allowance < amount) {
+      const tx = await prepareContractCall({
+        contract: usdc,
+        method: "approve",
+        params: [spender, amount],
+      });
+
+      await sendTransaction({
+        account: account!,
+        transaction: tx,
+      });
+    }
+  }
 
   async function mintGenesis(
     address: `0x${string}`,
-    svgParams: any,
+    avatar: ReturnType<typeof generateRandomAvatarAttributes>,
     amount: bigint,
-    paymentToken: `0x${string}` | null,
-    options?: BaseTransactionOptions
+    paymentToken: `0x${string}` | null
   ) {
     if (!contract) throw new Error("Contract not initialized");
-    const prepared = await prepareContractCall({
+
+    const svgParams = toSVGParamsFromAvatar(avatar);
+
+    if (paymentToken) {
+      const priceUsd18 = await getMintPrice();
+      const totalPrice = (priceUsd18 ?? BigInt(0)) * amount;
+      await approveToken(
+        account!.address as `0x${string}`,
+        contract.address as `0x${string}`,
+        totalPrice,
+        chain
+      );
+    }
+
+    const txRequest = await prepareContractCall({
       contract,
-      method:
-        "function mintGenesis(address to, string[] memory svgParams, uint256 amount, address paymentToken) returns (uint256)",
+      method: "mintGenesis",
       params: [
         address,
-        Object.values(svgParams) as string[],
+        svgParams as any,
         amount,
         paymentToken ?? USDC_ADDRESS[chain?.id!],
       ],
       value: paymentToken ? BigInt(0) : amount,
-      ...options,
     });
     return sendTransaction({
       account: account!,
-      transaction: prepared,
-    }) as Promise<PreparedTransaction>;
+      transaction: txRequest,
+    });
   }
 
   async function mintBridgeToken(
     address: `0x${string}`,
     tokenId: bigint,
-    svgParams: any,
+    avatar: ReturnType<typeof generateRandomAvatarAttributes>,
     originChainId: bigint,
     options?: BaseTransactionOptions
   ) {
     if (!contract) throw new Error("Contract not initialized");
+
+    const svgParams = toSVGParamsFromAvatar(avatar as any);
+
     const prepared = await prepareContractCall({
       contract,
       method:
@@ -313,7 +338,7 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
       params: [
         address,
         tokenId,
-        Object.values(svgParams) as string[],
+        svgParams as unknown as string[],
         originChainId,
       ],
       ...options,

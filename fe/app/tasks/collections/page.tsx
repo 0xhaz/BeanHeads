@@ -148,6 +148,7 @@ const MyCollections = () => {
       const total = Number(supply ?? 0);
       let need = Number(ownedCount ?? 0);
       const out: OwnedNFT[] = [];
+      console.log("Total Supply:", total, "Owned Count:", need);
       if (total === 0 || need === 0) {
         setItems([]);
         setLoading(false);
