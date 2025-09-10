@@ -94,6 +94,10 @@ type BeanHeadsCtx = {
   name: () => Promise<string>;
   symbol: () => Promise<string>;
   getOwnerOf: (tokenId: bigint) => Promise<`0x${string}`>;
+  getPriceFeed: (token: `0x${string}`) => Promise<`0x${string}`>;
+  getGeneration: (tokenId: bigint) => Promise<bigint>;
+  getOwnerTokens: (owner: `0x${string}`) => Promise<bigint[]>;
+  getAuthorizedBreeders: (address: `0x${string}`) => Promise<`0x${string}`[]>;
 };
 
 const Ctx = createContext<BeanHeadsCtx | null>(null);
@@ -166,10 +170,10 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     try {
       const attr = await readContract({
         contract,
-        method:
-          "function getAttributesByOwner(address owner, uint256 tokenId) view returns (string[] memory)",
+        method: "getAttributesByOwner",
         params: [owner, tokenId],
       });
+      console.log("Attributes by Owner:", attr);
       return attr as string[];
     } catch (error) {
       console.error("Error fetching attributes:", error);
@@ -431,12 +435,54 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  function getOwnerOf(tokenId: bigint) {
+  async function getOwnerOf(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    let owner = await readContract({
+      contract,
+      method: "getOwnerOf",
+      params: [tokenId],
+    });
+    return owner as `0x${string}`;
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                             BREEDER FACET
+  //////////////////////////////////////////////////////////////*/
+
+  async function getAuthorizedBreeders(address: `0x${string}`) {
     if (!contract) throw new Error("Contract not initialized");
     return readContract({
       contract,
-      method: "function ownerOf(uint256 tokenId) view returns (address)",
+      method: "getAuthorizedBreeders",
+      params: [address],
+    }) as Promise<`0x${string}`[]>;
+  }
+
+  async function getGeneration(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "getGeneration",
       params: [tokenId],
+    }) as Promise<bigint>;
+  }
+
+  async function getOwnerTokens(owner: `0x${string}`) {
+    if (!contract) throw new Error("Contract not initialized");
+    const tokens = await readContract({
+      contract,
+      method: "getOwnerTokens",
+      params: [owner],
+    });
+    return tokens as bigint[];
+  }
+
+  async function getPriceFeed(token: `0x${string}`) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "getPriceFeed",
+      params: [token],
     }) as Promise<`0x${string}`>;
   }
 
@@ -463,6 +509,10 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     name,
     symbol,
     getOwnerOf,
+    getPriceFeed,
+    getGeneration,
+    getOwnerTokens,
+    getAuthorizedBreeders,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

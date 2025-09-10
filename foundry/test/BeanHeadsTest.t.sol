@@ -43,7 +43,7 @@ contract BeanHeadsTest is Test, Helpers {
     address deployerAddress;
 
     string public expectedTokenURI =
-        "data:application/json;base64,eyJuYW1lIjoiQmVhbkhlYWRzICMwIiwiZGVzY3JpcHRpb24iOiJCZWFuSGVhZHMgaXMgYSBjdXN0b21pemFibGUgYXZhdGFyIG9uLWNoYWluIE5GVCBjb2xsZWN0aW9uIiwiaW1hZ2UiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBMU1EQWdOVEF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlOVEF3SWlCb1pXbG5hSFE5SWpVd01DSWdabWxzYkQwaUF5SXZQangwWlhoMElIZzlJalV3SlNJZ2VUMGlOVEFsSWlCa2IyMXBibUZ1ZEMxaVlYTmxiR2x1WlQwaWJXbGtaR3hsSWlCMFpYaDBMV0Z1WTJodmNqMGliV2xrWkd4bElpQm1iMjUwTFhOcGVtVTlJakkwSWo1Q1pXRnVTR1ZoWkhNZ1FYWmhkR0Z5UEM5MFpYaDBQand2YzNablBnPT0iLCJhdHRyaWJ1dGVzIjpbeyJ0cmFpdF90eXBlIjogIkhhaXIgU3R5bGUiLCAidmFsdWUiOiAiQWZybyJ9LHsidHJhaXRfdHlwZSI6ICJIYWlyIENvbG9yIiwgInZhbHVlIjogIkJsb25kZSJ9LHsidHJhaXRfdHlwZSI6ICJBY2Nlc3NvcnkiLCAidmFsdWUiOiAiUm91bmQgR2xhc3NlcyJ9LHsidHJhaXRfdHlwZSI6ICJIYXQgU3R5bGUiLCAidmFsdWUiOiAiQmVhbmllIn0seyJ0cmFpdF90eXBlIjogIkhhdCBDb2xvciIsICJ2YWx1ZSI6ICJHcmVlbiJ9LHsidHJhaXRfdHlwZSI6ICJCb2R5IFR5cGUiLCAidmFsdWUiOiAiQnJlYXN0In0seyJ0cmFpdF90eXBlIjogIlNraW4gQ29sb3IiLCAidmFsdWUiOiAiRGFyayBTa2luIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMiLCAidmFsdWUiOiAiVC1TaGlydCJ9LHsidHJhaXRfdHlwZSI6ICJDbG90aGVzIENvbG9yIiwgInZhbHVlIjogIldoaXRlIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMgR3JhcGhpYyIsICJ2YWx1ZSI6ICJHcmFwaHFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZWJyb3cgU2hhcGUiLCAidmFsdWUiOiAiTm9ybWFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZSBTaGFwZSIsICJ2YWx1ZSI6ICJOb3JtYWwifSx7InRyYWl0X3R5cGUiOiAiRmFjaWFsIEhhaXIgVHlwZSIsICJ2YWx1ZSI6ICJTdHViYmxlIn0seyJ0cmFpdF90eXBlIjogIk1vdXRoIFN0eWxlIiwgInZhbHVlIjogIkxpcHMifSx7InRyYWl0X3R5cGUiOiAiTGlwIENvbG9yIiwgInZhbHVlIjogIlB1cnBsZSJ9LHsidHJhaXRfdHlwZSI6ICJMYXNoZXMiLCAidmFsdWUiOiAidHJ1ZSJ9LHsidHJhaXRfdHlwZSI6ICJHZW5lcmF0aW9uIiwgInZhbHVlIjogIjEifV19";
+        "data:application/json;base64,eyJuYW1lIjoiQmVhbkhlYWRzICMwIiwiZGVzY3JpcHRpb24iOiJCZWFuSGVhZHMgaXMgYSBjdXN0b21pemFibGUgYXZhdGFyIG9uLWNoYWluIE5GVCBjb2xsZWN0aW9uIiwiaW1hZ2UiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBMU1EQWdOVEF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlOVEF3SWlCb1pXbG5hSFE5SWpVd01DSWdabWxzYkQwaUF5SXZQangwWlhoMElIZzlJalV3SlNJZ2VUMGlOVEFsSWlCa2IyMXBibUZ1ZEMxaVlYTmxiR2x1WlQwaWJXbGtaR3hsSWlCMFpYaDBMV0Z1WTJodmNqMGliV2xrWkd4bElpQm1iMjUwTFhOcGVtVTlJakkwSWo1Q1pXRnVTR1ZoWkhNZ1FYWmhkR0Z5UEM5MFpYaDBQand2YzNablBnPT0iLCJhdHRyaWJ1dGVzIjpbeyJ0cmFpdF90eXBlIjogIkhhaXIgU3R5bGUiLCAidmFsdWUiOiAiQWZybyJ9LHsidHJhaXRfdHlwZSI6ICJIYWlyIENvbG9yIiwgInZhbHVlIjogIkJsb25kZSJ9LHsidHJhaXRfdHlwZSI6ICJBY2Nlc3NvcnkiLCAidmFsdWUiOiAiUm91bmQgR2xhc3NlcyJ9LHsidHJhaXRfdHlwZSI6ICJIYXQgU3R5bGUiLCAidmFsdWUiOiAiQmVhbmllIn0seyJ0cmFpdF90eXBlIjogIkhhdCBDb2xvciIsICJ2YWx1ZSI6ICJHcmVlbiJ9LHsidHJhaXRfdHlwZSI6ICJCb2R5IFR5cGUiLCAidmFsdWUiOiAiQnJlYXN0In0seyJ0cmFpdF90eXBlIjogIlNraW4gQ29sb3IiLCAidmFsdWUiOiAiRGFyayBTa2luIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMiLCAidmFsdWUiOiAiVC1TaGlydCJ9LHsidHJhaXRfdHlwZSI6ICJDbG90aGVzIENvbG9yIiwgInZhbHVlIjogIldoaXRlIn0seyJ0cmFpdF90eXBlIjogIkNsb3RoZXMgR3JhcGhpYyIsICJ2YWx1ZSI6ICJHcmFwaHFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZWJyb3cgU2hhcGUiLCAidmFsdWUiOiAiTm9ybWFsIn0seyJ0cmFpdF90eXBlIjogIkV5ZSBTaGFwZSIsICJ2YWx1ZSI6ICJOb3JtYWwifSx7InRyYWl0X3R5cGUiOiAiRmFjaWFsIEhhaXIgVHlwZSIsICJ2YWx1ZSI6ICJTdHViYmxlIn0seyJ0cmFpdF90eXBlIjogIk1vdXRoIFN0eWxlIiwgInZhbHVlIjogIkxpcHMifSx7InRyYWl0X3R5cGUiOiAiTGlwIENvbG9yIiwgInZhbHVlIjogIlB1cnBsZSJ9LHsidHJhaXRfdHlwZSI6ICJTaGFwZXMiLCAidmFsdWUiOiAidHJ1ZSJ9LHsidHJhaXRfdHlwZSI6ICJTaGFwZSBDb2xvciIsICJ2YWx1ZSI6ICJCbHVlIn0seyJ0cmFpdF90eXBlIjogIkxhc2hlcyIsICJ2YWx1ZSI6ICJ0cnVlIn0seyJ0cmFpdF90eXBlIjogIkdlbmVyYXRpb24iLCAidmFsdWUiOiAiMSJ9XX0=";
 
     event Transfer(address indexed from, address indexed to, uint256 tokenId);
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);
@@ -184,7 +184,7 @@ contract BeanHeadsTest is Test, Helpers {
         // SVG param validation
         Genesis.SVGParams memory svgParams = beanHeads.getAttributesByTokenId(tokenId);
         string memory svgStr = helpers.getParams(svgParams);
-        assertEq(svgStr, "11312352113003113falsefalsetrue");
+        assertEq(svgStr, "11312352113003113falsetruetrue");
 
         assertEq(svgParams.accessoryParams.accessoryId, 1);
         assertEq(svgParams.bodyParams.bodyType, 1);
@@ -204,7 +204,7 @@ contract BeanHeadsTest is Test, Helpers {
         assertEq(svgParams.facialFeaturesParams.lipColor, 1);
         assertEq(svgParams.otherParams.faceMaskColor, 3);
         assertEq(svgParams.otherParams.faceMask, false);
-        assertEq(svgParams.otherParams.shapes, false);
+        assertEq(svgParams.otherParams.shapes, true);
         assertEq(svgParams.otherParams.lashes, true);
 
         vm.stopPrank();
@@ -413,7 +413,11 @@ contract BeanHeadsTest is Test, Helpers {
 
         Genesis.SVGParams memory fetchedParams = beanHeads.getAttributesByTokenId(tokenId);
         string memory paramsStr = helpers.getParams(fetchedParams);
-        assertEq(paramsStr, "11312352113003113falsefalsetrue");
+        assertEq(paramsStr, "11312352113003113falsetruetrue");
+
+        Genesis.SVGParams memory ownerParams = beanHeads.getAttributesByOwner(breeder, tokenId);
+        string memory ownerParamsStr = helpers.getParams(ownerParams);
+        assertEq(ownerParamsStr, "11312352113003113falsetruetrue");
 
         vm.stopPrank();
     }
