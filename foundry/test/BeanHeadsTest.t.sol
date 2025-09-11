@@ -415,7 +415,7 @@ contract BeanHeadsTest is Test, Helpers {
         string memory paramsStr = helpers.getParams(fetchedParams);
         assertEq(paramsStr, "11312352113003113falsetruetrue");
 
-        Genesis.SVGParams memory ownerParams = beanHeads.getAttributesByOwner(breeder, tokenId);
+        Genesis.SVGParams memory ownerParams = beanHeads.getAttributesByOwner(USER, tokenId);
         string memory ownerParamsStr = helpers.getParams(ownerParams);
         assertEq(ownerParamsStr, "11312352113003113falsetruetrue");
 

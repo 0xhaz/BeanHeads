@@ -15,7 +15,6 @@ import {IBeanHeadsMint} from "src/interfaces/IBeanHeadsMint.sol";
 import {OracleLib} from "src/libraries/OracleLib.sol";
 import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
 
-
 contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     using SafeERC20 for IERC20;
     using OracleLib for AggregatorV3Interface;

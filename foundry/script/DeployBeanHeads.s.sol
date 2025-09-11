@@ -129,7 +129,7 @@ contract DeployBeanHeads is Script {
         // ---------------------- View Facet ----------------------
         {
             BeanHeadsViewFacet facet = new BeanHeadsViewFacet();
-            bytes4[] memory selectors = new bytes4[](9);
+            bytes4[] memory selectors = new bytes4[](10);
             selectors[0] = facet.tokenURI.selector;
             selectors[1] = facet.getAttributesByTokenId.selector;
             selectors[2] = facet.getAttributesByOwner.selector;
@@ -139,6 +139,7 @@ contract DeployBeanHeads is Script {
             selectors[6] = facet.isBridgeAuthorized.selector;
             selectors[7] = facet.isTokenLocked.selector;
             selectors[8] = facet.getOriginChainId.selector;
+            selectors[9] = facet.getOwnedTokenIds.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
         // ---------------------- Diamond Loupe Facet ----------------------

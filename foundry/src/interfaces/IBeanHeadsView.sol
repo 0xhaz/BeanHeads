@@ -68,6 +68,13 @@ interface IBeanHeadsView {
     function isTokenLocked(uint256 tokenId) external view returns (bool);
 
     /**
+     * @notice Returns the list of token IDs owned by a specified address
+     * @param _owner The address to query for owned tokens
+     * @return An array of token IDs owned by the specified address
+     */
+    function getOwnedTokenIds(address _owner) external view returns (uint256[] memory);
+
+    /**
      * @notice Returns the origin chain ID of a token
      * @param tokenId The ID of the token
      * @return The origin chain ID as a uint256

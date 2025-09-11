@@ -52,11 +52,18 @@ contract BeanHeadsViewFacet is ERC721AUpgradeable, IBeanHeadsView {
         returns (Genesis.SVGParams memory)
     {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
-        if (msg.sender != _owner) {
+
+        if (_owner != _ownerOf(_tokenId)) {
             _revert(IBeanHeadsView__NotOwner.selector);
         }
 
         return ds.tokenIdToParams[_tokenId];
+    }
+
+    /// @inheritdoc IBeanHeadsView
+    function getOwnedTokenIds(address _owner) external view returns (uint256[] memory) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.ownerTokens[_owner];
     }
 
     /// @inheritdoc IBeanHeadsView
