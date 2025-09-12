@@ -1,19 +1,20 @@
 import { sepolia, arbitrumSepolia, optimismSepolia } from "thirdweb/chains";
+import { BeanHeads, USDC, LINK } from "@/app/contracts/BeanHeads-address.json";
 
 export const BEANHEADS_ADDRESS: Record<number, `0x${string}`> = {
-  [sepolia.id]: "0x717ad726c9F7e659C037518Dd11Be16DF8099F52",
-  [arbitrumSepolia.id]: "0x7A88F9f7bfb29cF50854f83394fcc02D82B16b16",
-  [optimismSepolia.id]: "0xbe42BBB87D5827c875ECFe274d13D176Cdb42E75",
+  [sepolia.id]: BeanHeads.sepolia as `0x${string}`,
+  [arbitrumSepolia.id]: BeanHeads.arbitrumSepolia as `0x${string}`,
+  [optimismSepolia.id]: BeanHeads.optimismSepolia as `0x${string}`,
 };
 
 export const USDC_ADDRESS: Record<number, `0x${string}`> = {
-  [sepolia.id]: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-  [arbitrumSepolia.id]: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
-  [optimismSepolia.id]: "0x5fd84259d66Cd46123540766Be93DFE6D43130D7",
+  [sepolia.id]: USDC.sepolia as `0x${string}`,
+  [arbitrumSepolia.id]: USDC.arbitrumSepolia as `0x${string}`,
+  [optimismSepolia.id]: USDC.optimismSepolia as `0x${string}`,
 };
 
 export const LINK_ADDRESS: Record<number, `0x${string}`> = {
-  [sepolia.id]: "0x779877A7B0D9E8603169DdbD7836e478b4624789",
-  [arbitrumSepolia.id]: "0xb1D4538B4571d411F07960EF2838Ce337FE1E80E",
-  [optimismSepolia.id]: "0x5fd84259d66Cd46123540766Be93DFE6D43130D7",
+  [sepolia.id]: LINK.sepolia as `0x${string}`,
+  [arbitrumSepolia.id]: LINK.arbitrumSepolia as `0x${string}`,
+  [optimismSepolia.id]: LINK.optimismSepolia as `0x${string}`,
 };

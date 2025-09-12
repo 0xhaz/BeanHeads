@@ -1,3 +1,4 @@
+// utils/normalizeSvgParams.ts
 import type { SVGParams } from "./avatarMapping";
 
 function toBig(v: any): bigint {
@@ -8,7 +9,7 @@ function toBig(v: any): bigint {
   throw new Error("Cannot convert to bigint: " + String(v));
 }
 
-function get(obj: any, key: string, index: number): any {
+function pick(obj: any, key: string, index: number) {
   if (obj == null) return undefined;
   if (Object.prototype.hasOwnProperty.call(obj, key)) return obj[key];
   if (Object.prototype.hasOwnProperty.call(obj, index)) return obj[index];
@@ -18,103 +19,115 @@ function get(obj: any, key: string, index: number): any {
 export function normalizeSvgParams(raw: any): SVGParams {
   if (!raw) throw new Error("normalizeSvgParams: empty value");
 
-  // Case A: already shaped (named nested keys)
+  // Already shaped with named keys?
   if (raw.hairParams && raw.bodyParams && raw.clothingParams) {
     return {
-      accessoryParams: {
-        accessoryId: toBig(raw.accessoryParams.accessoryId),
-        hatStyle: toBig(raw.accessoryParams.hatStyle),
-        hatColor: toBig(raw.accessoryParams.hatColor),
+      hairParams: {
+        hairStyle: toBig(raw.hairParams.hairStyle) as unknown as bigint,
+        hairColor: toBig(raw.hairParams.hairColor) as unknown as bigint,
       },
       bodyParams: {
-        bodyType: toBig(raw.bodyParams.bodyType),
-        skinColor: toBig(raw.bodyParams.skinColor),
+        bodyType: toBig(raw.bodyParams.bodyType) as unknown as bigint,
+        skinColor: toBig(raw.bodyParams.skinColor) as unknown as bigint,
       },
+      // IMPORTANT: clothing order = clothes, clothingColor, clothesGraphic
       clothingParams: {
-        clothes: toBig(raw.clothingParams.clothes),
-        clothesGraphic: toBig(raw.clothingParams.clothesGraphic),
-        clothingColor: toBig(raw.clothingParams.clothingColor),
-      },
-      hairParams: {
-        hairStyle: toBig(raw.hairParams.hairStyle),
-        hairColor: toBig(raw.hairParams.hairColor),
+        clothes: toBig(raw.clothingParams.clothes) as unknown as bigint,
+        clothingColor: toBig(
+          raw.clothingParams.clothingColor
+        ) as unknown as bigint,
+        clothesGraphic: toBig(
+          raw.clothingParams.clothesGraphic
+        ) as unknown as bigint,
       },
       facialFeaturesParams: {
-        eyebrowShape: toBig(raw.facialFeaturesParams.eyebrowShape),
-        eyeShape: toBig(raw.facialFeaturesParams.eyeShape),
-        facialHairType: toBig(raw.facialFeaturesParams.facialHairType),
-        mouthStyle: toBig(raw.facialFeaturesParams.mouthStyle),
-        lipColor: toBig(raw.facialFeaturesParams.lipColor),
+        eyebrowShape: toBig(
+          raw.facialFeaturesParams.eyebrowShape
+        ) as unknown as bigint,
+        eyeShape: toBig(raw.facialFeaturesParams.eyeShape) as unknown as bigint,
+        facialHairType: toBig(
+          raw.facialFeaturesParams.facialHairType
+        ) as unknown as bigint,
+        mouthStyle: toBig(
+          raw.facialFeaturesParams.mouthStyle
+        ) as unknown as bigint,
+        lipColor: toBig(raw.facialFeaturesParams.lipColor) as unknown as bigint,
       },
+      accessoryParams: {
+        accessoryId: toBig(
+          raw.accessoryParams.accessoryId
+        ) as unknown as bigint,
+        hatStyle: toBig(raw.accessoryParams.hatStyle) as unknown as bigint,
+        hatColor: toBig(raw.accessoryParams.hatColor) as unknown as bigint,
+      },
+      // IMPORTANT: other order = faceMask, faceMaskColor, shapes, shapeColor, lashes
       otherParams: {
-        shapeColor: toBig(raw.otherParams.shapeColor),
-        faceMaskColor: toBig(raw.otherParams.faceMaskColor),
         faceMask: Boolean(raw.otherParams.faceMask),
+        faceMaskColor: toBig(
+          raw.otherParams.faceMaskColor
+        ) as unknown as bigint,
         shapes: Boolean(raw.otherParams.shapes),
+        shapeColor: toBig(raw.otherParams.shapeColor) as unknown as bigint,
         lashes: Boolean(raw.otherParams.lashes),
       },
     };
   }
 
-  // Case B: viem/ethers often return tuple-like object with numeric indices
-  // or an actual array (Array.isArray(raw) === true)
-  const acc = get(raw, "accessoryParams", 0);
-  const body = get(raw, "bodyParams", 1);
-  const cloth = get(raw, "clothingParams", 2);
-  const hair = get(raw, "hairParams", 3);
-  const facial = get(raw, "facialFeaturesParams", 4);
-  const other = get(raw, "otherParams", 5);
+  // Tuple / numeric-key object case
+  const hair = pick(raw, "hairParams", 0);
+  const body = pick(raw, "bodyParams", 1);
+  const cloth = pick(raw, "clothingParams", 2);
+  const facial = pick(raw, "facialFeaturesParams", 3);
+  const acc = pick(raw, "accessoryParams", 4);
+  const other = pick(raw, "otherParams", 5);
 
-  if (!acc || !body || !cloth || !hair || !facial || !other) {
-    // Case C: you might be calling the wrong function (e.g., getAttributes returning a string)
-    if (typeof raw === "string") {
-      throw new Error(
-        "normalizeSvgParams: got a string. Did you call getAttributes (string) instead of getAttributesByOwner (struct)?"
-      );
-    }
+  if (!hair || !body || !cloth || !facial || !acc || !other) {
     console.error("normalizeSvgParams: unexpected shape:", raw);
     throw new Error("Invalid SVGParams shape from contract");
   }
 
-  const accessoryParams = {
-    accessoryId: toBig(get(acc, "accessoryId", 0)),
-    hatStyle: toBig(get(acc, "hatStyle", 1)),
-    hatColor: toBig(get(acc, "hatColor", 2)),
-  };
-  const bodyParams = {
-    bodyType: toBig(get(body, "bodyType", 0)),
-    skinColor: toBig(get(body, "skinColor", 1)),
-  };
-  const clothingParams = {
-    clothes: toBig(get(cloth, "clothes", 0)),
-    clothesGraphic: toBig(get(cloth, "clothesGraphic", 1)),
-    clothingColor: toBig(get(cloth, "clothingColor", 2)),
-  };
-  const hairParams = {
-    hairStyle: toBig(get(hair, "hairStyle", 0)),
-    hairColor: toBig(get(hair, "hairColor", 1)),
-  };
-  const facialFeaturesParams = {
-    eyebrowShape: toBig(get(facial, "eyebrowShape", 0)),
-    eyeShape: toBig(get(facial, "eyeShape", 1)),
-    facialHairType: toBig(get(facial, "facialHairType", 2)),
-    mouthStyle: toBig(get(facial, "mouthStyle", 3)),
-    lipColor: toBig(get(facial, "lipColor", 4)),
-  };
-  const otherParams = {
-    shapeColor: toBig(get(other, "shapeColor", 0)),
-    faceMaskColor: toBig(get(other, "faceMaskColor", 1)),
-    faceMask: Boolean(get(other, "faceMask", 2)),
-    shapes: Boolean(get(other, "shapes", 3)),
-    lashes: Boolean(get(other, "lashes", 4)),
-  };
-
   return {
-    accessoryParams,
-    bodyParams,
-    clothingParams,
-    hairParams,
-    facialFeaturesParams,
-    otherParams,
+    hairParams: {
+      hairStyle: toBig(pick(hair, "hairStyle", 0)) as unknown as bigint,
+      hairColor: toBig(pick(hair, "hairColor", 1)) as unknown as bigint,
+    },
+    bodyParams: {
+      bodyType: toBig(pick(body, "bodyType", 0)) as unknown as bigint,
+      skinColor: toBig(pick(body, "skinColor", 1)) as unknown as bigint,
+    },
+    // order: clothes, clothingColor, clothesGraphic
+    clothingParams: {
+      clothes: toBig(pick(cloth, "clothes", 0)) as unknown as bigint,
+      clothingColor: toBig(
+        pick(cloth, "clothingColor", 1)
+      ) as unknown as bigint,
+      clothesGraphic: toBig(
+        pick(cloth, "clothesGraphic", 2)
+      ) as unknown as bigint,
+    },
+    facialFeaturesParams: {
+      eyebrowShape: toBig(pick(facial, "eyebrowShape", 0)) as unknown as bigint,
+      eyeShape: toBig(pick(facial, "eyeShape", 1)) as unknown as bigint,
+      facialHairType: toBig(
+        pick(facial, "facialHairType", 2)
+      ) as unknown as bigint,
+      mouthStyle: toBig(pick(facial, "mouthStyle", 3)) as unknown as bigint,
+      lipColor: toBig(pick(facial, "lipColor", 4)) as unknown as bigint,
+    },
+    accessoryParams: {
+      accessoryId: toBig(pick(acc, "accessoryId", 0)) as unknown as bigint,
+      hatStyle: toBig(pick(acc, "hatStyle", 1)) as unknown as bigint,
+      hatColor: toBig(pick(acc, "hatColor", 2)) as unknown as bigint,
+    },
+    // order: faceMask, faceMaskColor, shapes, shapeColor, lashes
+    otherParams: {
+      faceMask: Boolean(pick(other, "faceMask", 0)),
+      faceMaskColor: toBig(
+        pick(other, "faceMaskColor", 1)
+      ) as unknown as bigint,
+      shapes: Boolean(pick(other, "shapes", 2)),
+      shapeColor: toBig(pick(other, "shapeColor", 3)) as unknown as bigint,
+      lashes: Boolean(pick(other, "lashes", 4)),
+    },
   };
 }

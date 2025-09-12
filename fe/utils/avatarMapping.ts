@@ -1,22 +1,11 @@
 import type { AvatarProps } from "@/components/Avatar";
 export interface SVGParams {
-  accessoryParams: {
-    accessoryId: bigint;
-    hatStyle: bigint;
-    hatColor: bigint;
-  };
-  bodyParams: {
-    bodyType: bigint;
-    skinColor: bigint;
-  };
+  hairParams: { hairStyle: bigint; hairColor: bigint };
+  bodyParams: { bodyType: bigint; skinColor: bigint };
   clothingParams: {
     clothes: bigint;
-    clothesGraphic: bigint;
     clothingColor: bigint;
-  };
-  hairParams: {
-    hairStyle: bigint;
-    hairColor: bigint;
+    clothesGraphic: bigint;
   };
   facialFeaturesParams: {
     eyebrowShape: bigint;
@@ -25,38 +14,42 @@ export interface SVGParams {
     mouthStyle: bigint;
     lipColor: bigint;
   };
+  accessoryParams: { accessoryId: bigint; hatStyle: bigint; hatColor: bigint };
   otherParams: {
-    shapeColor: bigint;
-    faceMaskColor: bigint;
     faceMask: boolean;
+    faceMaskColor: bigint;
     shapes: boolean;
+    shapeColor: bigint;
     lashes: boolean;
   };
 }
 
-export function svgParamsToAvatarProps(params: SVGParams): AvatarProps {
+export function svgParamsToAvatarProps(p: SVGParams): AvatarProps {
+  const shape = p.otherParams.shapes;
+  const mask = shape;
+
   return {
-    hairStyle: Number(params.hairParams.hairStyle),
-    hairColor: Number(params.hairParams.hairColor),
-    body: Number(params.bodyParams.bodyType),
-    facialHair: Number(params.facialFeaturesParams.facialHairType),
-    clothingStyle: Number(params.clothingParams.clothes),
-    clothingColor: Number(params.clothingParams.clothingColor),
-    hat: Number(params.accessoryParams.hatStyle),
-    eyebrows: Number(params.facialFeaturesParams.eyebrowShape),
-    eyes: Number(params.facialFeaturesParams.eyeShape),
-    mouthShape: Number(params.facialFeaturesParams.mouthStyle),
-    mouthColor: Number(params.facialFeaturesParams.lipColor),
-    accessory: Number(params.accessoryParams.accessoryId),
-    skinColor: Number(params.bodyParams.skinColor),
-    circleColor: Number(params.otherParams.shapeColor),
-    hatColor: Number(params.accessoryParams.hatColor),
-    graphic: Number(params.clothingParams.clothesGraphic),
-    faceMaskColor: Number(params.otherParams.faceMaskColor),
-    faceMask: params.otherParams.faceMask,
-    lashes: params.otherParams.lashes,
-    shape: params.otherParams.shapes,
-    mask: false, // Deprecated
+    hairStyle: Number(p.hairParams.hairStyle),
+    hairColor: Number(p.hairParams.hairColor),
+    body: Number(p.bodyParams.bodyType),
+    facialHair: Number(p.facialFeaturesParams.facialHairType),
+    clothingStyle: Number(p.clothingParams.clothes),
+    clothingColor: Number(p.clothingParams.clothingColor),
+    hat: Number(p.accessoryParams.hatStyle),
+    eyebrows: Number(p.facialFeaturesParams.eyebrowShape),
+    eyes: Number(p.facialFeaturesParams.eyeShape),
+    mouthShape: Number(p.facialFeaturesParams.mouthStyle),
+    mouthColor: Number(p.facialFeaturesParams.lipColor),
+    accessory: Number(p.accessoryParams.accessoryId),
+    skinColor: Number(p.bodyParams.skinColor),
+    circleColor: Number(p.otherParams.shapeColor),
+    hatColor: Number(p.accessoryParams.hatColor),
+    graphic: Number(p.clothingParams.clothesGraphic),
+    faceMaskColor: Number(p.otherParams.faceMaskColor),
+    faceMask: p.otherParams.faceMask,
+    lashes: p.otherParams.lashes,
+    shape,
+    mask,
   };
 }
 
@@ -86,6 +79,7 @@ export function getParamsFromAttributes(p: SVGParams): string {
     (p.otherParams.faceMask ? "true" : "false") +
     (p.otherParams.shapes ? "true" : "false") +
     (p.otherParams.lashes ? "true" : "false");
+  // (p.otherParams.mask ? "true" : "false");
 
   return part1 + part2 + part3;
 }
