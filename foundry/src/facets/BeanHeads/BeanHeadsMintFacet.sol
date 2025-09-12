@@ -75,7 +75,7 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
             ds.tokenIdToPaymentToken[currentTokenId] = _paymentToken;
             ds.tokenIdToGeneration[currentTokenId] = 1;
 
-            ds.tokenIdToOrigin[currentTokenId] = block.chainid; // Set the origin chain ID
+            ds.tokenIdToOrigin[currentTokenId] = block.chainid;
         }
 
         emit MintedGenesis(_to, _tokenId);

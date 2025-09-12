@@ -22,8 +22,8 @@ const TRAIT_MAP = {
     color: HAIR_COLORS,
   },
   body: {
-    style: BODY_TYPES,
-    color: SKIN_COLORS,
+    type: BODY_TYPES,
+    skinColor: SKIN_COLORS,
   },
   clothing: {
     style: CLOTHING_STYLES,
@@ -48,7 +48,7 @@ const TRAIT_MAP = {
     lashes: [true, false],
     shape: [true, false],
     shapeColor: BG_COLORS,
-  }, // mask not included as user-selectable
+  },
 };
 
 export const CATEGORY_MAP: Record<string, keyof typeof TRAIT_MAP> = {

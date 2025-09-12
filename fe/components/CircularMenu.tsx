@@ -55,28 +55,38 @@ const CircularMenu = ({
 
   const avatarProps = selectedAttributes
     ? {
-        hairStyle: selectedAttributes?.hair?.style ?? 0,
-        hairColor: selectedAttributes?.hair?.color ?? "brown",
-        body: selectedAttributes?.body?.style ?? 0,
-        skinColor: selectedAttributes?.body?.color ?? "light",
-        facialHair: selectedAttributes?.facialFeatures?.facialHair ?? 0,
-        clothingStyle: selectedAttributes?.clothing?.style ?? 0,
-        clothingColor: selectedAttributes?.clothing?.color ?? "blue",
-        graphic: selectedAttributes?.clothing?.graphic ?? 0,
-        eyebrows: selectedAttributes?.facialFeatures?.eyebrows ?? 0,
-        eyes: selectedAttributes?.facialFeatures?.eyes ?? 0,
-        mouthShape: selectedAttributes?.facialFeatures?.mouth ?? 0,
-        mouthColor: selectedAttributes?.facialFeatures?.lipColor ?? "red",
-        accessory: selectedAttributes?.accessories?.accessory ?? 0,
-        hat: selectedAttributes?.accessories?.hat ?? 0,
-        hatColor: selectedAttributes?.accessories?.hatColor ?? "blue",
-        faceMask: selectedAttributes?.misc?.faceMask ?? false,
-        faceMaskColor: selectedAttributes?.misc?.faceMaskColor ?? "blue",
-        mask: selectedAttributes?.misc?.shape ?? false,
-        lashes: selectedAttributes?.misc?.lashes ?? false,
-        shape: selectedAttributes?.misc?.shape ?? false,
-        circleColor:
-          selectedAttributes?.misc?.shapeColor ?? colors.bgColors.blue,
+        // hair
+        hairStyle: Number(selectedAttributes?.hair?.style ?? 0),
+        hairColor: Number(selectedAttributes?.hair?.color ?? 0),
+
+        // body
+        body: Number(selectedAttributes?.body?.type ?? 0),
+        skinColor: Number(selectedAttributes?.body?.skinColor ?? 0),
+
+        // clothing
+        clothingStyle: Number(selectedAttributes?.clothing?.style ?? 0),
+        clothingColor: Number(selectedAttributes?.clothing?.color ?? 0),
+        graphic: Number(selectedAttributes?.clothing?.graphic ?? 0),
+
+        // face features
+        eyebrows: Number(selectedAttributes?.facialFeatures?.eyebrows ?? 0),
+        eyes: Number(selectedAttributes?.facialFeatures?.eyes ?? 0),
+        facialHair: Number(selectedAttributes?.facialFeatures?.facialHair ?? 0),
+        mouthShape: Number(selectedAttributes?.facialFeatures?.mouth ?? 0),
+        mouthColor: Number(selectedAttributes?.facialFeatures?.lipColor ?? 0),
+
+        // accessories
+        accessory: Number(selectedAttributes?.accessories?.accessory ?? 0),
+        hat: Number(selectedAttributes?.accessories?.hat ?? 0),
+        hatColor: Number(selectedAttributes?.accessories?.hatColor ?? 0),
+
+        // misc (mask is derived from shapes)
+        faceMask: Boolean(selectedAttributes?.misc?.faceMask ?? false),
+        faceMaskColor: Number(selectedAttributes?.misc?.faceMaskColor ?? 0),
+        shape: Boolean(selectedAttributes?.misc?.shape ?? false),
+        circleColor: Number(selectedAttributes?.misc?.shapeColor ?? 0),
+        lashes: Boolean(selectedAttributes?.misc?.lashes ?? false),
+        mask: Boolean(selectedAttributes?.misc?.shape ?? false),
       }
     : null;
 
