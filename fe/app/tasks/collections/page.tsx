@@ -3,11 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { useBeanHeads } from "@/context/beanheads";
-import {
-  svgParamsToAvatarProps,
-  getParamsFromAttributes,
-  type SVGParams,
-} from "@/utils/avatarMapping";
+import { svgParamsToAvatarProps, type SVGParams } from "@/utils/avatarMapping";
 import { normalizeSvgParams } from "@/utils/normalizeSvgParams";
 import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
@@ -15,113 +11,139 @@ import CollectionCard from "@/components/CollectionCard";
 
 type OwnedNFT = {
   tokenId: bigint;
-  attrsRaw: string[];
-  props: ReturnType<typeof svgParamsToAvatarProps>;
-  svgParams: SVGParams;
 };
 
 const CollectionsPage = () => {
-  const { getOwnerTokens, getAttributesByOwner } = useBeanHeads();
+  const { getOwnerTokens, getAttributesByOwner, getGeneration } =
+    useBeanHeads();
   const account = useActiveAccount();
   const chain = useActiveWalletChain();
-  const [ownedNFTs, setOwnedNFTs] = useState<OwnedNFT[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingList, setLoadingList] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState<string | null>(null);
-
-  const ownerAddress = useMemo(
-    () => (account?.address ? (account.address as `0x${string}`) : undefined),
-    [account?.address]
-  );
-
-  const handleSetIsOpen = (tokenId?: string) => {
-    setIsOpen(prev => (prev === tokenId ? null : tokenId || null));
-  };
+  const [tokens, setTokens] = useState<OwnedNFT[]>([]);
+  const [detailsCache, setDetailsCache] = useState<
+    Record<string, { params: SVGParams; generation: bigint }>
+  >({});
+  const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!account?.address) return;
     (async () => {
-      const owner = account.address as `0x${string}`;
-      setLoading(true);
+      setLoadingList(true);
       setError(null);
-
-      const ids = await getOwnerTokens(owner);
-
-      const items: OwnedNFT[] = [];
-      for (const id of ids) {
-        try {
-          const raw = await getAttributesByOwner(owner, id);
-
-          let params: SVGParams;
-          if (raw) {
-            params = normalizeSvgParams(raw);
-            console.log("Normalized SVG Params:", params);
-          } else {
-            continue; // Skip this token if no valid data
-          }
-
-          const props = svgParamsToAvatarProps(params);
-          items.push({
-            tokenId: id,
-            attrsRaw: Array.isArray(raw) ? raw : [],
-            props,
-            svgParams: params,
-          });
-        } catch (err) {
-          setError(`Failed to process token ${id}. Please try again.`);
-        }
+      try {
+        const owner = account.address as `0x${string}`;
+        const ids = await getOwnerTokens(owner);
+        setTokens(ids.map(id => ({ tokenId: id })));
+      } catch (e) {
+        console.error("Error fetching owned tokens:", e);
+        setError("Failed to load your collections.");
+      } finally {
+        setLoadingList(false);
       }
-      setOwnedNFTs(items);
-      setLoading(false);
-    })().catch(err => {
-      console.error("Error fetching owned NFTs:", err);
-      setError("Failed to load your collections. Please try again.");
-      setLoading(false);
-    });
-  }, [account?.address, getOwnerTokens, getAttributesByOwner]);
+    })();
+  }, [account?.address, getOwnerTokens]);
 
-  if (!account?.address)
+  const handleOpen = async (tokenId: bigint) => {
+    const key = tokenId.toString();
+    setIsOpen(key);
+
+    if (detailsCache[key] || loadingMap[key]) return; // cached or already loading
+
+    try {
+      setLoadingMap(m => ({ ...m, [key]: true }));
+      const owner = account!.address as `0x${string}`;
+      const raw = await getAttributesByOwner(owner, tokenId);
+      if (!raw) return;
+      const params = normalizeSvgParams(raw);
+      const generation = await getGeneration(tokenId);
+      setDetailsCache(prev => ({ ...prev, [key]: { params, generation } }));
+    } catch (e) {
+      console.error("Error fetching NFT details:", e);
+    } finally {
+      setLoadingMap(m => ({ ...m, [key]: false }));
+    }
+  };
+
+  if (!account?.address) {
     return (
       <div className="p-8 text-center text-lg">
         Please connect your wallet to view your collections.
       </div>
     );
-  if (ownedNFTs.length === 0)
+  }
+
+  if (loadingList) {
+    return <div className="p-8 text-center text-lg">Loading your tokens…</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center text-red-400">{error}</div>;
+  }
+
+  if (tokens.length === 0) {
     return (
       <div className="p-8 text-center text-lg">
-        You don't own any BeanHeads yet. Mint or acquire some to see them
-        <Link href="/tasks/minter" className=" text-blue-500">
-          {" "}
-          here!
+        You do not own any BeanHeads NFTs yet.{" "}
+        <Link href="/tasks/minter" className="text-blue-500 underline">
+          Mint one now!
         </Link>
       </div>
     );
+  }
 
   return (
     <section>
       <div className="p-8 text-2xl font-bold underline">My Collections</div>
       <div className="flex flex-col p-4 gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 p-8 ">
-          {ownedNFTs.map(({ tokenId, svgParams }) => {
-            const props = svgParamsToAvatarProps(svgParams);
+          {tokens.map(({ tokenId }) => {
+            const key = tokenId.toString();
+            const cached = detailsCache[key];
+            const inFlight = !!loadingMap[key];
+            const props = cached
+              ? svgParamsToAvatarProps(cached.params)
+              : undefined;
+
             return (
               <div
-                key={tokenId.toString()}
+                key={key}
                 className="group relative h-[250px] w-[250px] rounded-3xl  border-4 border-white shadow-lg overflow-hidden"
               >
-                <Avatar {...props} />
+                {props ? (
+                  <Avatar {...props} />
+                ) : (
+                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-white/70">
+                    BeanHead #{key}
+                  </div>
+                )}
                 <div
                   className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl cursor-pointer"
-                  onClick={() => handleSetIsOpen(tokenId.toString())}
+                  onClick={() => handleOpen(tokenId)}
                 >
                   <div className="text-white text-lg font-bold">
-                    View Details
+                    {cached
+                      ? "View Details"
+                      : inFlight
+                      ? "Loading…"
+                      : "Load Details"}
                   </div>
                 </div>
-                {isOpen === tokenId.toString() && (
+
+                {isOpen === key && !cached && (
+                  <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 text-white">
+                    Loading details…
+                  </div>
+                )}
+
+                {isOpen === key && cached && (
                   <CollectionCard
-                    params={svgParams}
-                    onClose={() => handleSetIsOpen(tokenId.toString())}
+                    tokenId={tokenId}
+                    params={cached?.params}
+                    generation={cached?.generation}
+                    loading={false}
+                    onClose={() => setIsOpen(null)}
                   />
                 )}
               </div>

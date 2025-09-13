@@ -77,14 +77,14 @@ export const mainTasks = [
     id: "minter",
     title: "Mint",
     image: "/images/mint.svg",
-    description: "Create your own custom NFT like a true artist",
+    description: "Create your own NFT like a true artist",
     color: "#ffda6e",
   },
   {
     id: "breeder",
     title: "Breeder",
     image: "/images/breeder.svg",
-    description: "Breed your BeanHeads and gain unique traits",
+    description: "Breed your NFT and gain unique traits",
     color: "#e5d0ff",
   },
   {
