@@ -13,5 +13,10 @@
     "sepolia": "0x779877A7B0D9E8603169DdbD7836e478b4624789",
     "arbitrumSepolia": "0xb1D4538B4571d411F07960EF2838Ce337FE1E80E",
     "optimismSepolia": "0x5fd84259d66Cd46123540766Be93DFE6D43130D7"
+  },
+  "AggregatatorV3Interface": {
+    "sepolia": "0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E",
+    "arbitrumSepolia": "0x0153002d20B96532C639313c2d54c3dA09109309",
+    "optimismSepolia": "0x6e44e50E3cc14DD16e01C590DC1d7020cb36eD4C"
   }
 }

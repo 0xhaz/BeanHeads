@@ -1,4 +1,5 @@
 import type { AvatarProps } from "@/components/Avatar";
+
 export interface SVGParams {
   hairParams: { hairStyle: bigint; hairColor: bigint };
   bodyParams: { bodyType: bigint; skinColor: bigint };
@@ -24,7 +25,58 @@ export interface SVGParams {
   };
 }
 
-export function svgParamsToAvatarProps(p: SVGParams): AvatarProps {
+/** Safe defaults to guarantee shape */
+const DEF: SVGParams = {
+  hairParams: { hairStyle: BigInt(0), hairColor: BigInt(0) },
+  bodyParams: { bodyType: BigInt(0), skinColor: BigInt(0) },
+  clothingParams: {
+    clothes: BigInt(0),
+    clothingColor: BigInt(0),
+    clothesGraphic: BigInt(0),
+  },
+  facialFeaturesParams: {
+    eyebrowShape: BigInt(0),
+    eyeShape: BigInt(0),
+    facialHairType: BigInt(0),
+    mouthStyle: BigInt(0),
+    lipColor: BigInt(0),
+  },
+  accessoryParams: {
+    accessoryId: BigInt(0),
+    hatStyle: BigInt(0),
+    hatColor: BigInt(0),
+  },
+  otherParams: {
+    faceMask: false,
+    faceMaskColor: BigInt(0),
+    shapes: false,
+    shapeColor: BigInt(0),
+    lashes: false,
+  },
+};
+
+/** Merge helper that fills missing nested keys with defaults (handles undefined safely) */
+function fillDefaults(p?: Partial<SVGParams> | SVGParams): SVGParams {
+  const src = (p ?? {}) as any;
+  return {
+    hairParams: { ...DEF.hairParams, ...(src.hairParams ?? {}) },
+    bodyParams: { ...DEF.bodyParams, ...(src.bodyParams ?? {}) },
+    clothingParams: { ...DEF.clothingParams, ...(src.clothingParams ?? {}) },
+    facialFeaturesParams: {
+      ...DEF.facialFeaturesParams,
+      ...(src.facialFeaturesParams ?? {}),
+    },
+    accessoryParams: { ...DEF.accessoryParams, ...(src.accessoryParams ?? {}) },
+    otherParams: { ...DEF.otherParams, ...(src.otherParams ?? {}) },
+  };
+}
+
+/** Safe converter; accepts possibly-undefined/partial input */
+export function svgParamsToAvatarProps(
+  _p?: Partial<SVGParams> | SVGParams
+): AvatarProps {
+  const p = fillDefaults(_p);
+
   const shape = p.otherParams.shapes;
   const mask = shape;
 
@@ -46,14 +98,18 @@ export function svgParamsToAvatarProps(p: SVGParams): AvatarProps {
     hatColor: Number(p.accessoryParams.hatColor),
     graphic: Number(p.clothingParams.clothesGraphic),
     faceMaskColor: Number(p.otherParams.faceMaskColor),
-    faceMask: p.otherParams.faceMask,
-    lashes: p.otherParams.lashes,
+    faceMask: !!p.otherParams.faceMask,
+    lashes: !!p.otherParams.lashes,
     shape,
     mask,
   };
 }
 
-export function getParamsFromAttributes(p: SVGParams): string {
+export function getParamsFromAttributes(
+  _p?: Partial<SVGParams> | SVGParams
+): string {
+  const p = fillDefaults(_p);
+
   const part1 =
     p.accessoryParams.accessoryId.toString() +
     p.bodyParams.bodyType.toString() +
@@ -79,7 +135,6 @@ export function getParamsFromAttributes(p: SVGParams): string {
     (p.otherParams.faceMask ? "true" : "false") +
     (p.otherParams.shapes ? "true" : "false") +
     (p.otherParams.lashes ? "true" : "false");
-  // (p.otherParams.mask ? "true" : "false");
 
   return part1 + part2 + part3;
 }

@@ -56,27 +56,29 @@ const CollectionCard = ({
         <div className="flex-shrink-0 w-full lg:w-1/3 flex justify-center">
           <div className="w-[300px] h-[300px] border-4 border-white rounded-3xl overflow-hidden bg-white">
             <Avatar
-              hairStyle={Number(params.hairParams.hairStyle)}
-              hairColor={Number(params.hairParams.hairColor)}
-              body={Number(params.bodyParams.bodyType)}
-              facialHair={Number(params.facialFeaturesParams.facialHairType)}
-              clothingStyle={Number(params.clothingParams.clothes)}
-              clothingColor={Number(params.clothingParams.clothingColor)}
-              hat={Number(params.accessoryParams.hatStyle)}
-              eyebrows={Number(params.facialFeaturesParams.eyebrowShape)}
-              eyes={Number(params.facialFeaturesParams.eyeShape)}
-              mouthShape={Number(params.facialFeaturesParams.mouthStyle)}
-              mouthColor={Number(params.facialFeaturesParams.lipColor)}
-              accessory={Number(params.accessoryParams.accessoryId)}
-              skinColor={Number(params.bodyParams.skinColor)}
-              hatColor={Number(params.accessoryParams.hatColor)}
-              graphic={Number(params.clothingParams.clothesGraphic)}
-              faceMaskColor={Number(params.otherParams.faceMaskColor)}
-              circleColor={Number(params.otherParams.shapeColor)}
-              mask={params.otherParams.shapes}
-              faceMask={params.otherParams.faceMask}
-              lashes={params.otherParams.lashes}
-              shape={params.otherParams.shapes}
+              hairStyle={Number(params?.hairParams?.hairStyle ?? 0)}
+              hairColor={Number(params?.hairParams?.hairColor ?? 0)}
+              body={Number(params?.bodyParams?.bodyType ?? 0)}
+              facialHair={Number(
+                params?.facialFeaturesParams?.facialHairType ?? 0
+              )}
+              clothingStyle={Number(params?.clothingParams?.clothes ?? 0)}
+              clothingColor={Number(params?.clothingParams?.clothingColor ?? 0)}
+              hat={Number(params?.accessoryParams?.hatStyle ?? 0)}
+              eyebrows={Number(params?.facialFeaturesParams?.eyebrowShape ?? 0)}
+              eyes={Number(params?.facialFeaturesParams?.eyeShape ?? 0)}
+              mouthShape={Number(params?.facialFeaturesParams?.mouthStyle ?? 0)}
+              mouthColor={Number(params?.facialFeaturesParams?.lipColor ?? 0)}
+              accessory={Number(params?.accessoryParams?.accessoryId ?? 0)}
+              skinColor={Number(params?.bodyParams?.skinColor ?? 0)}
+              hatColor={Number(params?.accessoryParams?.hatColor ?? 0)}
+              graphic={Number(params?.clothingParams?.clothesGraphic ?? 0)}
+              faceMaskColor={Number(params?.otherParams?.faceMaskColor ?? 0)}
+              circleColor={Number(params?.otherParams?.shapeColor ?? 0)}
+              mask={params?.otherParams?.shapes ?? false}
+              faceMask={params?.otherParams?.faceMask ?? false}
+              lashes={params?.otherParams?.lashes ?? false}
+              shape={params?.otherParams?.shapes ?? false}
             />
           </div>
         </div>
@@ -97,37 +99,47 @@ const CollectionCard = ({
             <div>
               <h3 className="text-lg font-bold underline mb-2">Hair</h3>
               <p>
-                Style: {labelFrom(HAIR_STYLES, params?.hairParams.hairStyle)}
+                Style:{" "}
+                {labelFrom(HAIR_STYLES, params?.hairParams?.hairStyle ?? 0)}
               </p>
               <p>
-                Color: {labelFrom(HAIR_COLORS, params.hairParams.hairColor)}
+                Color:{" "}
+                {labelFrom(HAIR_COLORS, params?.hairParams?.hairColor ?? 0)}
               </p>
             </div>
 
             <div>
               <h3 className="text-lg font-bold underline mb-2">Body</h3>
-              <p>Type: {labelFrom(BODY_TYPES, params.bodyParams.bodyType)}</p>
-              <p>Skin: {labelFrom(SKIN_COLORS, params.bodyParams.skinColor)}</p>
+              <p>
+                Type: {labelFrom(BODY_TYPES, params?.bodyParams?.bodyType ?? 0)}
+              </p>
+              <p>
+                Skin:{" "}
+                {labelFrom(SKIN_COLORS, params?.bodyParams?.skinColor ?? 0)}
+              </p>
             </div>
 
             <div>
               <h3 className="text-lg font-bold underline mb-2">Clothing</h3>
               <p>
                 Style:{" "}
-                {labelFrom(CLOTHING_STYLES, params.clothingParams.clothes)}
+                {labelFrom(
+                  CLOTHING_STYLES,
+                  params?.clothingParams?.clothes ?? 0
+                )}
               </p>
               <p>
                 Color:{" "}
                 {labelFrom(
                   CLOTHING_COLORS,
-                  params.clothingParams.clothingColor
+                  params?.clothingParams?.clothingColor ?? 0
                 )}
               </p>
               <p>
                 Graphic:{" "}
                 {labelFrom(
                   CLOTHING_GRAPHICS,
-                  params.clothingParams.clothesGraphic
+                  params?.clothingParams?.clothesGraphic ?? 0
                 )}
               </p>
             </div>
@@ -138,46 +150,55 @@ const CollectionCard = ({
                 Eyebrows:{" "}
                 {labelFrom(
                   EYEBROW_SHAPES,
-                  params.facialFeaturesParams.eyebrowShape
+                  params?.facialFeaturesParams?.eyebrowShape ?? 0
                 )}
               </p>
               <p>
                 Eyes:{" "}
-                {labelFrom(EYE_SHAPES, params.facialFeaturesParams.eyeShape)}
+                {labelFrom(
+                  EYE_SHAPES,
+                  params?.facialFeaturesParams?.eyeShape ?? 0
+                )}
               </p>
               <p>
                 Facial Hair:{" "}
                 {labelFrom(
                   FACIAL_HAIR_STYLES,
-                  params.facialFeaturesParams.facialHairType
+                  params?.facialFeaturesParams?.facialHairType ?? 0
                 )}
               </p>
               <p>
                 Mouth:{" "}
                 {labelFrom(
                   MOUTH_SHAPES,
-                  params.facialFeaturesParams.mouthStyle
+                  params?.facialFeaturesParams?.mouthStyle ?? 0
                 )}
               </p>
               <p>
                 Lips Color:{" "}
-                {labelFrom(LIP_COLORS, params.facialFeaturesParams.lipColor)}
+                {labelFrom(
+                  LIP_COLORS,
+                  params?.facialFeaturesParams?.lipColor ?? 0
+                )}
               </p>
             </div>
 
             <div>
               <h3 className="text-lg font-bold underline mb-2">Misc</h3>
-              <p>Face Mask: {params.otherParams.faceMask ? "Yes" : "No"}</p>
+              <p>Face Mask: {params?.otherParams?.faceMask ? "Yes" : "No"}</p>
               <p>
                 Face Mask Color:{" "}
-                {labelFrom(CLOTHING_COLORS, params.otherParams.faceMaskColor)}
+                {labelFrom(
+                  CLOTHING_COLORS,
+                  params?.otherParams?.faceMaskColor ?? 0
+                )}
               </p>
-              <p>Shapes: {params.otherParams.shapes ? "Yes" : "No"}</p>
+              <p>Shapes: {params?.otherParams?.shapes ? "Yes" : "No"}</p>
               <p>
                 Shape Color:{" "}
-                {labelFrom(BG_COLORS, params.otherParams.shapeColor)}
+                {labelFrom(BG_COLORS, params?.otherParams?.shapeColor ?? 0)}
               </p>
-              <p>Lashes: {params.otherParams.lashes ? "Yes" : "No"}</p>
+              <p>Lashes: {params?.otherParams?.lashes ? "Yes" : "No"}</p>
             </div>
 
             <div>
