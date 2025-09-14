@@ -11,6 +11,7 @@ import {AggregatorV3Interface} from
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsMarketplace} from "src/interfaces/IBeanHeadsMarketplace.sol";
@@ -19,6 +20,7 @@ import {ReentrancyLib} from "src/libraries/ReentrancyLib.sol";
 
 contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
     using SafeERC20 for IERC20;
+    using EnumerableSet for EnumerableSet.UintSet;
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
     //////////////////////////////////////////////////////////////*/
@@ -51,6 +53,8 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         safeTransferFrom(msg.sender, address(this), _tokenId);
 
         ds.tokenIdToListing[_tokenId] = BHStorage.Listing({seller: msg.sender, price: _price, isActive: true});
+
+        ds.activeListings.add(_tokenId);
 
         emit SetTokenPrice(msg.sender, _tokenId, _price);
     }
@@ -101,9 +105,10 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         ds.tokenIdToPaymentToken[_tokenId] = _paymentToken;
         _safeTransfer(address(this), _buyer, _tokenId, "");
 
-        emit TokenSold(_buyer, listing.seller, _tokenId, adjustedPrice);
-
         ds.tokenIdToListing[_tokenId] = BHStorage.Listing({seller: address(0), price: 0, isActive: false});
+        ds.activeListings.remove(_tokenId);
+
+        emit TokenSold(_buyer, listing.seller, _tokenId, adjustedPrice);
     }
 
     /// @inheritdoc IBeanHeadsMarketplace
@@ -126,6 +131,7 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
 
     /// @inheritdoc IBeanHeadsMarketplace
     function cancelTokenSale(uint256 _tokenId) external tokenExists(_tokenId) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
         BHStorage.Listing storage listing = _getListing(_tokenId);
 
         if (msg.sender != listing.seller) _revert(IBeanHeadsMarketplace__NotOwner.selector);
@@ -138,6 +144,8 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         listing.isActive = false;
         listing.price = 0;
         listing.seller = address(0);
+
+        ds.activeListings.remove(_tokenId);
 
         emit TokenSaleCancelled(msg.sender, _tokenId);
     }
@@ -180,6 +188,12 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
     {
         BHStorage.Listing storage listing = _getListing(_tokenId);
         return (listing.seller, listing.price, listing.isActive);
+    }
+
+    /// @inheritdoc IBeanHeadsMarketplace
+    function getAllActiveSaleTokens() external view returns (uint256[] memory) {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        return ds.activeListings.values();
     }
 
     /// @notice Inherits from IERC721Receiver interface

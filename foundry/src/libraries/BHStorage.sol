@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Genesis} from "src/types/Genesis.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {IDiamondCut} from "src/interfaces/IDiamondCut.sol";
@@ -72,6 +73,7 @@ library BHStorage {
         mapping(uint256 tokenId => uint256 chainId) tokenIdToOrigin;
         mapping(address remoteBridges => bool isBridge) authorizedBridges;
         mapping(uint64 chainSelector => address remoteBridge) remoteBridges;
+        EnumerableSet.UintSet activeListings;
     }
 
     function diamondStorage() internal pure returns (BeanHeadsStorage storage ds) {

@@ -76,7 +76,7 @@ contract DeployBeanHeads is Script {
         // ---------------------- Marketplace Facet ----------------------
         {
             BeanHeadsMarketplaceFacet facet = new BeanHeadsMarketplaceFacet();
-            bytes4[] memory selectors = new bytes4[](11);
+            bytes4[] memory selectors = new bytes4[](12);
             selectors[0] = facet.sellToken.selector;
             selectors[1] = facet.buyToken.selector;
             selectors[2] = facet.cancelTokenSale.selector;
@@ -88,6 +88,7 @@ contract DeployBeanHeads is Script {
             selectors[8] = facet.batchBuyTokens.selector;
             selectors[9] = facet.batchSellTokens.selector;
             selectors[10] = facet.batchCancelTokenSales.selector;
+            selectors[11] = facet.getAllActiveSaleTokens.selector;
             diamondCut[i++] = IDiamondCut.FacetCut(address(facet), IDiamondCut.FacetCutAction.Add, selectors);
         }
         // ---------------------- Marketplace With Signature Facet ----------------------

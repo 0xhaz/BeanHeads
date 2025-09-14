@@ -10,6 +10,7 @@ import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import {IERC721A} from "ERC721A/interfaces/IERC721A.sol";
 import {ERC721PermitBase, IERC721Permit, ECDSA} from "src/abstracts/ERC721PermitBase.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsMarketplaceSig} from "src/interfaces/IBeanHeadsMarketplaceSig.sol";
 import {PermitTypes} from "src/types/PermitTypes.sol";
@@ -17,6 +18,7 @@ import {ReentrancyLib} from "src/libraries/ReentrancyLib.sol";
 
 contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplaceSig {
     using SafeERC20 for IERC20;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     /// @notice Modifier to check if the token exists
     modifier tokenExists(uint256 tokenId) {
@@ -62,6 +64,8 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         /// @dev This is a self-external call to the ERC721 contract
         IERC721A(address(this)).safeTransferFrom(s.owner, address(this), s.tokenId);
         ds.tokenIdToListing[s.tokenId] = BHStorage.Listing({seller: s.owner, price: s.price, isActive: true});
+
+        ds.activeListings.add(s.tokenId);
 
         emit TokenListedCrossChain(s.owner, s.tokenId, s.price);
     }
@@ -145,8 +149,6 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         ds.tokenIdToPaymentToken[b.tokenId] = b.paymentToken;
         _safeTransfer(address(this), b.recipient, b.tokenId, "");
 
-        emit TokenSoldCrossChain(b.recipient, listing.seller, b.tokenId, L.adjustedPrice);
-
         // Clear the listing
         listing.seller = address(0);
         listing.price = 0;
@@ -154,6 +156,10 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         unchecked {
             ds.tokenNonces[b.tokenId] = b.listingNonce + 1;
         }
+
+        ds.activeListings.remove(b.tokenId);
+
+        emit TokenSoldCrossChain(b.recipient, listing.seller, b.tokenId, L.adjustedPrice);
     }
 
     /// @inheritdoc IBeanHeadsMarketplaceSig

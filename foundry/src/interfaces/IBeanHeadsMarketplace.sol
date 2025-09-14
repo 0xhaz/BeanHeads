@@ -104,4 +104,9 @@ interface IBeanHeadsMarketplace {
      * @param _tokenIds The array of token IDs to cancel sales for
      */
     function batchCancelTokenSales(uint256[] calldata _tokenIds, address _seller) external;
+
+    /**
+     * @notice Returns all active sale tokens
+     */
+    function getAllActiveSaleTokens() external view returns (uint256[] memory);
 }
