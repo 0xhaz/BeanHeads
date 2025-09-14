@@ -93,7 +93,7 @@ const CollectionCard = ({
             </h3>
           </div>
 
-          <div className="grid grid-cols-2 gap-6 w-full text-sm">
+          <div className="grid grid-cols-2 gap-6 w-full text-sm  ">
             <div>
               <h3 className="text-lg font-bold underline mb-2">Hair</h3>
               <p>

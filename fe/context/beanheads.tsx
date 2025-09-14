@@ -98,6 +98,31 @@ type BeanHeadsCtx = {
   getGeneration: (tokenId: bigint) => Promise<bigint>;
   getOwnerTokens: (owner: `0x${string}`) => Promise<bigint[]>;
   getAuthorizedBreeders: (address: `0x${string}`) => Promise<`0x${string}`[]>;
+  sellToken: (tokenId: bigint, price: bigint) => Promise<PreparedTransaction>;
+  batchSellTokens: (
+    tokenIds: bigint[],
+    price: bigint[]
+  ) => Promise<PreparedTransaction>;
+  buyToken: (
+    buyer: `0x${string}`,
+    tokenId: bigint,
+    paymentToken: `0x${string}`
+  ) => Promise<PreparedTransaction>;
+  batchBuyTokens: (
+    buyer: `0x${string}`,
+    tokenIds: bigint[],
+    paymentToken: `0x${string}`
+  ) => Promise<PreparedTransaction>;
+  cancelTokenSale: (tokenId: bigint) => Promise<PreparedTransaction>;
+  batchCancelTokenSales: (
+    tokenIds: bigint[],
+    seller: `0x${string}`
+  ) => Promise<PreparedTransaction>;
+  getTokenSalePrice: (tokenId: bigint) => Promise<bigint>;
+  isTokenForSale: (tokenId: bigint) => Promise<boolean>;
+  getTokenSaleInfo: (
+    tokenId: bigint
+  ) => Promise<{ seller: `0x${string}`; price: bigint; isActive: boolean }>;
 };
 
 const Ctx = createContext<BeanHeadsCtx | null>(null);
@@ -486,6 +511,132 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     }) as Promise<`0x${string}`>;
   }
 
+  /*//////////////////////////////////////////////////////////////
+                           MARKETPLACE FACET
+    //////////////////////////////////////////////////////////////*/
+
+  async function sellToken(tokenId: bigint, price: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "sellToken",
+      params: [tokenId, price],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function batchSellTokens(tokenIds: bigint[], price: bigint[]) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "batchSellTokens",
+      params: [tokenIds, price],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function buyToken(
+    buyer: `0x${string}`,
+    tokenId: bigint,
+    paymentToken: `0x${string}`
+  ) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "buyToken",
+      params: [buyer, tokenId, paymentToken],
+      value: paymentToken === USDC_ADDRESS[chain?.id!] ? BigInt(0) : undefined,
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function batchBuyTokens(
+    buyer: `0x${string}`,
+    tokenIds: bigint[],
+    paymentToken: `0x${string}`
+  ) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "batchBuyTokens",
+      params: [buyer, tokenIds, paymentToken],
+      value: paymentToken === USDC_ADDRESS[chain?.id!] ? BigInt(0) : undefined,
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function cancelTokenSale(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "cancelTokenSale",
+      params: [tokenId],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function batchCancelTokenSales(
+    tokenIds: bigint[],
+    seller: `0x${string}`
+  ) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "batchCancelTokenSales",
+      params: [tokenIds, seller],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function getTokenSalePrice(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "getTokenSalePrice",
+      params: [tokenId],
+    }) as Promise<bigint>;
+  }
+
+  async function isTokenForSale(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "isTokenForSale",
+      params: [tokenId],
+    }) as Promise<boolean>;
+  }
+
+  async function getTokenSaleInfo(tokenId: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    return readContract({
+      contract,
+      method: "getTokenSaleInfo",
+      params: [tokenId],
+    }) as Promise<{
+      seller: `0x${string}`;
+      price: bigint;
+      isActive: boolean;
+    }>;
+  }
+
   const value: BeanHeadsCtx = {
     chainId: chain?.id,
     address,
@@ -513,6 +664,15 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     getGeneration,
     getOwnerTokens,
     getAuthorizedBreeders,
+    sellToken,
+    batchSellTokens,
+    buyToken,
+    batchBuyTokens,
+    cancelTokenSale,
+    batchCancelTokenSales,
+    getTokenSalePrice,
+    isTokenForSale,
+    getTokenSaleInfo,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
