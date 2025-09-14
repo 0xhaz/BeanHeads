@@ -35,7 +35,7 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
     uint256 public constant GAS_LIMIT_TRANSFER = 500_000;
     uint256 public constant GAS_LIMIT_MINT = 500_000;
     uint256 public constant GAS_LIMIT_BUY = 500_000;
-    uint256 public constant GAS_LIMIT_SELL = 500_000;
+    uint256 public constant GAS_LIMIT_SELL = 600_000;
 
     /*//////////////////////////////////////////////////////////////
                                 MAPPINGS

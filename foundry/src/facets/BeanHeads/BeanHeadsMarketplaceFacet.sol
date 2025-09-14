@@ -105,10 +105,10 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         ds.tokenIdToPaymentToken[_tokenId] = _paymentToken;
         _safeTransfer(address(this), _buyer, _tokenId, "");
 
+        emit TokenSold(_buyer, listing.seller, _tokenId, adjustedPrice);
+
         ds.tokenIdToListing[_tokenId] = BHStorage.Listing({seller: address(0), price: 0, isActive: false});
         ds.activeListings.remove(_tokenId);
-
-        emit TokenSold(_buyer, listing.seller, _tokenId, adjustedPrice);
     }
 
     /// @inheritdoc IBeanHeadsMarketplace

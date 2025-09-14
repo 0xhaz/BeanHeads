@@ -105,7 +105,7 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
             IERC721Permit(address(this)).permit(address(this), s.tokenId, permitDeadlines[i], permitSigs[i]);
         }
 
-        for (uint256 i = 0; i < sellRequests.length; i++) {
+        for (uint256 i = 0; i < sellRequests.length;) {
             PermitTypes.Sell calldata s = sellRequests[i];
             if (!_exists(s.tokenId)) continue;
 
@@ -115,6 +115,9 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
             ds.activeListings.add(s.tokenId);
 
             emit TokenListedCrossChain(s.owner, s.tokenId, s.price);
+            unchecked {
+                i++;
+            }
         }
     }
 
