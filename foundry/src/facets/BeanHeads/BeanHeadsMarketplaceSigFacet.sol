@@ -112,6 +112,7 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
             // escrow and list
             IERC721A(address(this)).transferFrom(s.owner, address(this), s.tokenId);
             ds.tokenIdToListing[s.tokenId] = BHStorage.Listing({seller: s.owner, price: s.price, isActive: true});
+            ds.activeListings.add(s.tokenId);
 
             emit TokenListedCrossChain(s.owner, s.tokenId, s.price);
         }
@@ -183,6 +184,8 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         listing.price = 0;
         listing.seller = address(0);
 
+        ds.activeListings.remove(c.tokenId);
+
         emit TokenSaleCancelledCrossChain(c.seller, c.tokenId);
 
         unchecked {
@@ -216,6 +219,8 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
             listing.isActive = false;
             listing.price = 0;
             listing.seller = address(0);
+
+            ds.activeListings.remove(c.tokenId);
 
             emit TokenSaleCancelledCrossChain(c.seller, c.tokenId);
 

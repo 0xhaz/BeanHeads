@@ -11,10 +11,12 @@ import {SafeERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IBeanHeads, IBeanHeadsMarketplace} from "src/interfaces/IBeanHeads.sol";
 
 abstract contract BeanHeadsBase is ERC721AUpgradeable {
     using SafeERC20 for IERC20;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     /// @notice Error if the token does not exist
     error IBeanHeadsBase__TokenDoesNotExist();
@@ -217,6 +219,8 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
         listing.seller = address(0);
         listing.price = 0;
         listing.isActive = false;
+
+        ds.activeListings.remove(tokenId);
     }
 
     function _handleRoyalty(uint256 tokenId, uint256 adjustedPrice, address paymentToken) internal {
@@ -238,6 +242,7 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
      */
     function _sellToken(uint256 tokenId, uint256 price, address seller) internal {
         BHStorage.Listing storage listing = _getListing(tokenId);
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
 
         if (!_exists(tokenId)) _revert(IBeanHeadsBase__TokenDoesNotExist.selector);
         if (_ownerOf(tokenId) != seller) _revert(IBeanHeadsBase__NotOwner.selector);
@@ -250,6 +255,8 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
         listing.price = price;
         listing.isActive = true;
 
+        ds.activeListings.add(tokenId);
+
         emit IBeanHeadsMarketplace.SetTokenPrice(seller, tokenId, price);
     }
 
@@ -260,6 +267,7 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
      */
     function _cancelToken(uint256 tokenId, address seller) internal {
         BHStorage.Listing storage listing = _getListing(tokenId);
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
 
         if (!_exists(tokenId)) _revert(IBeanHeadsBase__TokenDoesNotExist.selector);
         if (seller != listing.seller) _revert(IBeanHeadsBase__NotOwner.selector);
@@ -268,6 +276,8 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
         listing.seller = address(0);
         listing.price = 0;
         listing.isActive = false;
+
+        ds.activeListings.remove(tokenId);
 
         _transfer(address(this), seller, tokenId);
 
