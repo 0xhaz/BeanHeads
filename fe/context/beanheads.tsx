@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, useCallback } from "react";
 import {
   getContract,
   readContract,
@@ -123,6 +123,8 @@ type BeanHeadsCtx = {
   getTokenSaleInfo: (
     tokenId: bigint
   ) => Promise<{ seller: `0x${string}`; price: bigint; isActive: boolean }>;
+  ready: boolean;
+  getAllActiveSaleTokens: () => Promise<bigint[]>;
 };
 
 const Ctx = createContext<BeanHeadsCtx | null>(null);
@@ -180,8 +182,7 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     try {
       const attr = await readContract({
         contract,
-        method:
-          "function getAttributesByTokenId(uint256 tokenId) view returns (string[] memory)",
+        method: "getAttributesByTokenId",
         params: [tokenId],
       });
       return attr as string[];
@@ -637,6 +638,16 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     }>;
   }
 
+  const ready = !!contract;
+  const getAllActiveSaleTokens = useCallback(async () => {
+    if (!contract) return [] as bigint[];
+    return (await readContract({
+      contract,
+      method: "getAllActiveSaleTokens",
+      params: [],
+    })) as Promise<bigint[]>;
+  }, [contract]);
+
   const value: BeanHeadsCtx = {
     chainId: chain?.id,
     address,
@@ -673,6 +684,8 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     getTokenSalePrice,
     isTokenForSale,
     getTokenSaleInfo,
+    ready,
+    getAllActiveSaleTokens,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

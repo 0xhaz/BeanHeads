@@ -1,8 +1,8 @@
 {
   "BeanHeads": {
-    "sepolia": "0x51E674Cd5387fB8d49ef9Af26dcB39792D2AaDE7",
-    "arbitrumSepolia": "0x726bee03C63FA9CD07a664Cc5e79430E2CbB5C33",
-    "optimismSepolia": "0xe8b4dA33EA3f8c61785E0580614b3F4C32260B88"
+    "sepolia": "0x61e50EEbCEFF063EEb16D18AE19AEf7105905085",
+    "arbitrumSepolia": "0x8A5DeD9737024a3E3b76F303CBbF21Bc18c92e88",
+    "optimismSepolia": "0x5D4712acE65e0Db502Be338C739aD40254F312a2"
   },
   "USDC": {
     "sepolia": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
