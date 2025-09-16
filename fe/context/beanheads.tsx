@@ -125,6 +125,26 @@ type BeanHeadsCtx = {
   ) => Promise<{ seller: `0x${string}`; price: bigint; isActive: boolean }>;
   ready: boolean;
   getAllActiveSaleTokens: () => Promise<bigint[]>;
+  setMintPrice?: (newPrice: bigint) => Promise<PreparedTransaction>;
+  setAllowedToken?: (
+    address: `0x${string}`,
+    isAllowed: boolean
+  ) => Promise<PreparedTransaction>;
+  addPriceFeed?: (
+    token: `0x${string}`,
+    feed: `0x${string}`
+  ) => Promise<PreparedTransaction>;
+  withdraw: (token: `0x${string}`) => Promise<PreparedTransaction>;
+  authorizeBreeder: (breeder: `0x${string}`) => Promise<PreparedTransaction>;
+  setRemoteBridge: (
+    chainId: bigint,
+    bridgeAddress: `0x${string}`
+  ) => Promise<PreparedTransaction>;
+  balanceOfERC20: (
+    owner: `0x${string}`,
+    token: `0x${string}`,
+    chain: any
+  ) => Promise<bigint>;
 };
 
 const Ctx = createContext<BeanHeadsCtx | null>(null);
@@ -648,6 +668,109 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     })) as Promise<bigint[]>;
   }, [contract]);
 
+  /*//////////////////////////////////////////////////////////////
+                              ADMIN FACET
+    //////////////////////////////////////////////////////////////*/
+
+  async function setMintPrice(price: bigint) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "setMintPrice",
+      params: [price],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function setAllowedToken(address: `0x${string}`, isAllowed: boolean) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "setAllowedToken",
+      params: [address, isAllowed],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function addPriceFeed(address: `0x${string}`, feed: `0x${string}`) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "addPriceFeed",
+      params: [address, feed],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function withdraw(token: `0x${string}`) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "withdraw",
+      params: [token],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function authorizeBreeder(breeder: `0x${string}`) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "authorizeBreeder",
+      params: [breeder],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function setRemoteBridge(chainId: bigint, bridge: `0x${string}`) {
+    if (!contract) throw new Error("Contract not initialized");
+    const prepared = await prepareContractCall({
+      contract,
+      method: "setRemoteBridge",
+      params: [chainId, bridge],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: prepared,
+    }) as Promise<PreparedTransaction>;
+  }
+
+  async function balanceOfERC20(
+    token: `0x${string}`,
+    chain: any
+  ): Promise<bigint> {
+    if (!address) throw new Error("BeanHeads contract address not resolved");
+    const erc20 = getContract({
+      client,
+      chain,
+      address: token,
+      abi: ERC20ABI as any,
+    });
+
+    const bal = await readContract({
+      contract: erc20,
+      method: "balanceOf",
+      params: [address],
+    });
+
+    return bal as bigint;
+  }
+
   const value: BeanHeadsCtx = {
     chainId: chain?.id,
     address,
@@ -686,6 +809,13 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     getTokenSaleInfo,
     ready,
     getAllActiveSaleTokens,
+    setMintPrice,
+    setAllowedToken,
+    addPriceFeed,
+    withdraw,
+    authorizeBreeder,
+    setRemoteBridge,
+    balanceOfERC20,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
