@@ -72,7 +72,10 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         s_vrfCoordinator = VRFCoordinatorV2_5(_vrfCoordinator);
         i_subscriptionId = _subscriptionId;
         i_keyHash = _keyHash;
-        transferOwnership(_owner);
+
+        if (_owner != msg.sender) {
+            transferOwnership(_owner);
+        }
     }
 
     /*//////////////////////////////////////////////////////////////

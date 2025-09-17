@@ -108,7 +108,7 @@ contract HelperConfig is Script {
             linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
             usdPriceFeed: 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E,
             vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
-            subscriptionId: 5283,
+            subscriptionId: 62006562457364504435480039715090775291352508890600299278052625743272861229499,
             keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             deployerKey: vm.envUint("PRIVATE_KEY")
         });
@@ -123,7 +123,7 @@ contract HelperConfig is Script {
             linkToken: 0xE4aB69C077896252FAFBD49EFD26B5D171A32410,
             usdPriceFeed: 0x6e44e50E3cc14DD16e01C590DC1d7020cb36eD4C,
             vrfCoordinator: 0x02667f44a6a44E4BDddCF80e724512Ad3426B17d,
-            subscriptionId: 258,
+            subscriptionId: 83615733694144098481723925549149254030585331773564248453894784102817899297545,
             keyHash: 0xc3d5bc4d5600fa71f7a50b9ad841f14f24f9ca4236fd00bdb5fda56b052b28a4,
             deployerKey: vm.envUint("PRIVATE_KEY")
         });
@@ -138,7 +138,7 @@ contract HelperConfig is Script {
             linkToken: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E,
             usdPriceFeed: 0x0153002d20B96532C639313c2d54c3dA09109309,
             vrfCoordinator: 0x5CE8D5A2BC84beb22a398CCA51996F7930313D61,
-            subscriptionId: 403,
+            subscriptionId: 67358612661498263543516139562168295078269238317925272370889272572573929337815,
             keyHash: 0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be,
             deployerKey: vm.envUint("PRIVATE_KEY")
         });
