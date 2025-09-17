@@ -140,11 +140,7 @@ type BeanHeadsCtx = {
     chainId: bigint,
     bridgeAddress: `0x${string}`
   ) => Promise<PreparedTransaction>;
-  balanceOfERC20: (
-    owner: `0x${string}`,
-    token: `0x${string}`,
-    chain: any
-  ) => Promise<bigint>;
+  balanceOfERC20: (token: `0x${string}`, chain: any) => Promise<bigint>;
 };
 
 const Ctx = createContext<BeanHeadsCtx | null>(null);
@@ -165,6 +161,18 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
       abi: BeanHeadsABI as any,
     });
   }, [address, chain]);
+
+  const tokenContract = useCallback(
+    (token: `0x${string}`, chain: any) => {
+      return getContract({
+        client,
+        chain,
+        address: token,
+        abi: ERC20ABI as any,
+      });
+    },
+    [client]
+  );
 
   /*//////////////////////////////////////////////////////////////
                               VIEW FACET

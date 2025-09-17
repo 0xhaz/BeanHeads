@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { useBeanHeads } from "@/context/beanheads";
+import { USDC_ADDRESS } from "@/constants/contract";
 
 function isAddress(addr: string): addr is `0x${string}` {
   return /^0x[a-fA-F0-9]{40}$/.test(addr);
@@ -38,7 +39,9 @@ const Admin = () => {
   const [pfFeedAddr, setPfFeedAddr] = useState("");
 
   const [withdrawToken, setWithdrawToken] = useState("");
-  const [balToken, setBalToken] = useState("");
+  const [usdcAddr, setUsdcAddr] = useState<`0x${string}` | null>(null);
+  const [usdcBal, setUsdcBal] = useState<bigint | null>(null);
+  const [loadingBal, setLoadingBal] = useState(false);
 
   const [breederAddr, setBreederAddr] = useState("");
   const [remoteChainId, setRemoteChainId] = useState("");
@@ -46,7 +49,8 @@ const Admin = () => {
 
   const [balResult, setBalResult] = useState<string>("");
 
-  const USDC_DECIMALS = 18;
+  // const USDC_DECIMALS = 18;
+  const USDC_DECIMALS = 6;
   const parseUsdTo1e18 = (s: string): bigint => {
     const t = s.trim();
     if (!t) throw new Error("Empty amount");
@@ -59,6 +63,48 @@ const Admin = () => {
   };
 
   const toast = (m: string) => alert(m);
+
+  useEffect(() => {
+    if (!chain?.id) {
+      setUsdcAddr(null);
+      setUsdcBal(null);
+      return;
+    }
+    setUsdcAddr(USDC_ADDRESS[chain.id] || null);
+    setUsdcBal(null);
+  }, [chain?.id]);
+
+  async function refreshUsdcBalance() {
+    if (!chain || !usdcAddr) {
+      alert("Select a network with USDC address");
+      return;
+    }
+
+    try {
+      setLoadingBal(true);
+      const bal = await balanceOfERC20(usdcAddr, chain);
+      setUsdcBal(bal);
+    } catch (e: any) {
+      setUsdcBal(null);
+      alert(e?.message ?? "Failed to fetch USDC balance");
+    } finally {
+      setLoadingBal(false);
+    }
+  }
+
+  async function withdrawUsdc() {
+    if (!usdcAddr) {
+      alert("No USDC address for this network");
+      return;
+    }
+    try {
+      await withdraw(usdcAddr);
+      alert("Withdraw executed");
+      refreshUsdcBalance();
+    } catch (e: any) {
+      alert(e?.message ?? "Failed to withdraw USDC");
+    }
+  }
 
   return (
     <div className="p-8 min-h-screen bg-gray-100 flex justify-around mx-auto">
@@ -177,38 +223,28 @@ const Admin = () => {
           {/* Contract ERC20 Balance */}
           <section className="space-y-3">
             <h2 className="text-xl font-semibold">Contract ERC20 Balance</h2>
+
+            <div className="text-sm">
+              Network: {chain?.name || "-"}
+              <br />
+              Token Address: {usdcAddr ?? "not supported"}
+            </div>
+
             <label className="flex flex-col gap-2">
-              <input
-                value={balToken}
-                onChange={e => setBalToken(e.target.value)}
-                placeholder="ERC20 Token 0x..."
-                className="border p-2 rounded w-80 bg-white"
-              />
+              <button
+                className="px-4 py-2 font-bold bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer w-64"
+                disabled={!usdcAddr || loadingBal || !chain}
+                onClick={refreshUsdcBalance}
+              >
+                {loadingBal ? "Fetching..." : "Refresh Balance"}
+              </button>
+
+              {usdcBal !== null && (
+                <div className="text-sm text-gray-800">
+                  Balance: USDC {formatUnits(usdcBal, USDC_DECIMALS)}
+                </div>
+              )}
             </label>
-            <button
-              className="px-4 py-2 font-bold bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
-              onClick={async () => {
-                try {
-                  if (!chain) throw new Error("Select a network");
-                  if (!isAddress(balToken))
-                    throw new Error("Invalid token address");
-                  const bal = await balanceOfERC20(
-                    account?.address as `0x${string}`,
-                    balToken as `0x${string}`,
-                    chain
-                  );
-                  setBalResult(`${bal.toString()}`);
-                } catch (e: any) {
-                  setBalResult("");
-                  alert(e?.message ?? "Balance check failed");
-                }
-              }}
-            >
-              Fetch Contract Balance
-            </button>
-            {balResult && (
-              <div className="text-sm text-gray-800">Balance: {balResult}</div>
-            )}
           </section>
 
           {/* Withdraw (entire contract balance for token) */}
@@ -218,26 +254,11 @@ const Admin = () => {
               Calls <code>withdraw(token)</code> on the NFT contract (withdraws
               full contract balance for the token).
             </p>
-            <label className="flex flex-col gap-2">
-              <input
-                value={withdrawToken}
-                onChange={e => setWithdrawToken(e.target.value)}
-                placeholder="Token Address 0x..."
-                className="border p-2 rounded w-80 bg-white"
-              />
-            </label>
+
             <button
               className="px-4 py-2 font-bold bg-slate-700 text-white rounded hover:bg-slate-600 cursor-pointer"
-              onClick={async () => {
-                try {
-                  if (!isAddress(withdrawToken))
-                    throw new Error("Invalid token address");
-                  await withdraw(withdrawToken as `0x${string}`);
-                  alert(`Withdraw executed for ${withdrawToken}`);
-                } catch (e: any) {
-                  alert(e?.message ?? "Withdraw failed");
-                }
-              }}
+              disabled={!usdcAddr}
+              onClick={withdrawUsdc}
             >
               Withdraw
             </button>
