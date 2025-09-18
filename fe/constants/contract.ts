@@ -4,6 +4,7 @@ import {
   USDC,
   LINK,
   AggregatatorV3Interface,
+  Breeder,
 } from "@/app/contracts/BeanHeads-address.json";
 
 export const BEANHEADS_ADDRESS: Record<number, `0x${string}`> = {
@@ -30,4 +31,10 @@ export const PRICE_FEED_ADDRESS: Record<number, `0x${string}`> = {
     AggregatatorV3Interface.arbitrumSepolia as `0x${string}`,
   [optimismSepolia.id]:
     AggregatatorV3Interface.optimismSepolia as `0x${string}`,
+};
+
+export const BREEDER_ADDRESS: Record<number, `0x${string}`> = {
+  [sepolia.id]: Breeder.sepolia as `0x${string}`,
+  [arbitrumSepolia.id]: Breeder.arbitrumSepolia as `0x${string}`,
+  [optimismSepolia.id]: Breeder.optimismSepolia as `0x${string}`,
 };
