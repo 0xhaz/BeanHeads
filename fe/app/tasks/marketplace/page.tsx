@@ -13,7 +13,7 @@ import { USDC_ADDRESS } from "@/constants/contract";
 type CacheEntry = {
   params?: SVGParams;
   generation?: bigint;
-  price?: bigint; // <= we only cache price
+  price?: bigint;
 };
 
 const USDC_DECIMALS = 18;
@@ -39,7 +39,7 @@ function formatUsd(raw?: bigint | number | string | null): string {
   }`;
 }
 
-export default function Marketplace() {
+const Marketplace = () => {
   const {
     ready,
     getAllActiveSaleTokens,
@@ -332,4 +332,6 @@ export default function Marketplace() {
       </div>
     </section>
   );
-}
+};
+
+export default Marketplace;

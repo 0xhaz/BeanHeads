@@ -130,3 +130,15 @@ export const mainTasks = [
     color: "#cbc0d3",
   },
 ];
+
+// Drag-and-drop breeding types
+export type BreedTask = {
+  id: string; // UI identifier for the draggable item
+  tokenId: bigint; // On-chain token id
+};
+
+export type BreedColumn = {
+  id: "parent1" | "parent2" | "mode";
+  title: string;
+  color: string;
+};

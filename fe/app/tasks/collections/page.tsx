@@ -57,7 +57,6 @@ const CollectionsPage = () => {
     sellToken,
     batchSellTokens,
     cancelTokenSale,
-    getTokenSalePrice,
   } = useBeanHeads();
   const account = useActiveAccount();
   const chain = useActiveWalletChain();
