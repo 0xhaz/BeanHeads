@@ -31,6 +31,12 @@ type BreederCtx = {
   address?: `0x${string}`;
   contract?: ReturnType<typeof getContract> | undefined;
   getContractAddress: (chainId?: number) => Promise<`0x${string}`>;
+  approveToken: (
+    owner: `0x${string}`,
+    spender: `0x${string}`,
+    amount: bigint,
+    chain: any
+  ) => Promise<void>;
   depositBeanHeads: (tokenId: bigint) => Promise<PreparedTransaction>;
   withdrawBeanHeads: (tokenId: bigint) => Promise<PreparedTransaction>;
   requestBreed: (
@@ -105,18 +111,19 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
       params: [owner, spender],
     })) as bigint;
 
-    if (allowance < amount) {
-      const tx = await prepareContractCall({
-        contract: usdc,
-        method: "approve",
-        params: [spender, amount],
-      });
+    const THRESHOLD = BigInt(10) ** BigInt(24);
+    if (allowance >= THRESHOLD) return;
 
-      await sendTransaction({
-        account: account!,
-        transaction: tx,
-      });
-    }
+    const tx = await prepareContractCall({
+      contract: usdc,
+      method: "approve",
+      params: [spender, amount],
+    });
+
+    await sendTransaction({
+      account: account!,
+      transaction: tx,
+    });
   }
 
   //   async function tokenIdApproval(tokenId: bigint) {
@@ -154,45 +161,44 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
     if (!nftContract || !account || !chain)
       throw new Error("NFT Contract not initialized");
 
-    // check existing approval
-    const approved = (await readContract({
-      contract: nftContract,
-      method: "getApproved",
-      params: [tokenId],
-    })) as `0x${string}`;
-
+    const me = account.address.toLowerCase();
     const breeder = BREEDER_ADDRESS[chain.id].toLowerCase();
-    if (approved && approved.toLowerCase() === breeder) return; // already approved
 
-    // approve breeder
+    // read owner defensively
+    let owner: `0x${string}` | undefined;
+    try {
+      owner = (await readContract({
+        contract: nftContract,
+        method: "getOwnerOf",
+        params: [tokenId],
+      })) as `0x${string}`;
+    } catch {
+      return;
+    }
+
+    if (!owner || owner.toLowerCase() !== me) return; // already escrowed or not mine
+
+    try {
+      const approved = (await readContract({
+        contract: nftContract,
+        method: "getApproved",
+        params: [tokenId],
+      })) as `0x${string}`;
+      if (approved && approved.toLowerCase() === breeder) return;
+    } catch {
+      // ignore – we'll approve below
+    }
+
     const approveTx = await prepareContractCall({
       contract: nftContract,
       method: "approve",
       params: [BREEDER_ADDRESS[chain.id], tokenId],
     });
-
-    await sendTransaction({
-      account: account!,
-      transaction: approveTx,
-    });
-
-    // poll until approval is visible
-    for (let i = 0; i < 10; i++) {
-      const now = (await readContract({
-        contract: nftContract,
-        method: "getApproved",
-        params: [tokenId],
-      })) as `0x${string}`;
-      if (now && now.toLowerCase() === breeder) return;
-      await new Promise(r => setTimeout(r, 800));
-    }
-
-    throw new Error("Approval not confirmed after waiting");
+    await sendTransaction({ account: account!, transaction: approveTx });
   }
 
   async function depositBeanHeads(tokenId: bigint) {
     if (!contract) throw new Error("Contract not initialized");
-
     await ensureTokenApproval(tokenId);
 
     const tx = await prepareContractCall({
@@ -200,7 +206,6 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
       method: "depositBeanHeads",
       params: [tokenId],
     });
-
     return sendTransaction({
       account: account!,
       transaction: tx,
@@ -230,36 +235,44 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
     mode: BreedingMode,
     tokenAddress: `0x${string}`
   ) {
-    if (!contract) throw new Error("Contract not initialized");
-    if (mode === BreedingMode.Ascension && parent2 !== BigInt(0)) {
+    if (!contract || !chain || !account)
+      throw new Error("Contract not initialized");
+
+    if (mode === BreedingMode.Ascension && parent2 !== BigInt(0))
       throw new Error("Ascension mode requires parent2 to be 0");
-    }
-    if (parent1 === parent2) {
+    if (parent1 === parent2)
       throw new Error("Parent1 and Parent2 cannot be the same");
+
+    // optional: assert tokens are escrowed by the caller
+    const escrow1 = await getEscrowedTokenOwner(parent1);
+    if (!escrow1 || escrow1.toLowerCase() !== account.address!.toLowerCase())
+      throw new Error("Parent 1 is not escrowed by you");
+
+    if (mode !== BreedingMode.Ascension) {
+      const escrow2 = await getEscrowedTokenOwner(parent2);
+      if (!escrow2 || escrow2.toLowerCase() !== account.address!.toLowerCase())
+        throw new Error("Parent 2 is not escrowed by you");
     }
 
+    // USDC allowance (unchanged)
     if (tokenAddress) {
       await approveToken(
-        account!.address as `0x${string}`,
+        account.address as `0x${string}`,
         contract.address as `0x${string}`,
         BigInt(10) ** BigInt(18),
         chain
       );
     }
 
-    try {
-      const tx = await prepareContractCall({
-        contract,
-        method: "requestBreed",
-        params: [parent1, parent2, mode, tokenAddress],
-      });
-      return sendTransaction({
-        account: account!,
-        transaction: tx,
-      }) as Promise<PreparedTransaction>;
-    } catch (e) {
-      throw e;
-    }
+    const tx = await prepareContractCall({
+      contract,
+      method: "requestBreed",
+      params: [parent1, parent2, mode, tokenAddress],
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: tx,
+    }) as Promise<PreparedTransaction>;
   }
 
   async function setCoolDown(time: bigint) {
@@ -356,6 +369,7 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
     chainId: chain?.id,
     address,
     contract,
+    approveToken,
     getContractAddress,
     depositBeanHeads,
     withdrawBeanHeads,

@@ -45,8 +45,6 @@ export default function BreedSlot({
 }: BreedSlotProps) {
   const [dragOver, setDragOver] = useState(false);
 
-  if (hidden) return null;
-
   const tid = token?.tokenId;
   const avatar = tid ? getAvatarProps(tid) : undefined;
 
@@ -60,6 +58,7 @@ export default function BreedSlot({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tid]);
 
+  if (hidden) return null;
   const handleDrop: React.DragEventHandler<HTMLDivElement> = e => {
     e.preventDefault();
     setDragOver(false);

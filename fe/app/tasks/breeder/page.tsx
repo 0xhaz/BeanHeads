@@ -202,6 +202,15 @@ const BreedingPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account?.address, chain?.id]);
 
+  useEffect(() => {
+    if (mode === BreedingMode.Ascension) {
+      setParent2(null);
+      // also clear LS
+      saveSlots(account?.address, chain?.id, parent1?.tokenId ?? null, null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
   /* ---------- actions ---------- */
   async function handleDepositToggle(which: "p1" | "p2") {
     const item = which === "p1" ? parent1 : parent2;
@@ -270,10 +279,16 @@ const BreedingPage = () => {
         return alert("Cannot breed the same token");
     }
 
+    const tokenAddr = USDC_ADDRESS[chain.id as keyof typeof USDC_ADDRESS];
+    if (!tokenAddr) {
+      alert("USDC not configured for this network");
+      return;
+    }
+
     try {
       const p1 = parent1!.tokenId;
       const p2 = mode === BreedingMode.Ascension ? BigInt(0) : parent2!.tokenId;
-      await requestBreed(p1, p2, mode as any, USDC_ADDRESS[chain.id]);
+      await requestBreed(p1, p2, mode as any, tokenAddr);
       alert("Breed request submitted");
     } catch (e) {
       console.error(e);
@@ -368,7 +383,15 @@ const BreedingPage = () => {
           escrowedByYou={escByYou(escOwner1)}
           getAvatarProps={getAvatarProps}
           ensureDetailsByTokenId={loadTokenDetailsByTokenId}
-          onRemove={() => setParent1(null)}
+          onRemove={() => {
+            setParent1(null);
+            saveSlots(
+              account?.address,
+              chain?.id,
+              null,
+              parent2?.tokenId ?? null
+            );
+          }}
           onDropTokenId={tid => {
             setParent1({ tokenId: tid });
             refreshEscrowedStatus(tid);
@@ -386,7 +409,15 @@ const BreedingPage = () => {
           escrowedByYou={escByYou(escOwner2)}
           getAvatarProps={getAvatarProps}
           ensureDetailsByTokenId={loadTokenDetailsByTokenId}
-          onRemove={() => setParent2(null)}
+          onRemove={() => {
+            setParent2(null);
+            saveSlots(
+              account?.address,
+              chain?.id,
+              parent1?.tokenId ?? null,
+              null
+            );
+          }}
           onDropTokenId={tid => {
             setParent2({ tokenId: tid });
             refreshEscrowedStatus(tid);
