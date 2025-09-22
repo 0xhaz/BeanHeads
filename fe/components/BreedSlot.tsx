@@ -99,7 +99,7 @@ export default function BreedSlot({
               Token #{String(tid)}
               {deposited && (
                 <span
-                  className={`ml-2 ${
+                  className={`mr-14 ${
                     escrowedByYou ? "text-green-300" : "text-yellow-300"
                   }`}
                 >
@@ -111,7 +111,7 @@ export default function BreedSlot({
             </div>
             {!deposited && (
               <button
-                className="text-sm text-red-300 hover:text-red-200 underline"
+                className="text-sm text-red-300 hover:text-red-200 underline cursor-pointer"
                 onClick={onRemove}
               >
                 remove

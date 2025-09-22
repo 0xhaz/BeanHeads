@@ -110,6 +110,15 @@ const BreedingPage = () => {
     }
   }
 
+  async function tokenExists(tokenId: bigint) {
+    try {
+      await getOwnerOf(tokenId);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   /* ---------- data loaders ---------- */
   async function refreshEscrowedStatus(tid: bigint) {
     // safe probe: try mapping, fall back to ownerOf
@@ -163,6 +172,14 @@ const BreedingPage = () => {
     if (loadingMap[key]) return;
     try {
       setLoadingMap(m => ({ ...m, [key]: true }));
+
+      if (!(await tokenExists(tokenId))) {
+        setDetailsCache(prev => {
+          const { [key]: _, ...rest } = prev;
+          return rest;
+        });
+        return;
+      }
       const raw = await getAttributesByTokenId(tokenId);
       const generation = await getGeneration(tokenId);
       setDetailsCache(prev => ({
@@ -230,6 +247,35 @@ const BreedingPage = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
+
+  useEffect(() => {
+    if (!account?.address || !chain?.id) return;
+    const { p1, p2 } = loadSlots(account.address, chain.id);
+
+    (async () => {
+      let nextP1 = p1 ?? null;
+      let nextP2 = p2 ?? null;
+
+      if (nextP1 && !(await tokenExists(nextP1))) {
+        nextP1 = null;
+      }
+      if (nextP2 && !(await tokenExists(nextP2))) {
+        nextP2 = null;
+      }
+
+      setParent1(nextP1 ? { tokenId: nextP1 } : null);
+      setParent2(nextP2 ? { tokenId: nextP2 } : null);
+      saveSlots(account.address, chain.id, nextP1, nextP2);
+
+      const live = [nextP1, nextP2].filter(Boolean) as bigint[];
+      await Promise.all(
+        live.map(async tid => {
+          await refreshEscrowedStatus(tid);
+          await loadTokenDetailsByTokenId(tid);
+        })
+      );
+    })();
+  }, [account?.address, chain?.id]);
 
   /* ---------- actions ---------- */
   async function handleDepositToggle(which: "p1" | "p2") {
@@ -309,6 +355,15 @@ const BreedingPage = () => {
       const p1 = parent1!.tokenId;
       const p2 = mode === BreedingMode.Ascension ? BigInt(0) : parent2!.tokenId;
       await requestBreed(p1, p2, mode as any, tokenAddr);
+
+      if (mode == BreedingMode.Mutation) {
+        setParent1(null);
+        saveSlots(account.address, chain?.id, null, parent2?.tokenId ?? null);
+      } else if (mode == BreedingMode.Fusion) {
+        setParent1(null);
+        setParent2(null);
+        saveSlots(account.address, chain?.id, null, null);
+      }
       alert("Breed request submitted");
     } catch (e) {
       console.error(e);
