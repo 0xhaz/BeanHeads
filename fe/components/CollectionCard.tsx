@@ -1,8 +1,9 @@
 "use client";
 
+import React, { useMemo } from "react";
 import { Avatar } from "./Avatar";
 import type { SVGParams } from "@/utils/avatarMapping";
-import { useBeanHeads } from "@/context/beanheads";
+import { svgParamsToAvatarProps } from "@/utils/avatarMapping"; // ⬅️ use the converter
 import {
   HAIR_STYLES,
   BODY_TYPES,
@@ -20,66 +21,50 @@ import {
   BG_COLORS,
   SKIN_COLORS,
 } from "@/components/Avatar";
-import { useActiveAccount, useActiveWallet } from "thirdweb/react";
 
 interface CollectionCardProps {
   tokenId: bigint;
   params: SVGParams;
   generation?: bigint;
+  rarityPoints?: bigint;
   loading?: boolean;
   onClose: () => void;
 }
 
-function labelFrom(arr: any[], id: bigint | number | boolean): string {
-  if (typeof id === "boolean") return id ? "Yes" : "No";
-  const num = Number(id);
-  return arr.find(opt => opt.id === num)?.label ?? num.toString();
+/** clamp to valid array index & return label */
+function labelFrom(arr: { id?: number; label?: string }[], idxLike: unknown) {
+  const n = Number(idxLike);
+  if (!Number.isFinite(n) || arr.length === 0) return String(idxLike ?? 0);
+  const idx = Math.max(0, Math.min(arr.length - 1, n));
+  return arr[idx]?.label ?? String(idx);
 }
 
 const CollectionCard = ({
   tokenId,
   params,
   generation,
+  rarityPoints,
   loading,
   onClose,
 }: CollectionCardProps) => {
+  // Convert *once* to the normalized/clamped AvatarProps
+  const av = useMemo(() => svgParamsToAvatarProps(params), [params]);
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 text-white p-8 overflow-y-auto ">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 text-white p-8 overflow-y-auto">
       <button
-        className="absolute top-50 right-70 text-4xl font-bold hover:text-red-400 cursor-pointer"
+        className="absolute top-6 right-8 text-4xl font-bold hover:text-red-400 cursor-pointer"
         onClick={onClose}
+        aria-label="Close"
       >
-        x
+        ×
       </button>
 
       <div className="flex flex-col lg:flex-row items-center gap-10 w-full max-w-6xl">
         <div className="flex-shrink-0 w-full lg:w-1/3 flex justify-center">
           <div className="w-[300px] h-[300px] border-4 border-white rounded-3xl overflow-hidden bg-white">
-            <Avatar
-              hairStyle={Number(params?.hairParams?.hairStyle ?? 0)}
-              hairColor={Number(params?.hairParams?.hairColor ?? 0)}
-              body={Number(params?.bodyParams?.bodyType ?? 0)}
-              facialHair={Number(
-                params?.facialFeaturesParams?.facialHairType ?? 0
-              )}
-              clothingStyle={Number(params?.clothingParams?.clothes ?? 0)}
-              clothingColor={Number(params?.clothingParams?.clothingColor ?? 0)}
-              hat={Number(params?.accessoryParams?.hatStyle ?? 0)}
-              eyebrows={Number(params?.facialFeaturesParams?.eyebrowShape ?? 0)}
-              eyes={Number(params?.facialFeaturesParams?.eyeShape ?? 0)}
-              mouthShape={Number(params?.facialFeaturesParams?.mouthStyle ?? 0)}
-              mouthColor={Number(params?.facialFeaturesParams?.lipColor ?? 0)}
-              accessory={Number(params?.accessoryParams?.accessoryId ?? 0)}
-              skinColor={Number(params?.bodyParams?.skinColor ?? 0)}
-              hatColor={Number(params?.accessoryParams?.hatColor ?? 0)}
-              graphic={Number(params?.clothingParams?.clothesGraphic ?? 0)}
-              faceMaskColor={Number(params?.otherParams?.faceMaskColor ?? 0)}
-              circleColor={Number(params?.otherParams?.shapeColor ?? 0)}
-              mask={params?.otherParams?.shapes ?? false}
-              faceMask={params?.otherParams?.faceMask ?? false}
-              lashes={params?.otherParams?.lashes ?? false}
-              shape={params?.otherParams?.shapes ?? false}
-            />
+            {/* Use the clamped AvatarProps */}
+            <Avatar {...av} />
           </div>
         </div>
 
@@ -95,115 +80,53 @@ const CollectionCard = ({
             </h3>
           </div>
 
-          <div className="grid grid-cols-2 gap-6 w-full text-sm  ">
+          <div className="grid grid-cols-2 gap-6 w-full text-sm">
             <div>
               <h3 className="text-lg font-bold underline mb-2">Hair</h3>
-              <p>
-                Style:{" "}
-                {labelFrom(HAIR_STYLES, params?.hairParams?.hairStyle ?? 0)}
-              </p>
-              <p>
-                Color:{" "}
-                {labelFrom(HAIR_COLORS, params?.hairParams?.hairColor ?? 0)}
-              </p>
+              <p>Style: {labelFrom(HAIR_STYLES, av.hairStyle)}</p>
+              <p>Color: {labelFrom(HAIR_COLORS, av.hairColor)}</p>
             </div>
 
             <div>
               <h3 className="text-lg font-bold underline mb-2">Body</h3>
-              <p>
-                Type: {labelFrom(BODY_TYPES, params?.bodyParams?.bodyType ?? 0)}
-              </p>
-              <p>
-                Skin:{" "}
-                {labelFrom(SKIN_COLORS, params?.bodyParams?.skinColor ?? 0)}
-              </p>
+              <p>Type: {labelFrom(BODY_TYPES, av.body)}</p>
+              <p>Skin: {labelFrom(SKIN_COLORS, av.skinColor)}</p>
             </div>
 
             <div>
               <h3 className="text-lg font-bold underline mb-2">Clothing</h3>
-              <p>
-                Style:{" "}
-                {labelFrom(
-                  CLOTHING_STYLES,
-                  params?.clothingParams?.clothes ?? 0
-                )}
-              </p>
-              <p>
-                Color:{" "}
-                {labelFrom(
-                  CLOTHING_COLORS,
-                  params?.clothingParams?.clothingColor ?? 0
-                )}
-              </p>
-              <p>
-                Graphic:{" "}
-                {labelFrom(
-                  CLOTHING_GRAPHICS,
-                  params?.clothingParams?.clothesGraphic ?? 0
-                )}
-              </p>
+              <p>Style: {labelFrom(CLOTHING_STYLES, av.clothingStyle)}</p>
+              <p>Color: {labelFrom(CLOTHING_COLORS, av.clothingColor)}</p>
+              <p>Graphic: {labelFrom(CLOTHING_GRAPHICS, av.graphic)}</p>
             </div>
 
             <div>
               <h3 className="text-lg font-bold underline mb-2">Facial</h3>
-              <p>
-                Eyebrows:{" "}
-                {labelFrom(
-                  EYEBROW_SHAPES,
-                  params?.facialFeaturesParams?.eyebrowShape ?? 0
-                )}
-              </p>
-              <p>
-                Eyes:{" "}
-                {labelFrom(
-                  EYE_SHAPES,
-                  params?.facialFeaturesParams?.eyeShape ?? 0
-                )}
-              </p>
-              <p>
-                Facial Hair:{" "}
-                {labelFrom(
-                  FACIAL_HAIR_STYLES,
-                  params?.facialFeaturesParams?.facialHairType ?? 0
-                )}
-              </p>
-              <p>
-                Mouth:{" "}
-                {labelFrom(
-                  MOUTH_SHAPES,
-                  params?.facialFeaturesParams?.mouthStyle ?? 0
-                )}
-              </p>
-              <p>
-                Lips Color:{" "}
-                {labelFrom(
-                  LIP_COLORS,
-                  params?.facialFeaturesParams?.lipColor ?? 0
-                )}
-              </p>
+              <p>Eyebrows: {labelFrom(EYEBROW_SHAPES, av.eyebrows)}</p>
+              <p>Eyes: {labelFrom(EYE_SHAPES, av.eyes)}</p>
+              <p>Facial Hair: {labelFrom(FACIAL_HAIR_STYLES, av.facialHair)}</p>
+              <p>Mouth: {labelFrom(MOUTH_SHAPES, av.mouthShape)}</p>
+              <p>Lips Color: {labelFrom(LIP_COLORS, av.mouthColor)}</p>
             </div>
 
             <div>
               <h3 className="text-lg font-bold underline mb-2">Misc</h3>
-              <p>Face Mask: {params?.otherParams?.faceMask ? "Yes" : "No"}</p>
+              <p>Face Mask: {av.faceMask ? "Yes" : "No"}</p>
               <p>
-                Face Mask Color:{" "}
-                {labelFrom(
-                  CLOTHING_COLORS,
-                  params?.otherParams?.faceMaskColor ?? 0
-                )}
+                Face Mask Color: {labelFrom(CLOTHING_COLORS, av.faceMaskColor)}
               </p>
-              <p>Shapes: {params?.otherParams?.shapes ? "Yes" : "No"}</p>
-              <p>
-                Shape Color:{" "}
-                {labelFrom(BG_COLORS, params?.otherParams?.shapeColor ?? 0)}
-              </p>
-              <p>Lashes: {params?.otherParams?.lashes ? "Yes" : "No"}</p>
+              <p>Shapes: {av.shape ? "Yes" : "No"}</p>
+              <p>Shape Color: {labelFrom(BG_COLORS, av.circleColor)}</p>
+              <p>Lashes: {av.lashes ? "Yes" : "No"}</p>
+              <p>Hat: {labelFrom(HAT_STYLES, av.hat)}</p>
+              <p>Hat Color: {labelFrom(CLOTHING_COLORS, av.hatColor)}</p>
+              <p>Accessory: {labelFrom(ACCESSORIES, av.accessory)}</p>
             </div>
 
             <div>
               <h3 className="text-lg font-bold underline mb-2">Generation</h3>
-              <p>Gen: {generation}</p>
+              <p>Gen: {generation?.toString() ?? "-"}</p>
+              <p>Rarity Points: {rarityPoints?.toString() ?? "0"}</p>
             </div>
           </div>
         </div>

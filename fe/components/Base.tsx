@@ -28,15 +28,15 @@ interface BaseProps {
   facialHair: React.ComponentType<FacialHairProps>;
   accessory?: React.ComponentType<AccessoryProps>;
   graphic?: React.ComponentType;
-  hat: {
+  hat?: {
     Front: React.ComponentType<ClothingProps & HatProps>;
     Back: React.ComponentType<ClothingProps & HatProps>;
   };
-  body: {
+  body?: {
     Front: React.ComponentType<BodyProps>;
     Back: React.ComponentType<BodyProps>;
   };
-  clothing: {
+  clothing?: {
     Front: React.ComponentType<ClothingProps>;
     Back: React.ComponentType<ClothingProps>;
     braStraps?: boolean;
@@ -84,14 +84,32 @@ export const Base = React.forwardRef<SVGSVGElement, BaseProps>(
   ) => {
     const { skin } = useTheme();
 
-    const { Front: FrontHair, Back: BackHair, hatScale } = hair;
-    const { Front: FrontHat, Back: BackHat } = hat;
-    const { Front: FrontBody, Back: BackBody } = body;
+    const {
+      Front: FrontHair,
+      Back: BackHair,
+      hatScale,
+    } = hair ?? {
+      Front: Noop,
+      Back: Noop,
+      hatScale: 1,
+    };
+    const { Front: FrontHat, Back: BackHat } = hat ?? {
+      Front: Noop,
+      Back: Noop,
+    };
+    const { Front: FrontBody, Back: BackBody } = body ?? {
+      Front: Noop,
+      Back: Noop,
+    };
     const {
       Front: ClothingFront,
       Back: ClothingBack,
       braStraps = true,
-    } = clothing;
+    } = clothing ?? {
+      Front: Noop,
+      Back: Noop,
+      braStraps: true,
+    };
 
     return (
       <svg ref={ref} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 990">

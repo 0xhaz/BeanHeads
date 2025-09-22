@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { useBeanHeads } from "@/context/beanheads";
+import { useBreeder } from "@/context/breeder";
 import { type SVGParams, svgParamsToAvatarProps } from "@/utils/avatarMapping";
 import { normalizeSvgParams } from "@/utils/normalizeSvgParams";
 import { Avatar } from "@/components/Avatar";
@@ -43,13 +44,14 @@ const Marketplace = () => {
   const {
     ready,
     getAllActiveSaleTokens,
-    getTokenSalePrice, // <= add in context if not present
+    getTokenSalePrice,
     getAttributesByTokenId,
     getGeneration,
     buyToken,
     batchBuyTokens,
     cancelTokenSale,
   } = useBeanHeads();
+  const { getRarityPoints } = useBreeder();
 
   const account = useActiveAccount();
   const chain = useActiveWalletChain();
@@ -61,6 +63,17 @@ const Marketplace = () => {
   const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
   const [isOpen, setIsOpen] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [rarityPoints, setRarityPoints] = useState<Record<string, bigint>>({});
+
+  const fetchRarityPoints = async (tokenId: bigint) => {
+    const key = tokenId.toString();
+    try {
+      const points = await getRarityPoints(tokenId);
+      setRarityPoints(prev => ({ ...prev, [key]: points }));
+    } catch (e) {
+      console.error(`Error fetching rarity points for token ${tokenId}:`, e);
+    }
+  };
 
   // Load active tokenIds
   useEffect(() => {
@@ -123,9 +136,10 @@ const Marketplace = () => {
     const key = tokenId.toString();
     try {
       setLoadingMap(m => ({ ...m, [key]: true }));
-      const [raw, generation] = await Promise.all([
+      const [raw, generation, points] = await Promise.all([
         getAttributesByTokenId(tokenId),
         getGeneration(tokenId),
+        getRarityPoints(tokenId),
       ]);
       setCache(prev => {
         const curr = prev[key] ?? {};
@@ -133,6 +147,8 @@ const Marketplace = () => {
         if (raw) next.params = normalizeSvgParams(raw);
         return { ...prev, [key]: next };
       });
+
+      setRarityPoints(prev => ({ ...prev, [key]: points }));
     } catch (e) {
       console.error(`fetchDetails #${key}:`, e);
     } finally {
@@ -301,6 +317,7 @@ const Marketplace = () => {
                         tokenId={tokenId}
                         params={entry.params}
                         generation={entry.generation}
+                        rarityPoints={rarityPoints[key]}
                         loading={false}
                         onClose={() => setIsOpen(null)}
                       />

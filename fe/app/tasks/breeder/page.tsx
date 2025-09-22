@@ -41,6 +41,7 @@ const BreedingPage = () => {
     depositBeanHeads,
     withdrawBeanHeads,
     getEscrowedTokenOwner,
+    getRarityPoints,
   } = useBreeder();
 
   const [loadingList, setLoadingList] = useState(false);
@@ -56,6 +57,7 @@ const BreedingPage = () => {
   const [parent1, setParent1] = useState<WalletNFT | null>(null);
   const [parent2, setParent2] = useState<WalletNFT | null>(null);
   const [mode, setMode] = useState<number>(BreedingMode.NewBreed);
+  const [rarityPoints, setRarityPoints] = useState<Record<string, bigint>>({});
 
   // tokenId -> escrow owner (or null if not escrowed)
   const [escrowedOwner, setEscrowedOwner] = useState<
@@ -95,6 +97,16 @@ const BreedingPage = () => {
       };
     } catch {
       return { p1: null, p2: null };
+    }
+  }
+
+  async function fetchRarityPoints(tokenId: bigint) {
+    const key = tokenId.toString();
+    try {
+      const points = await getRarityPoints(tokenId);
+      setRarityPoints(prev => ({ ...prev, [key]: points }));
+    } catch (e) {
+      console.error(`fetchRarityPoints #${key}:`, e);
     }
   }
 
@@ -140,6 +152,7 @@ const BreedingPage = () => {
           generation,
         },
       }));
+      if (!rarityPoints[key]) await fetchRarityPoints(tokenId);
     } finally {
       setLoadingMap(m => ({ ...m, [key]: false }));
     }
@@ -160,6 +173,7 @@ const BreedingPage = () => {
           generation,
         },
       }));
+      if (!rarityPoints[key]) await fetchRarityPoints(tokenId);
     } finally {
       setLoadingMap(m => ({ ...m, [key]: false }));
     }
@@ -187,8 +201,14 @@ const BreedingPage = () => {
   useEffect(() => {
     if (!account?.address || !chain?.id) return;
     const { p1, p2 } = loadSlots(account.address, chain.id);
-    if (p1) setParent1({ tokenId: p1 });
-    if (p2) setParent2({ tokenId: p2 });
+    if (p1) {
+      setParent1({ tokenId: p1 });
+      fetchRarityPoints(p1);
+    }
+    if (p2) {
+      setParent2({ tokenId: p2 });
+      fetchRarityPoints(p2);
+    }
 
     (async () => {
       const list = [p1, p2].filter(Boolean) as bigint[];
@@ -492,6 +512,7 @@ const BreedingPage = () => {
                       tokenId={tokenId}
                       params={cached.params!}
                       generation={cached.generation!}
+                      rarityPoints={rarityPoints[key]}
                       loading={false}
                       onClose={() => setIsOpen(null)}
                     />

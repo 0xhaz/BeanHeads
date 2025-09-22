@@ -1,3 +1,4 @@
+// utils/avatarMapping.ts
 import type { AvatarProps } from "@/components/Avatar";
 
 export interface SVGParams {
@@ -71,33 +72,64 @@ function fillDefaults(p?: Partial<SVGParams> | SVGParams): SVGParams {
   };
 }
 
-/** Safe converter; accepts possibly-undefined/partial input */
+/** Utility: clamp/modulo any (bigint/number) into [0, len-1] */
+function clamp(n: unknown, len: number): number {
+  const x = typeof n === "bigint" ? Number(n) : Number(n ?? 0);
+  if (!Number.isFinite(x) || len <= 0) return 0;
+  return ((x % len) + len) % len;
+}
+
+/**
+ * Keep these in sync with the array lengths in components/Avatar.tsx
+ * (If you add/remove styles/colors, update these numbers.)
+ */
+const RANGES = {
+  hairStyle: 8, // HAIR_STYLES.length
+  hairColor: 7, // HAIR_COLORS.length
+  body: 2, // BODY_TYPES.length
+  facialHair: 3, // FACIAL_HAIR_STYLES.length
+  clothingStyle: 6, // CLOTHING_STYLES.length
+  clothingColor: 5, // CLOTHING_COLORS.length
+  hat: 3, // HAT_STYLES.length
+  eyebrows: 5, // EYEBROW_SHAPES.length
+  eyes: 9, // EYE_SHAPES.length
+  mouthShape: 7, // MOUTH_SHAPES.length
+  mouthColor: 5, // LIP_COLORS.length
+  accessory: 4, // ACCESSORIES.length
+  skinColor: 6, // SKIN_COLORS.length
+  circleColor: 5, // BG_COLORS.length
+  hatColor: 5, // CLOTHING_COLORS.length
+  graphic: 6, // CLOTHING_GRAPHICS.length
+  faceMaskColor: 5, // CLOTHING_COLORS.length
+};
+
+/** Safe converter with clamping; accepts possibly-undefined/partial input */
 export function svgParamsToAvatarProps(
   _p?: Partial<SVGParams> | SVGParams
 ): AvatarProps {
   const p = fillDefaults(_p);
 
-  const shape = p.otherParams.shapes;
+  const shape = !!p.otherParams.shapes;
   const mask = shape;
 
   return {
-    hairStyle: Number(p.hairParams.hairStyle),
-    hairColor: Number(p.hairParams.hairColor),
-    body: Number(p.bodyParams.bodyType),
-    facialHair: Number(p.facialFeaturesParams.facialHairType),
-    clothingStyle: Number(p.clothingParams.clothes),
-    clothingColor: Number(p.clothingParams.clothingColor),
-    hat: Number(p.accessoryParams.hatStyle),
-    eyebrows: Number(p.facialFeaturesParams.eyebrowShape),
-    eyes: Number(p.facialFeaturesParams.eyeShape),
-    mouthShape: Number(p.facialFeaturesParams.mouthStyle),
-    mouthColor: Number(p.facialFeaturesParams.lipColor),
-    accessory: Number(p.accessoryParams.accessoryId),
-    skinColor: Number(p.bodyParams.skinColor),
-    circleColor: Number(p.otherParams.shapeColor),
-    hatColor: Number(p.accessoryParams.hatColor),
-    graphic: Number(p.clothingParams.clothesGraphic),
-    faceMaskColor: Number(p.otherParams.faceMaskColor),
+    hairStyle: clamp(p.hairParams.hairStyle, RANGES.hairStyle),
+    hairColor: clamp(p.hairParams.hairColor, RANGES.hairColor),
+    body: clamp(p.bodyParams.bodyType, RANGES.body),
+    facialHair: clamp(p.facialFeaturesParams.facialHairType, RANGES.facialHair),
+    clothingStyle: clamp(p.clothingParams.clothes, RANGES.clothingStyle),
+    clothingColor: clamp(p.clothingParams.clothingColor, RANGES.clothingColor),
+    hat: clamp(p.accessoryParams.hatStyle, RANGES.hat),
+    eyebrows: clamp(p.facialFeaturesParams.eyebrowShape, RANGES.eyebrows),
+    eyes: clamp(p.facialFeaturesParams.eyeShape, RANGES.eyes),
+    mouthShape: clamp(p.facialFeaturesParams.mouthStyle, RANGES.mouthShape),
+    mouthColor: clamp(p.facialFeaturesParams.lipColor, RANGES.mouthColor),
+    accessory: clamp(p.accessoryParams.accessoryId, RANGES.accessory),
+    skinColor: clamp(p.bodyParams.skinColor, RANGES.skinColor),
+    circleColor: clamp(p.otherParams.shapeColor, RANGES.circleColor),
+    hatColor: clamp(p.accessoryParams.hatColor, RANGES.hatColor),
+    graphic: clamp(p.clothingParams.clothesGraphic, RANGES.graphic),
+    faceMaskColor: clamp(p.otherParams.faceMaskColor, RANGES.faceMaskColor),
     faceMask: !!p.otherParams.faceMask,
     lashes: !!p.otherParams.lashes,
     shape,

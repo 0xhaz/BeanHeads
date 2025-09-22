@@ -268,6 +268,29 @@ export function generateRandomAvatarAttributes(): any {
   };
 }
 
+/* -------------------- SAFE HELPERS (fallbacks everywhere) ------------------- */
+function safeArr<T>(arr: T[], idx: number, fallback: T): T {
+  return arr[idx] ?? fallback;
+}
+
+function safeComp<T extends { Component: any }>(
+  arr: T[],
+  idx: number,
+  fallback: any = Noop
+): any {
+  return arr[idx]?.Component ?? fallback;
+}
+
+function safeLabelKey<T extends Record<string, any>>(
+  label: string | undefined,
+  dict: T,
+  fallbackKey: keyof T
+): keyof T {
+  const k = (label ?? "").toLowerCase() as keyof T;
+  return Object.prototype.hasOwnProperty.call(dict, k) ? k : fallbackKey;
+}
+
+/* ------------------------------ AVATAR COMPONENT --------------------------- */
 export const Avatar = React.forwardRef<SVGSVGElement, AvatarProps>(
   (
     {
@@ -296,22 +319,59 @@ export const Avatar = React.forwardRef<SVGSVGElement, AvatarProps>(
     },
     ref
   ) => {
-    const skin = SKIN_COLORS[skinColor]?.base
-      ? {
-          base: SKIN_COLORS[skinColor].base,
-          shadow: SKIN_COLORS[skinColor].shadow,
-        }
-      : SKIN_COLORS[0];
-    const Eyes = EYE_SHAPES[eyes]?.Component;
-    const Eyebrows = EYEBROW_SHAPES[eyebrows]?.Component;
-    const Mouth = MOUTH_SHAPES[mouthShape]?.Component;
-    const Hair = HAIR_STYLES[hairStyle];
-    const FacialHair = FACIAL_HAIR_STYLES[facialHair]?.Component;
-    const Clothing = CLOTHING_STYLES[clothingStyle];
-    const Accessory = ACCESSORIES[accessory]?.Component;
-    const Graphic = CLOTHING_GRAPHICS[graphic]?.Component;
-    const Hat = HAT_STYLES[hat];
-    const Body = BODY_TYPES[body]?.Component;
+    // Skin palette fallback
+    const skin = ((): { base: string; shadow: string } => {
+      const s = (SKIN_COLORS as any)[skinColor];
+      return s?.base ? { base: s.base, shadow: s.shadow } : SKIN_COLORS[0];
+    })();
+
+    // Components with safe fallbacks
+    const Eyes = safeComp(EYE_SHAPES, eyes, Noop);
+    const Eyebrows = safeComp(EYEBROW_SHAPES, eyebrows, Noop);
+    const Mouth = safeComp(MOUTH_SHAPES, mouthShape, Noop);
+    const Hair = safeArr(HAIR_STYLES, hairStyle, HAIR_STYLES[0]);
+    const FacialHair = safeComp(FACIAL_HAIR_STYLES, facialHair, Noop);
+    const Clothing = safeArr(
+      CLOTHING_STYLES,
+      clothingStyle,
+      CLOTHING_STYLES[0]
+    );
+    const Accessory = ACCESSORIES[accessory]?.Component; // allow undefined (Base handles optional)
+    const Graphic = safeComp(CLOTHING_GRAPHICS, graphic, Noop);
+    const Hat = safeArr(HAT_STYLES, hat, HAT_STYLES[0]);
+    const Body = safeArr(BODY_TYPES, body, BODY_TYPES[0]).Component;
+
+    // Color keys (map Label → theme key) with safe fallbacks
+    const clothingKey = safeLabelKey(
+      CLOTHING_COLORS[clothingColor]?.label,
+      colors.clothing,
+      "blue"
+    );
+    const hatKey = safeLabelKey(
+      CLOTHING_COLORS[hatColor]?.label,
+      colors.clothing,
+      "blue"
+    );
+    const hairKey = safeLabelKey(
+      HAIR_COLORS[hairColor]?.label,
+      colors.hair,
+      "brown"
+    );
+    const lipKey = safeLabelKey(
+      LIP_COLORS[mouthColor]?.label,
+      colors.lipColors,
+      "red"
+    );
+    const bgKey = safeLabelKey(
+      BG_COLORS[circleColor]?.label,
+      colors.bgColors,
+      "white"
+    );
+    const faceMaskKey = safeLabelKey(
+      CLOTHING_COLORS[faceMaskColor]?.label,
+      colors.clothing,
+      "blue"
+    );
 
     return (
       <ThemeContext.Provider value={{ colors, skin }}>
@@ -327,40 +387,16 @@ export const Avatar = React.forwardRef<SVGSVGElement, AvatarProps>(
           graphic={Graphic}
           hat={Hat}
           body={Body}
-          hatColor={
-            CLOTHING_COLORS[
-              hatColor
-            ]?.label.toLowerCase() as keyof typeof colors.clothing
-          }
-          hairColor={
-            HAIR_COLORS[
-              hairColor
-            ]?.label.toLowerCase() as keyof typeof colors.hair
-          }
-          clothingColor={
-            CLOTHING_COLORS[
-              clothingColor
-            ]?.label.toLowerCase() as keyof typeof colors.clothing
-          }
-          lipColor={
-            LIP_COLORS[
-              mouthColor
-            ]?.label.toLowerCase() as keyof typeof colors.lipColors
-          }
+          hatColor={hatKey}
+          hairColor={hairKey}
+          clothingColor={clothingKey}
+          lipColor={lipKey}
           mask={mask ?? false}
           faceMask={faceMask}
-          faceMaskColor={
-            CLOTHING_COLORS[
-              faceMaskColor
-            ]?.label.toLowerCase() as keyof typeof colors.clothing
-          }
+          faceMaskColor={faceMaskKey}
           lashes={lashes}
           shape={shape}
-          circleColor={
-            BG_COLORS[
-              circleColor
-            ]?.label.toLowerCase() as keyof typeof colors.bgColors
-          }
+          circleColor={bgKey}
           {...rest}
         />
       </ThemeContext.Provider>

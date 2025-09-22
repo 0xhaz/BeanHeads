@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { useBeanHeads } from "@/context/beanheads";
+import { useBreeder } from "@/context/breeder";
 import { svgParamsToAvatarProps, type SVGParams } from "@/utils/avatarMapping";
 import { normalizeSvgParams } from "@/utils/normalizeSvgParams";
 import { Avatar } from "@/components/Avatar";
@@ -58,6 +59,7 @@ const CollectionsPage = () => {
     batchSellTokens,
     cancelTokenSale,
   } = useBeanHeads();
+  const { getRarityPoints } = useBreeder();
   const account = useActiveAccount();
   const chain = useActiveWalletChain();
   const [loadingList, setLoadingList] = useState(false);
@@ -72,6 +74,7 @@ const CollectionsPage = () => {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [bulkPriceUSD, setBulkPriceUSD] = useState<string>("");
   const [listPriceUSD, setListPriceUSD] = useState<string>("");
+  const [rarityPoints, setRarityPoints] = useState<Record<string, bigint>>({});
 
   useEffect(() => {
     if (!account?.address) return;
@@ -104,12 +107,23 @@ const CollectionsPage = () => {
     }
   };
 
+  const fetchRarityPoints = async (tokenId: bigint) => {
+    const key = tokenId.toString();
+    try {
+      const points = await getRarityPoints(tokenId);
+      setRarityPoints(prev => ({ ...prev, [key]: points }));
+    } catch (e) {
+      console.error(`Error fetching rarity points for token ${tokenId}:`, e);
+    }
+  };
+
   const handleOpen = async (tokenId: bigint) => {
     const key = tokenId.toString();
     setIsOpen(key);
 
     if (detailsCache[key] || loadingMap[key]) {
       if (!detailsCache[key]?.sale) fetchSaleInfo(tokenId);
+      if (!rarityPoints[key]) fetchRarityPoints(tokenId);
       return;
     }
 
@@ -128,7 +142,10 @@ const CollectionsPage = () => {
           [key]: { ...(prev[key] ?? {}), params, generation },
         }));
       }
-      await fetchSaleInfo(tokenId);
+      await Promise.all([
+        await fetchSaleInfo(tokenId),
+        await fetchRarityPoints(tokenId),
+      ]);
     } catch (e) {
       console.error("Error fetching NFT details:", e);
     } finally {
@@ -340,6 +357,7 @@ const CollectionsPage = () => {
                       tokenId={tokenId}
                       params={cached.params}
                       generation={cached.generation}
+                      rarityPoints={rarityPoints[key]}
                       loading={false}
                       onClose={() => {
                         setIsOpen(null);
