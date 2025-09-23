@@ -22,6 +22,7 @@ type SaleInfo = {
 } | null;
 
 const USDC_DECIMALS = 18;
+const MAX_BREEDS = 5;
 
 function parseToUsd(usd: string): bigint {
   const s = usd.trim();
@@ -59,7 +60,7 @@ const CollectionsPage = () => {
     batchSellTokens,
     cancelTokenSale,
   } = useBeanHeads();
-  const { getRarityPoints } = useBreeder();
+  const { getRarityPoints, getParentBreedingCount } = useBreeder();
   const account = useActiveAccount();
   const chain = useActiveWalletChain();
   const [loadingList, setLoadingList] = useState(false);
@@ -75,6 +76,7 @@ const CollectionsPage = () => {
   const [bulkPriceUSD, setBulkPriceUSD] = useState<string>("");
   const [listPriceUSD, setListPriceUSD] = useState<string>("");
   const [rarityPoints, setRarityPoints] = useState<Record<string, bigint>>({});
+  const [breedCounts, setBreedCounts] = useState<Record<string, bigint>>({});
 
   useEffect(() => {
     if (!account?.address) return;
@@ -117,6 +119,20 @@ const CollectionsPage = () => {
     }
   };
 
+  const fetchBreedCount = async (tokenId: bigint) => {
+    const key = tokenId.toString();
+    try {
+      if (getParentBreedingCount) {
+        const count = await getParentBreedingCount(tokenId);
+        setBreedCounts(prev => ({ ...prev, [key]: count }));
+      } else {
+        console.warn("getParentBreedingCount is undefined");
+      }
+    } catch (e) {
+      console.error(`Error fetching breed count for token ${tokenId}:`, e);
+    }
+  };
+
   const handleOpen = async (tokenId: bigint) => {
     const key = tokenId.toString();
     setIsOpen(key);
@@ -124,6 +140,7 @@ const CollectionsPage = () => {
     if (detailsCache[key] || loadingMap[key]) {
       if (!detailsCache[key]?.sale) fetchSaleInfo(tokenId);
       if (!rarityPoints[key]) fetchRarityPoints(tokenId);
+      if (!breedCounts[key]) fetchBreedCount(tokenId);
       return;
     }
 
@@ -143,8 +160,9 @@ const CollectionsPage = () => {
         }));
       }
       await Promise.all([
-        await fetchSaleInfo(tokenId),
-        await fetchRarityPoints(tokenId),
+        fetchSaleInfo(tokenId),
+        fetchRarityPoints(tokenId),
+        fetchBreedCount(tokenId),
       ]);
     } catch (e) {
       console.error("Error fetching NFT details:", e);
@@ -358,6 +376,8 @@ const CollectionsPage = () => {
                       params={cached.params}
                       generation={cached.generation}
                       rarityPoints={rarityPoints[key]}
+                      breedCount={breedCounts[key]}
+                      maxBreeds={MAX_BREEDS}
                       loading={false}
                       onClose={() => {
                         setIsOpen(null);

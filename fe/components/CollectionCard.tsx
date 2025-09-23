@@ -27,6 +27,8 @@ interface CollectionCardProps {
   params: SVGParams;
   generation?: bigint;
   rarityPoints?: bigint;
+  breedCount?: bigint;
+  maxBreeds?: number;
   loading?: boolean;
   onClose: () => void;
 }
@@ -44,11 +46,16 @@ const CollectionCard = ({
   params,
   generation,
   rarityPoints,
+  breedCount,
+  maxBreeds = 5,
   loading,
   onClose,
 }: CollectionCardProps) => {
   // Convert *once* to the normalized/clamped AvatarProps
   const av = useMemo(() => svgParamsToAvatarProps(params), [params]);
+  const used = Number(breedCount ?? 0);
+  const max = Number(maxBreeds ?? 5);
+  const remaining = Math.max(0, max - used);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 text-white p-8 overflow-y-auto">
@@ -127,6 +134,9 @@ const CollectionCard = ({
               <h3 className="text-lg font-bold underline mb-2">Generation</h3>
               <p>Gen: {generation?.toString() ?? "-"}</p>
               <p>Rarity Points: {rarityPoints?.toString() ?? "0"}</p>
+              <p>
+                Breeds Used: {used} / {max}{" "}
+              </p>
             </div>
           </div>
         </div>
