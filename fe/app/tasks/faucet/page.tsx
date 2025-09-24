@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 
 type NetworkOpt = { label: string; value: string };
@@ -41,11 +41,11 @@ const Faucet = () => {
     }
   }, [chain?.id]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (account?.address) setAddress(account.address);
   }, [account?.address]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (suggestFromChain) setNetwork(suggestFromChain);
   }, [suggestFromChain]);
 
@@ -79,7 +79,7 @@ const Faucet = () => {
   }
 
   return (
-    <section className="p-6 text-black">
+    <section className="px-10 mt-10 text-black ">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold underline">Faucet</h1>
         <div className="text-sm text-white/70">
@@ -87,7 +87,7 @@ const Faucet = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 border border-black/20 p-6 rounded-xl">
         <div className="lg:col-span-2 bg-white/10 backdrop-blur border border-white/20 rounded-xl p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

@@ -12,6 +12,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {BHStorage} from "src/libraries/BHStorage.sol";
 import {IBeanHeadsMarketplace} from "src/interfaces/IBeanHeadsMarketplace.sol";
@@ -90,11 +91,11 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         token.safeTransferFrom(msg.sender, address(this), adjustedPrice);
 
         // calculate royalty and transfer it
-        (address royaltyReceiver, uint256 royaltyAmountRaw) = _royaltyInfo(_tokenId, adjustedPrice);
-        uint256 royaltyAmount = _getTokenAmountFromUsd(_paymentToken, royaltyAmountRaw);
+        (address royaltyReceiver, uint256 royaltyAmount) = _royaltyInfo(_tokenId, adjustedPrice);
+
         uint256 sellerAmount = adjustedPrice - royaltyAmount;
 
-        if (royaltyAmount > 0) {
+        if (royaltyAmount > 0 && royaltyReceiver != address(0)) {
             token.safeTransfer(royaltyReceiver, royaltyAmount);
             emit RoyaltyPaid(royaltyReceiver, _tokenId, price, royaltyAmount);
         }
@@ -120,11 +121,13 @@ contract BeanHeadsMarketplaceFacet is BeanHeadsBase, IBeanHeadsMarketplace {
         if (!ds.allowedTokens[_paymentToken]) _revert(IBeanHeadsMarketplace__TokenNotAllowed.selector);
 
         (uint256[] memory adjustedPrices, uint256 totalPrice) = _validateAndCalculatePrices(_tokenIds, _paymentToken);
+        console2.log("Total price in payment token:", totalPrice);
 
         _checkPaymentTokenAllowanceAndBalance(IERC20(_paymentToken), totalPrice);
 
         // Transfer tokens from buyer to contract
         IERC20(_paymentToken).safeTransferFrom(msg.sender, address(this), totalPrice);
+        console2.log("Tokens transferred from buyer to contract:", totalPrice);
 
         _processBatchTransfer(_buyer, _tokenIds, _paymentToken, adjustedPrices);
     }

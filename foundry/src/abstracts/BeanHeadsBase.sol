@@ -104,24 +104,26 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
      */
     function _getTokenAmountFromUsd(address token, uint256 usdAmount) internal view returns (uint256) {
         BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+        address feedAddr = ds.priceFeeds[token];
+        if (feedAddr == address(0)) _revert(IBeanHeadsBase__TokenNotAllowed.selector);
+
         AggregatorV3Interface priceFeed = AggregatorV3Interface(ds.priceFeeds[token]);
-        (, int256 answer,,,) = priceFeed.latestRoundData();
+        (uint80 roundId, int256 answer,, uint256 updatedAt, uint80 answeredInRound) = priceFeed.latestRoundData();
+        if (answer <= 0 || updatedAt == 0 || answeredInRound < roundId) {
+            _revert(IBeanHeadsBase__InvalidOraclePrice.selector);
+        }
 
-        if (answer <= 0) _revert(IBeanHeadsBase__InvalidOraclePrice.selector);
-
-        uint256 price = uint256(answer) * BHStorage.ADDITIONAL_FEED_PRECISION;
-        uint8 tokenDecimals = IERC20Metadata(token).decimals();
+        uint8 feedDecimals = priceFeed.decimals();
+        uint256 price = uint256(answer);
 
         // Required token amount = usdAmount / tokenPrice
-        uint256 tokenAmountIn18 = (usdAmount * BHStorage.PRECISION) / price;
+        uint256 tokenAmountIn18 = (usdAmount * (10 ** feedDecimals)) / price;
 
-        if (tokenDecimals < 18) {
-            return tokenAmountIn18 / (10 ** (18 - tokenDecimals));
-        } else if (tokenDecimals > 18) {
-            return tokenAmountIn18 * (10 ** (tokenDecimals - 18));
-        } else {
-            return tokenAmountIn18;
-        }
+        uint8 tokenDecimals = IERC20Metadata(token).decimals();
+
+        if (tokenDecimals < 18) return tokenAmountIn18 / (10 ** (18 - tokenDecimals));
+        if (tokenDecimals > 18) return tokenAmountIn18 * (10 ** (tokenDecimals - 18));
+        return tokenAmountIn18;
     }
 
     /**
@@ -199,36 +201,32 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
 
         BHStorage.Listing storage listing = _getListing(tokenId);
 
-        // Handle royalty
-        _handleRoyalty(tokenId, adjustedPrice, paymentToken);
+        address seller = listing.seller;
 
         // Seller payout
-        (, uint256 royaltyAmountRaw) = _royaltyInfo(tokenId, adjustedPrice);
-        uint256 royaltyAmount = _getTokenAmountFromUsd(paymentToken, royaltyAmountRaw);
+        (address royaltyReceiver, uint256 royaltyAmount) = _royaltyInfo(tokenId, adjustedPrice);
+        if (royaltyAmount > 0 && royaltyReceiver != address(0)) {
+            token.safeTransfer(royaltyReceiver, royaltyAmount);
+            emit IBeanHeadsMarketplace.RoyaltyPaid(royaltyReceiver, tokenId, adjustedPrice, royaltyAmount);
+        }
         uint256 sellerAmount = adjustedPrice - royaltyAmount;
-
-        token.safeTransfer(listing.seller, sellerAmount);
+        token.safeTransfer(seller, sellerAmount);
 
         // Transfer NFT to buyer
         ds.tokenIdToPaymentToken[tokenId] = paymentToken;
         _safeTransfer(address(this), buyer, tokenId, "");
 
-        emit IBeanHeadsMarketplace.TokenSold(buyer, listing.seller, tokenId, adjustedPrice);
+        emit IBeanHeadsMarketplace.TokenSold(buyer, seller, tokenId, adjustedPrice);
 
-        // Clear listing
         listing.seller = address(0);
         listing.price = 0;
         listing.isActive = false;
-
         ds.activeListings.remove(tokenId);
     }
 
     function _handleRoyalty(uint256 tokenId, uint256 adjustedPrice, address paymentToken) internal {
-        (address royaltyReceiver, uint256 royaltyAmountRaw) = _royaltyInfo(tokenId, adjustedPrice);
-        if (royaltyReceiver == address(0) || royaltyAmountRaw == 0) return;
-
-        uint256 royaltyAmount = _getTokenAmountFromUsd(paymentToken, royaltyAmountRaw);
-        if (royaltyAmount == 0) return;
+        (address royaltyReceiver, uint256 royaltyAmount) = _royaltyInfo(tokenId, adjustedPrice);
+        if (royaltyReceiver == address(0) || royaltyAmount == 0) return;
 
         IERC20(paymentToken).safeTransfer(royaltyReceiver, royaltyAmount);
         emit IBeanHeadsMarketplace.RoyaltyPaid(royaltyReceiver, tokenId, adjustedPrice, royaltyAmount);

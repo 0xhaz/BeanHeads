@@ -107,12 +107,14 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
 
         for (uint256 i = 0; i < sellRequests.length;) {
             PermitTypes.Sell calldata s = sellRequests[i];
-            if (!_exists(s.tokenId)) continue;
+            bool ok = _exists(s.tokenId);
 
-            // escrow and list
-            IERC721A(address(this)).transferFrom(s.owner, address(this), s.tokenId);
-            ds.tokenIdToListing[s.tokenId] = BHStorage.Listing({seller: s.owner, price: s.price, isActive: true});
-            ds.activeListings.add(s.tokenId);
+            if (ok) {
+                // escrow and list
+                IERC721A(address(this)).transferFrom(s.owner, address(this), s.tokenId);
+                ds.tokenIdToListing[s.tokenId] = BHStorage.Listing({seller: s.owner, price: s.price, isActive: true});
+                ds.activeListings.add(s.tokenId);
+            }
 
             emit TokenListedCrossChain(s.owner, s.tokenId, s.price);
             unchecked {
@@ -144,14 +146,18 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         }
         if (ds.tokenNonces[b.tokenId] != b.listingNonce) _revert(IPermit__InvalidNonce.selector);
 
+        address seller = listing.seller;
+
         PermitTypes.BuyLocals memory L = _calculatePaymentInfo(b, listing.price);
 
         _handlePaymentAndPermit(b, permitValue, permitDeadline, v, r, s, L);
 
-        _distributePayment(IERC20(b.paymentToken), listing.seller, L);
+        _distributePayment(IERC20(b.paymentToken), seller, L);
 
         ds.tokenIdToPaymentToken[b.tokenId] = b.paymentToken;
         _safeTransfer(address(this), b.recipient, b.tokenId, "");
+
+        emit TokenSoldCrossChain(b.recipient, seller, b.tokenId, L.adjustedPrice);
 
         // Clear the listing
         listing.seller = address(0);
@@ -162,8 +168,6 @@ contract BeanHeadsMarketplaceSigFacet is ERC721PermitBase, IBeanHeadsMarketplace
         }
 
         ds.activeListings.remove(b.tokenId);
-
-        emit TokenSoldCrossChain(b.recipient, listing.seller, b.tokenId, L.adjustedPrice);
     }
 
     /// @inheritdoc IBeanHeadsMarketplaceSig

@@ -475,171 +475,179 @@ const BreedingPage = () => {
 
   /* ---------- UI ---------- */
   return (
-    <div className="p-6 ">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold underline">Breeder</h1>
-        <div className="flex items-center gap-3">
-          <Select value={String(mode)} onValueChange={v => setMode(Number(v))}>
-            <SelectTrigger className="bg-white/10 border border-white/20 rounded px-3 py-2 text-black w-[200px]">
-              <SelectValue placeholder="Select breeding mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={String(BreedingMode.NewBreed)}>
-                New Breed
-              </SelectItem>
-              <SelectItem value={String(BreedingMode.Mutation)}>
-                Mutation
-              </SelectItem>
-              <SelectItem value={String(BreedingMode.Fusion)}>
-                Fusion
-              </SelectItem>
-              <SelectItem value={String(BreedingMode.Ascension)}>
-                Ascension
-              </SelectItem>
-            </SelectContent>
-          </Select>
+    <section>
+      <div className="p-6 ">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold underline">Breeder</h1>
+          <div className="flex items-center gap-3">
+            <Select
+              value={String(mode)}
+              onValueChange={v => setMode(Number(v))}
+            >
+              <SelectTrigger className="bg-white/10 border border-white/20 rounded px-3 py-2 text-black w-[200px]">
+                <SelectValue placeholder="Select breeding mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={String(BreedingMode.NewBreed)}>
+                  New Breed
+                </SelectItem>
+                <SelectItem value={String(BreedingMode.Mutation)}>
+                  Mutation
+                </SelectItem>
+                <SelectItem value={String(BreedingMode.Fusion)}>
+                  Fusion
+                </SelectItem>
+                <SelectItem value={String(BreedingMode.Ascension)}>
+                  Ascension
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
 
-      <div
-        className={`grid ${
-          mode === BreedingMode.Ascension
-            ? "grid-cols-1"
-            : "grid-cols-1 md:grid-cols-2"
-        } gap-8`}
-      >
-        <BreedSlot
-          label="Token 1"
-          which="p1"
-          token={parent1}
-          escrowOwner={escOwner1 as any}
-          escrowedByYou={escByYou(escOwner1)}
-          getAvatarProps={getAvatarProps}
-          ensureDetailsByTokenId={loadTokenDetailsByTokenId}
-          onRemove={() => {
-            setParent1(null);
-            saveSlots(
-              account?.address,
-              chain?.id,
-              null,
-              parent2?.tokenId ?? null
-            );
-          }}
-          onDropTokenId={async tid => {
-            if (!(await assertBreedable(tid))) return;
-            setParent1({ tokenId: tid });
-            refreshEscrowedStatus(tid);
-            loadTokenDetailsByTokenId(tid);
-          }}
-          onToggleDeposit={() => handleDepositToggle("p1")}
-        />
+        <div
+          className={`grid ${
+            mode === BreedingMode.Ascension
+              ? "grid-cols-1"
+              : "grid-cols-1 md:grid-cols-2"
+          } gap-8`}
+        >
+          <BreedSlot
+            label="Token 1"
+            which="p1"
+            token={parent1}
+            escrowOwner={escOwner1 as any}
+            escrowedByYou={escByYou(escOwner1)}
+            getAvatarProps={getAvatarProps}
+            ensureDetailsByTokenId={loadTokenDetailsByTokenId}
+            onRemove={() => {
+              setParent1(null);
+              saveSlots(
+                account?.address,
+                chain?.id,
+                null,
+                parent2?.tokenId ?? null
+              );
+            }}
+            onDropTokenId={async tid => {
+              if (!(await assertBreedable(tid))) return;
+              setParent1({ tokenId: tid });
+              refreshEscrowedStatus(tid);
+              loadTokenDetailsByTokenId(tid);
+            }}
+            onToggleDeposit={() => handleDepositToggle("p1")}
+          />
 
-        <BreedSlot
-          label="Token 2"
-          which="p2"
-          token={parent2}
-          hidden={mode === BreedingMode.Ascension}
-          escrowOwner={escOwner2 as any}
-          escrowedByYou={escByYou(escOwner2)}
-          getAvatarProps={getAvatarProps}
-          ensureDetailsByTokenId={loadTokenDetailsByTokenId}
-          onRemove={() => {
-            setParent2(null);
-            saveSlots(
-              account?.address,
-              chain?.id,
-              parent1?.tokenId ?? null,
-              null
-            );
-          }}
-          onDropTokenId={async tid => {
-            if (!(await assertBreedable(tid))) return;
-            setParent2({ tokenId: tid });
-            refreshEscrowedStatus(tid);
-            loadTokenDetailsByTokenId(tid);
-          }}
-          onToggleDeposit={() => handleDepositToggle("p2")}
-        />
-      </div>
+          <BreedSlot
+            label="Token 2"
+            which="p2"
+            token={parent2}
+            hidden={mode === BreedingMode.Ascension}
+            escrowOwner={escOwner2 as any}
+            escrowedByYou={escByYou(escOwner2)}
+            getAvatarProps={getAvatarProps}
+            ensureDetailsByTokenId={loadTokenDetailsByTokenId}
+            onRemove={() => {
+              setParent2(null);
+              saveSlots(
+                account?.address,
+                chain?.id,
+                parent1?.tokenId ?? null,
+                null
+              );
+            }}
+            onDropTokenId={async tid => {
+              if (!(await assertBreedable(tid))) return;
+              setParent2({ tokenId: tid });
+              refreshEscrowedStatus(tid);
+              loadTokenDetailsByTokenId(tid);
+            }}
+            onToggleDeposit={() => handleDepositToggle("p2")}
+          />
+        </div>
 
-      <div className="mt-6 flex justify-center">
-        <button className="btn-primary px-6 py-3 text-lg" onClick={handleBreed}>
-          Breed
-        </button>
-      </div>
+        <div className="mt-6 flex justify-center">
+          <button
+            className="btn-primary px-6 py-3 text-lg"
+            onClick={handleBreed}
+          >
+            Breed
+          </button>
+        </div>
 
-      {/* Wallet NFTs */}
-      <div className="mt-10">
-        <div className="text-lg mb-2">Your NFTs</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 p-4">
-          {tokens.map(({ tokenId }) => {
-            const key = tokenId.toString();
-            const cached = detailsCache[key];
-            const inFlight = !!loadingMap[key];
-            const props = cached?.params
-              ? svgParamsToAvatarProps(cached.params)
-              : undefined;
-            const disabled = inSlots(tokenId);
+        {/* Wallet NFTs */}
+        <div className="mt-10">
+          <div className="text-lg mb-2">Your NFTs</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 p-4">
+            {tokens.map(({ tokenId }) => {
+              const key = tokenId.toString();
+              const cached = detailsCache[key];
+              const inFlight = !!loadingMap[key];
+              const props = cached?.params
+                ? svgParamsToAvatarProps(cached.params)
+                : undefined;
+              const disabled = inSlots(tokenId);
 
-            return (
-              <div
-                key={key}
-                draggable={!disabled}
-                onDragStart={e => {
-                  e.dataTransfer.setData("text/plain", String(tokenId));
-                  e.dataTransfer.effectAllowed = "copy";
-                }}
-                className={[
-                  "group relative h-[250px] w-[250px] rounded-3xl border-4 border-white shadow-lg overflow-hidden",
-                  disabled ? "opacity-50 cursor-not-allowed" : "cursor-grab",
-                ].join(" ")}
-              >
-                {props ? (
-                  <Avatar {...props} />
-                ) : (
-                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-white/70">
-                    BeanHead #{key}
-                  </div>
-                )}
-
-                {!disabled && (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl cursor-pointer"
-                    onClick={() => {
-                      setIsOpen(key);
-                      if (!cached && !inFlight)
-                        loadTokenDetailsByOwner(tokenId);
-                    }}
-                  >
-                    <div className="text-white text-lg font-bold">
-                      {cached
-                        ? "View Details"
-                        : inFlight
-                        ? "Loading…"
-                        : "Load Details"}
+              return (
+                <div
+                  key={key}
+                  draggable={!disabled}
+                  onDragStart={e => {
+                    e.dataTransfer.setData("text/plain", String(tokenId));
+                    e.dataTransfer.effectAllowed = "copy";
+                  }}
+                  className={[
+                    "group relative h-[250px] w-[250px] rounded-3xl border-4 border-white shadow-lg overflow-hidden",
+                    disabled ? "opacity-50 cursor-not-allowed" : "cursor-grab",
+                  ].join(" ")}
+                >
+                  {props ? (
+                    <Avatar {...props} />
+                  ) : (
+                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-white/70">
+                      BeanHead #{key}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {isOpen === key && cached && !disabled && (
-                  <div className="fixed inset-0 z-50">
-                    <CollectionCard
-                      tokenId={tokenId}
-                      params={cached.params!}
-                      generation={cached.generation!}
-                      rarityPoints={rarityPoints[key]}
-                      breedCount={breedCounts[key]}
-                      loading={false}
-                      onClose={() => setIsOpen(null)}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  {!disabled && (
+                    <div
+                      className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl cursor-pointer"
+                      onClick={() => {
+                        setIsOpen(key);
+                        if (!cached && !inFlight)
+                          loadTokenDetailsByOwner(tokenId);
+                      }}
+                    >
+                      <div className="text-white text-lg font-bold">
+                        {cached
+                          ? "View Details"
+                          : inFlight
+                          ? "Loading…"
+                          : "Load Details"}
+                      </div>
+                    </div>
+                  )}
+
+                  {isOpen === key && cached && !disabled && (
+                    <div className="fixed inset-0 z-50">
+                      <CollectionCard
+                        tokenId={tokenId}
+                        params={cached.params!}
+                        generation={cached.generation!}
+                        rarityPoints={rarityPoints[key]}
+                        breedCount={breedCounts[key]}
+                        loading={false}
+                        onClose={() => setIsOpen(null)}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
