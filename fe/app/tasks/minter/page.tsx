@@ -8,6 +8,7 @@ import {
 } from "@/components/Avatar";
 import { useBeanHeads } from "@/context/beanheads";
 import { USDC_ADDRESS } from "@/constants/contract";
+import { toast } from "sonner";
 
 const pages = [
   ["Hair", "/icons/hair.svg"],
@@ -41,11 +42,11 @@ const MintPage = () => {
   const handleMint = () => {
     if (!selectedAttributes) return;
     if (!account) {
-      alert("Please connect your wallet to mint.");
+      toast("Please connect your wallet to mint.");
       return;
     }
     if (!chain) {
-      alert("Please select a network to mint.");
+      toast("Please select a network to mint.");
       return;
     }
 
@@ -58,14 +59,14 @@ const MintPage = () => {
       )
         .then(tx => {
           console.log("Minting transaction:", tx);
-          alert("Minting successful!");
+          toast("Minting successful!");
         })
         .catch(err => {
           console.error("Minting error:", err);
-          alert("Minting failed. Please try again.");
+          toast("Minting failed. Please try again.");
         });
     } else {
-      alert("Minting function is not available.");
+      toast("Minting function is not available.");
     }
   };
 

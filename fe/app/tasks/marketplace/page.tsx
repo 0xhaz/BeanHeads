@@ -10,6 +10,7 @@ import { Avatar } from "@/components/Avatar";
 import CollectionCard from "@/components/CollectionCard";
 import Image from "next/image";
 import { USDC_ADDRESS } from "@/constants/contract";
+import { toast } from "sonner";
 
 type CacheEntry = {
   params?: SVGParams;
@@ -51,7 +52,7 @@ const Marketplace = () => {
     batchBuyTokens,
     cancelTokenSale,
   } = useBeanHeads();
-  const { getRarityPoints } = useBreeder();
+  const { getRarityPoints, getParentBreedingCount } = useBreeder();
 
   const account = useActiveAccount();
   const chain = useActiveWalletChain();
@@ -64,6 +65,7 @@ const Marketplace = () => {
   const [isOpen, setIsOpen] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [rarityPoints, setRarityPoints] = useState<Record<string, bigint>>({});
+  const [breedCounts, setBreedCounts] = useState<Record<string, bigint>>({});
 
   const fetchRarityPoints = async (tokenId: bigint) => {
     const key = tokenId.toString();
@@ -72,6 +74,20 @@ const Marketplace = () => {
       setRarityPoints(prev => ({ ...prev, [key]: points }));
     } catch (e) {
       console.error(`Error fetching rarity points for token ${tokenId}:`, e);
+    }
+  };
+
+  const fetchBreedCount = async (tokenId: bigint) => {
+    const key = tokenId.toString();
+    try {
+      if (getParentBreedingCount) {
+        const count = await getParentBreedingCount(tokenId);
+        setBreedCounts(prev => ({ ...prev, [key]: count }));
+      } else {
+        console.warn("getParentBreedingCount is undefined");
+      }
+    } catch (e) {
+      console.error(`Error fetching breed count for token ${tokenId}:`, e);
     }
   };
 
@@ -136,10 +152,13 @@ const Marketplace = () => {
     const key = tokenId.toString();
     try {
       setLoadingMap(m => ({ ...m, [key]: true }));
-      const [raw, generation, points] = await Promise.all([
+      const [raw, generation, points, breedCount] = await Promise.all([
         getAttributesByTokenId(tokenId),
         getGeneration(tokenId),
         getRarityPoints(tokenId),
+        getParentBreedingCount
+          ? getParentBreedingCount(tokenId)
+          : Promise.resolve(undefined),
       ]);
       setCache(prev => {
         const curr = prev[key] ?? {};
@@ -149,6 +168,9 @@ const Marketplace = () => {
       });
 
       setRarityPoints(prev => ({ ...prev, [key]: points }));
+      if (breedCount !== undefined) {
+        setBreedCounts(prev => ({ ...prev, [key]: breedCount }));
+      }
     } catch (e) {
       console.error(`fetchDetails #${key}:`, e);
     } finally {
@@ -167,34 +189,36 @@ const Marketplace = () => {
   };
 
   const handleBuy = async (id: bigint) => {
-    if (!account || !chain) return alert("Connect wallet first");
+    if (!account || !chain) return toast("Connect wallet first");
     try {
       await buyToken(
         account.address as `0x${string}`,
         id,
         USDC_ADDRESS[chain.id]
       );
+      toast("Purchase successful");
       await refreshIds(); // card disappears -> badge gone
       setIsOpen(null);
     } catch (e) {
       console.error(e);
-      alert("Purchase failed");
+      toast("Purchase failed");
     }
   };
 
   const handleCancel = async (id: bigint) => {
     try {
       await cancelTokenSale(id);
+      toast("Listing cancelled");
       await refreshIds(); // card disappears
       setIsOpen(null);
     } catch (e) {
       console.error(e);
-      alert("Cancel failed");
+      toast("Cancel failed");
     }
   };
 
   const handleBulkBuy = async () => {
-    if (!account || !chain) return alert("Connect wallet first");
+    if (!account || !chain) return toast("Connect wallet first");
     const toBuy = Object.keys(selected)
       .filter(k => selected[k])
       .map(k => BigInt(k));
@@ -205,11 +229,12 @@ const Marketplace = () => {
         toBuy,
         USDC_ADDRESS[chain.id]
       );
+      toast("Bulk purchase successful");
       setSelected({});
       await refreshIds();
     } catch (e) {
       console.error(e);
-      alert("Batch purchase failed");
+      toast("Bulk purchase failed");
     }
   };
 
@@ -318,6 +343,7 @@ const Marketplace = () => {
                         params={entry.params}
                         generation={entry.generation}
                         rarityPoints={rarityPoints[key]}
+                        breedCount={breedCounts[key]}
                         loading={false}
                         onClose={() => setIsOpen(null)}
                       />

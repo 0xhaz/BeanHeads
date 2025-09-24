@@ -8,6 +8,7 @@ import { svgParamsToAvatarProps, type SVGParams } from "@/utils/avatarMapping";
 import { normalizeSvgParams } from "@/utils/normalizeSvgParams";
 import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
+import { toast } from "sonner";
 import CollectionCard from "@/components/CollectionCard";
 
 import Image from "next/image";
@@ -192,10 +193,12 @@ const CollectionsPage = () => {
       const prices = tokenIds.map(() => price1e18);
       await batchSellTokens(tokenIds, prices);
       await Promise.all(tokenIds.map(fetchSaleInfo));
+      toast("Bulk listing successful");
       clearSelection();
       setSelectMode(false);
     } catch (e) {
       console.error("Error during bulk listing:", e);
+      toast("Bulk listing failed");
     }
   };
 
@@ -211,9 +214,11 @@ const CollectionsPage = () => {
       setTokens(owned.map(id => ({ tokenId: id })));
 
       setListPriceUSD("");
+      toast("Listing successful");
       setIsOpen(null);
     } catch (e) {
       console.error("Error during single listing:", e);
+      toast("Listing failed");
     }
   };
 

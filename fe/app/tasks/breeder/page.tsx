@@ -20,8 +20,11 @@ import { type SVGParams, svgParamsToAvatarProps } from "@/utils/avatarMapping";
 import { normalizeSvgParams } from "@/utils/normalizeSvgParams";
 import Link from "next/link";
 import CollectionCard from "@/components/CollectionCard";
+import { toast } from "sonner";
 
 type WalletNFT = { tokenId: bigint };
+
+const MAX_BREEDS = 5;
 
 const BreedingPage = () => {
   const account = useActiveAccount();
@@ -42,6 +45,7 @@ const BreedingPage = () => {
     withdrawBeanHeads,
     getEscrowedTokenOwner,
     getRarityPoints,
+    getParentBreedingCount,
   } = useBreeder();
 
   const [loadingList, setLoadingList] = useState(false);
@@ -58,6 +62,7 @@ const BreedingPage = () => {
   const [parent2, setParent2] = useState<WalletNFT | null>(null);
   const [mode, setMode] = useState<number>(BreedingMode.NewBreed);
   const [rarityPoints, setRarityPoints] = useState<Record<string, bigint>>({});
+  const [breedCounts, setBreedCounts] = useState<Record<string, bigint>>({});
 
   // tokenId -> escrow owner (or null if not escrowed)
   const [escrowedOwner, setEscrowedOwner] = useState<
@@ -110,6 +115,20 @@ const BreedingPage = () => {
     }
   }
 
+  const fetchBreedCount = async (tokenId: bigint) => {
+    const key = tokenId.toString();
+    try {
+      if (getParentBreedingCount) {
+        const count = await getParentBreedingCount(tokenId);
+        setBreedCounts(prev => ({ ...prev, [key]: count }));
+      } else {
+        console.warn("getParentBreedingCount is undefined");
+      }
+    } catch (e) {
+      console.error(`Error fetching breed count for token ${tokenId}:`, e);
+    }
+  };
+
   async function tokenExists(tokenId: bigint) {
     try {
       await getOwnerOf(tokenId);
@@ -117,6 +136,30 @@ const BreedingPage = () => {
     } catch {
       return false;
     }
+  }
+
+  async function assertBreedable(tid: bigint): Promise<boolean> {
+    const key = tid.toString();
+    let count = breedCounts[key];
+
+    try {
+      if (count === undefined) {
+        if (!getParentBreedingCount) return true;
+        count = await getParentBreedingCount(tid);
+        setBreedCounts(prev => ({ ...prev, [key]: count! }));
+      }
+    } catch (e) {
+      console.error(`assertBreedable #${key}:`, e);
+      return true;
+    }
+
+    if ((count as bigint) >= BigInt(MAX_BREEDS)) {
+      toast(
+        `BeanHead #${key} has reached the maximum number of breeds (${MAX_BREEDS}).`
+      );
+      return false;
+    }
+    return true;
   }
 
   /* ---------- data loaders ---------- */
@@ -162,6 +205,7 @@ const BreedingPage = () => {
         },
       }));
       if (!rarityPoints[key]) await fetchRarityPoints(tokenId);
+      if (!breedCounts[key]) await fetchBreedCount(tokenId);
     } finally {
       setLoadingMap(m => ({ ...m, [key]: false }));
     }
@@ -191,6 +235,7 @@ const BreedingPage = () => {
         },
       }));
       if (!rarityPoints[key]) await fetchRarityPoints(tokenId);
+      if (!breedCounts[key]) await fetchBreedCount(tokenId);
     } finally {
       setLoadingMap(m => ({ ...m, [key]: false }));
     }
@@ -263,6 +308,13 @@ const BreedingPage = () => {
         nextP2 = null;
       }
 
+      if (nextP1 && !(await assertBreedable(nextP1))) {
+        nextP1 = null;
+      }
+      if (nextP2 && !(await assertBreedable(nextP2))) {
+        nextP2 = null;
+      }
+
       setParent1(nextP1 ? { tokenId: nextP1 } : null);
       setParent2(nextP2 ? { tokenId: nextP2 } : null);
       saveSlots(account.address, chain.id, nextP1, nextP2);
@@ -296,7 +348,7 @@ const BreedingPage = () => {
 
       if (isEscrowed) {
         if (!isMine) {
-          return alert("This token is escrowed by another user");
+          return toast("This token is escrowed by another user");
         }
 
         await withdrawBeanHeads(item.tokenId);
@@ -311,43 +363,49 @@ const BreedingPage = () => {
           which === "p2" ? null : parent2?.tokenId ?? null
         );
 
-        alert(`Withdrew token #${String(item.tokenId)}`);
+        toast(`Withdrew token #${String(item.tokenId)}`);
       } else {
+        if (!(await assertBreedable(item.tokenId))) {
+          if (which === "p1") setParent1(null);
+          else setParent2(null);
+
+          saveSlots(
+            account.address,
+            chain?.id,
+            which === "p1" ? item.tokenId : parent1?.tokenId ?? null,
+            which === "p2" ? item.tokenId : parent2?.tokenId ?? null
+          );
+          return;
+        }
+
         await depositBeanHeads(item.tokenId);
         await loadTokenDetailsByTokenId(item.tokenId);
 
-        saveSlots(
-          account.address,
-          chain?.id,
-          which === "p1" ? item.tokenId : parent1?.tokenId ?? null,
-          which === "p2" ? item.tokenId : parent2?.tokenId ?? null
-        );
-
-        alert(`Deposited token #${String(item.tokenId)}`);
+        toast(`Deposited token #${String(item.tokenId)}`);
       }
 
       await refreshEscrowedStatus(item.tokenId);
     } catch (e) {
       console.error(e);
-      alert("Action failed");
+      toast("Action failed");
     }
   }
 
   async function handleBreed() {
     if (!account || !chain)
-      return alert("Connect your wallet and select a network");
+      return toast("Connect your wallet and select a network");
 
     if (mode === BreedingMode.Ascension) {
-      if (!parent1) return alert("Select Token 1 (Ascension uses only one)");
+      if (!parent1) return toast("Select Token 1 (Ascension uses only one)");
     } else {
-      if (!parent1 || !parent2) return alert("Select both tokens");
+      if (!parent1 || !parent2) return toast("Select both tokens");
       if (parent1.tokenId === parent2.tokenId)
-        return alert("Cannot breed the same token");
+        return toast("Cannot breed the same token");
     }
 
     const tokenAddr = USDC_ADDRESS[chain.id as keyof typeof USDC_ADDRESS];
     if (!tokenAddr) {
-      alert("USDC not configured for this network");
+      toast("USDC not configured for this network");
       return;
     }
 
@@ -364,10 +422,10 @@ const BreedingPage = () => {
         setParent2(null);
         saveSlots(account.address, chain?.id, null, null);
       }
-      alert("Breed request submitted");
+      toast("Breed request submitted");
     } catch (e) {
       console.error(e);
-      alert("Breeding failed");
+      toast("Breeding failed");
     }
   }
 
@@ -467,7 +525,8 @@ const BreedingPage = () => {
               parent2?.tokenId ?? null
             );
           }}
-          onDropTokenId={tid => {
+          onDropTokenId={async tid => {
+            if (!(await assertBreedable(tid))) return;
             setParent1({ tokenId: tid });
             refreshEscrowedStatus(tid);
             loadTokenDetailsByTokenId(tid);
@@ -493,7 +552,8 @@ const BreedingPage = () => {
               null
             );
           }}
-          onDropTokenId={tid => {
+          onDropTokenId={async tid => {
+            if (!(await assertBreedable(tid))) return;
             setParent2({ tokenId: tid });
             refreshEscrowedStatus(tid);
             loadTokenDetailsByTokenId(tid);
@@ -568,6 +628,7 @@ const BreedingPage = () => {
                       params={cached.params!}
                       generation={cached.generation!}
                       rarityPoints={rarityPoints[key]}
+                      breedCount={breedCounts[key]}
                       loading={false}
                       onClose={() => setIsOpen(null)}
                     />
