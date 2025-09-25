@@ -17,6 +17,7 @@ import {IBeanHeadsView} from "src/interfaces/IBeanHeadsView.sol";
 import {IBeanHeadsBreeding} from "src/interfaces/IBeanHeadsBreeding.sol";
 import {IBeanHeadsAdmin} from "src/interfaces/IBeanHeadsAdmin.sol";
 import {BeanHeadsBase} from "src/abstracts/BeanHeadsBase.sol";
+import {PermitTypes} from "src/types/PermitTypes.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 contract BeanHeadsTest is Test, Helpers {
@@ -532,6 +533,16 @@ contract BeanHeadsTest is Test, Helpers {
         assertTrue(!beanHeads.isTokenForSale(tokenId2));
 
         vm.stopPrank();
+    }
+
+    function test_Sell_Buy_With_Permits() public {
+        uint256 usdPrice = 10 ether;
+        uint256 tokenId = beanHeads.mintGenesis(USER, params, 1, address(mockERC20));
+
+        vm.prank(USER);
+        // beanHeads.sellTokenWithPermit(
+
+        // );
     }
 
     function test_setRoyaltyInfo_FailWithRevert() public {

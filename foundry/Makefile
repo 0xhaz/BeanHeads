@@ -37,11 +37,11 @@ ifeq ($(findstring --network sepolia,$(ARGS)),--network sepolia)
 endif
 
 ifeq ($(findstring --network arbitrum-sepolia,$(ARGS)),--network arbitrum-sepolia)
-	NETWORK_ARGS := --rpc-url $(ARBITRUM_SEPOLIA_RPC_URL) --account testnetKey --sender $(OWNER) --broadcast --verify --etherscan-api-key $(ARBISCAN_API_KEY) -vvvv
+	NETWORK_ARGS := --rpc-url $(ARBITRUM_SEPOLIA_RPC_URL) --account testnetKey --sender $(OWNER) --broadcast --verify --etherscan-api-key $(ETHERSCAN_API_KEY) -vvvv
 endif
 
 ifeq ($(findstring --network optimism-sepolia,$(ARGS)),--network optimism-sepolia)
-	NETWORK_ARGS := --rpc-url $(OPTIMISM_SEPOLIA_RPC_URL) --account testnetKey --sender $(OWNER) --broadcast 
+	NETWORK_ARGS := --rpc-url $(OPTIMISM_SEPOLIA_RPC_URL) --account testnetKey --sender $(OWNER) --broadcast --verify --etherscan-api-key $(ETHERSCAN_API_KEY) -vvvv
 endif
 
 deploy:
