@@ -372,8 +372,8 @@ const BreedingPage = () => {
           saveSlots(
             account.address,
             chain?.id,
-            which === "p1" ? item.tokenId : parent1?.tokenId ?? null,
-            which === "p2" ? item.tokenId : parent2?.tokenId ?? null
+            which === "p1" ? null : parent1?.tokenId ?? null,
+            which === "p2" ? null : parent2?.tokenId ?? null
           );
           return;
         }
@@ -449,16 +449,6 @@ const BreedingPage = () => {
   if (loadingList)
     return <div className="p-8 text-center text-lg">Loading your tokens…</div>;
   if (error) return <div className="p-8 text-center text-red-400">{error}</div>;
-  if (tokens.length === 0) {
-    return (
-      <div className="p-8 text-center text-lg">
-        You do not own any BeanHeads NFTs yet.{" "}
-        <Link href="/tasks/minter" className="text-blue-500 underline">
-          Mint one now!
-        </Link>
-      </div>
-    );
-  }
 
   const escOwner1 = parent1
     ? escrowedOwner[parent1.tokenId.toString()] ?? null
@@ -484,7 +474,7 @@ const BreedingPage = () => {
               value={String(mode)}
               onValueChange={v => setMode(Number(v))}
             >
-              <SelectTrigger className="bg-white/10 border border-white/20 rounded px-3 py-2 text-black w-[200px]">
+              <SelectTrigger className="bg-white/10 border border-black/20 rounded px-3 py-2 text-black w-[200px]">
                 <SelectValue placeholder="Select breeding mode" />
               </SelectTrigger>
               <SelectContent>
@@ -532,6 +522,12 @@ const BreedingPage = () => {
             onDropTokenId={async tid => {
               if (!(await assertBreedable(tid))) return;
               setParent1({ tokenId: tid });
+              saveSlots(
+                account?.address,
+                chain?.id,
+                tid,
+                parent2?.tokenId ?? null
+              );
               refreshEscrowedStatus(tid);
               loadTokenDetailsByTokenId(tid);
             }}
@@ -559,6 +555,12 @@ const BreedingPage = () => {
             onDropTokenId={async tid => {
               if (!(await assertBreedable(tid))) return;
               setParent2({ tokenId: tid });
+              saveSlots(
+                account?.address,
+                chain?.id,
+                parent1?.tokenId ?? null,
+                tid
+              );
               refreshEscrowedStatus(tid);
               loadTokenDetailsByTokenId(tid);
             }}
