@@ -2,11 +2,9 @@
 pragma solidity ^0.8.24;
 
 import {VRFConsumerBaseV2Plus} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
-import {ConfirmedOwner} from "chainlink-brownie-contracts/contracts/src/v0.8/shared/access/ConfirmedOwner.sol";
 import {VRFCoordinatorV2_5} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFCoordinatorV2_5.sol";
 import {VRFV2PlusClient} from "chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 import {IERC721A} from "ERC721A/IERC721A.sol";
-import {ConfirmedOwner} from "chainlink-brownie-contracts/contracts/src/v0.8/shared/access/ConfirmedOwner.sol";
 import {IERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from
@@ -37,10 +35,10 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     // Chainlink VRF parameters
     uint256 private immutable i_subscriptionId;
     bytes32 private immutable i_keyHash;
-    uint32 private constant GAS_LIMIT = 500_000; // Gas limit for the VRF callback
-    uint16 private constant REQUEST_CONFIRMATIONS = 3; // Number of confirmations for the VRF request
-    uint256 private BREED_COOL_DOWN = 50; // Cool down period for breeding requests
-    uint256 private constant MAX_BREED_REQUESTS = 5; // Maximum number of breed requests per user
+    uint32 private immutable i_gasLimit; // Gas limit for the VRF callback
+    uint16 private immutable i_requestConfirmations; // Number of confirmations for the VRF request
+    uint256 private s_breedCoolDown; // Cool down period for breeding requests
+    uint256 private immutable i_maxBreedRequests; // Maximum number of breed requests per user
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
     uint256 private constant PRECISION = 1e18;
 
@@ -62,13 +60,31 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
     /// @notice Mapping of each parent used in breeding
     mapping(uint256 tokenId => uint256 count) public s_parentBreedingCount;
 
+    /// @notice Mapping for refundable balances per user/token
+    mapping(address user => mapping(address token => uint256 amount)) public s_refundable;
+
+    /// @notice Mapping to track contract balance in case of refunds
+    mapping(address token => uint256 amount) public s_totalRefundable;
+
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(address _owner, address _beanHeads, address _vrfCoordinator, uint256 _subscriptionId, bytes32 _keyHash)
-        VRFConsumerBaseV2Plus(_vrfCoordinator)
-    {
+    constructor(
+        address _owner,
+        address _beanHeads,
+        uint32 _gasLimit,
+        uint16 _requestConfirmations,
+        uint256 _breedCoolDown,
+        uint256 _maxBreedRequests,
+        address _vrfCoordinator,
+        uint256 _subscriptionId,
+        bytes32 _keyHash
+    ) VRFConsumerBaseV2Plus(_vrfCoordinator) {
         i_beanHeads = IBeanHeads(_beanHeads);
+        i_gasLimit = _gasLimit;
+        i_requestConfirmations = _requestConfirmations;
+        s_breedCoolDown = _breedCoolDown;
+        i_maxBreedRequests = _maxBreedRequests;
         s_vrfCoordinator = VRFCoordinatorV2_5(_vrfCoordinator);
         i_subscriptionId = _subscriptionId;
         i_keyHash = _keyHash;
@@ -140,9 +156,7 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
 
         IERC20 token = IERC20(paymentToken);
         uint256 price = i_beanHeads.getMintPrice();
-
         uint256 tokenAmount = _getTokenAmountFromUsd(paymentToken, price);
-
         uint256 allowance = token.allowance(msg.sender, address(this));
         uint256 balance = token.balanceOf(msg.sender);
 
@@ -153,14 +167,14 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
 
         // Check if the pairing parents have already been used in breeding
         if (
-            s_parentBreedingCount[parent1Id] >= MAX_BREED_REQUESTS
-                || s_parentBreedingCount[parent2Id] >= MAX_BREED_REQUESTS
+            s_parentBreedingCount[parent1Id] >= i_maxBreedRequests
+                || s_parentBreedingCount[parent2Id] >= i_maxBreedRequests
         ) {
             revert IBeanHeadsBreeder__BreedLimitReached();
         }
 
-        // Check if the user has already requested a breed in the last BREED_COOL_DOWN blocks
-        if (s_lastBreedingBlock[msg.sender] + BREED_COOL_DOWN > block.number) {
+        // Check if the user has already requested a breed in the last i_breedCoolDown blocks
+        if (s_lastBreedingBlock[msg.sender] + s_breedCoolDown > block.number) {
             revert IBeanHeadsBreeder__CoolDownNotPassed();
         }
 
@@ -168,22 +182,45 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
             VRFV2PlusClient.RandomWordsRequest({
                 keyHash: i_keyHash,
                 subId: i_subscriptionId,
-                requestConfirmations: REQUEST_CONFIRMATIONS,
-                callbackGasLimit: GAS_LIMIT,
+                requestConfirmations: i_requestConfirmations,
+                callbackGasLimit: i_gasLimit,
                 numWords: 1,
                 extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
             })
         );
 
-        s_breedRequests[requestId] =
-            BreedRequest({owner: msg.sender, parent1Id: parent1Id, parent2Id: parent2Id, mode: mode});
+        s_breedRequests[requestId] = BreedRequest({
+            owner: msg.sender,
+            parent1Id: parent1Id,
+            parent2Id: parent2Id,
+            mode: mode,
+            paymentToken: paymentToken,
+            paymentAmount: tokenAmount,
+            requestedAt: uint48(block.timestamp),
+            status: RequestStatus.PENDING
+        });
 
         // Update the last breeding block for the user
         s_lastBreedingBlock[msg.sender] = block.number;
 
+        if (mode == BreedingMode.Ascension) {
+            if (s_parentBreedingCount[parent1Id] >= i_maxBreedRequests) {
+                revert IBeanHeadsBreeder__BreedLimitReached();
+            }
+        } else {
+            if (
+                s_parentBreedingCount[parent1Id] >= i_maxBreedRequests
+                    || s_parentBreedingCount[parent2Id] >= i_maxBreedRequests
+            ) {
+                revert IBeanHeadsBreeder__BreedLimitReached();
+            }
+        }
+
         // Increment the breeding count for the parents
         s_parentBreedingCount[parent1Id]++;
-        s_parentBreedingCount[parent2Id]++;
+        if (mode != BreedingMode.Ascension) {
+            s_parentBreedingCount[parent2Id]++;
+        }
 
         emit RequestBreed(msg.sender, parent1Id, parent2Id, requestId, mode);
     }
@@ -192,36 +229,76 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
                            EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     function setCoolDown(uint256 coolDown) external onlyOwner {
-        BREED_COOL_DOWN = coolDown;
+        s_breedCoolDown = coolDown;
     }
 
-    /// @notice Inherits from IBeanHeadsBreeder
+    /// @inheritdoc IBeanHeadsBreeder
     function getRarityPoints(uint256 tokenId) external view override returns (uint256) {
         return s_mutatedRarityPoints[tokenId];
     }
 
-    /// @notice Inherits from IBeanHeadsBreeder
+    /// @inheritdoc IBeanHeadsBreeder
     function getBreedRequest(uint256 requestId) external view override returns (BreedRequest memory request) {
         request = s_breedRequests[requestId];
         if (request.owner == address(0)) revert IBeanHeadsBreeder__InvalidRequestId();
     }
 
-    /// @notice Inherits from IBeanHeadsBreeder
+    /// @inheritdoc IBeanHeadsBreeder
     function getEscrowedTokenOwner(uint256 tokenId) external view override returns (address owner) {
         owner = s_escrowedTokens[tokenId];
         if (owner == address(0)) revert IBeanHeadsBreeder__InvalidRequestId();
     }
 
-    /// @notice Inherits from IBeanHeadsBreeder
+    /// @inheritdoc IBeanHeadsBreeder
     function getParentBreedingCount(uint256 tokenId) external view override returns (uint256 count) {
         count = s_parentBreedingCount[tokenId];
     }
 
+    /// @inheritdoc IBeanHeadsBreeder
     function withdrawFunds(address token) external onlyOwner {
-        uint256 amount = IERC20(token).balanceOf(address(this));
-        if (amount > 0) IERC20(token).safeTransfer(msg.sender, amount);
+        uint256 bal = IERC20(token).balanceOf(address(this));
+        uint256 liab = s_totalRefundable[token];
+        if (bal <= liab) revert IBeanHeadsBreeder__InsufficientBalance();
+
+        uint256 amount = bal - liab;
+        IERC20(token).safeTransfer(msg.sender, amount);
 
         emit FundsWithdrawn(token, amount);
+    }
+
+    function claimRefund(address token) external {
+        uint256 amt = s_refundable[msg.sender][token];
+        if (amt == 0) revert IBeanHeadsBreeder__NoRefundableAmount();
+
+        s_refundable[msg.sender][token] = 0;
+        s_totalRefundable[token] -= amt;
+        IERC20(token).safeTransfer(msg.sender, amt);
+
+        emit RequestRefunded(msg.sender, token, amt);
+    }
+
+    function timeoutRefund(uint256 requestId) external {
+        BreedRequest storage R = s_breedRequests[requestId];
+        if (R.owner == address(0)) revert IBeanHeadsBreeder__NotOwner();
+        if (R.status != RequestStatus.PENDING) revert IBeanHeadsBreeder__StatusNotPending();
+        if (msg.sender != R.owner) revert IBeanHeadsBreeder__NotRequestor();
+
+        address owner = R.owner;
+        address paymentToken = R.paymentToken;
+        uint256 paymentAmount = R.paymentAmount;
+
+        R.status = RequestStatus.EXPIRED;
+        _failAndRefund(requestId);
+
+        emit RequestExpired(requestId, owner, paymentToken, paymentAmount);
+
+        delete s_breedRequests[requestId];
+    }
+
+    function settleRequestExternal(uint256 requestId, uint256 randomWord) external returns (bool) {
+        if (msg.sender != address(this)) revert IBeanHeadsBreeder__NotOwner();
+
+        return _settleRequest(requestId, randomWord);
     }
 
     receive() external payable {}
@@ -243,9 +320,11 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         if (feedAddress == address(0)) revert IBeanHeadsBreeder__InvalidToken();
 
         AggregatorV3Interface priceFeed = AggregatorV3Interface(feedAddress);
-        (, int256 answer,,,) = priceFeed.latestRoundData();
+        (uint80 roundId, int256 answer,, uint256 updatedAt, uint80 answeredInRound) = priceFeed.latestRoundData();
 
         if (answer <= 0) revert IBeanHeadsBreeder__InvalidOraclePrice();
+        if (answeredInRound < roundId) revert IBeanHeadsBreeder__StaleRound();
+        if (block.timestamp - updatedAt > 1 hours) revert IBeanHeadsBreeder__StalePrice();
 
         uint256 price = uint256(answer) * ADDITIONAL_FEED_PRECISION;
         uint8 tokenDecimals = IERC20Metadata(token).decimals();
@@ -253,13 +332,9 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         // Required token amount = usdAmount / tokenPrice
         uint256 tokenAmountIn18 = (usdAmount * PRECISION) / price;
 
-        if (tokenDecimals < 18) {
-            return tokenAmountIn18 / (10 ** (18 - tokenDecimals));
-        } else if (tokenDecimals > 18) {
-            return tokenAmountIn18 * (10 ** (tokenDecimals - 18));
-        } else {
-            return tokenAmountIn18;
-        }
+        return tokenDecimals < 18
+            ? tokenAmountIn18 / (10 ** (18 - tokenDecimals))
+            : tokenDecimals > 18 ? tokenAmountIn18 * (10 ** (tokenDecimals - 18)) : tokenAmountIn18;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -278,31 +353,20 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
      * @param randomWords The array of random words returned by Chainlink VRF.
      */
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
-        BreedRequest memory request = s_breedRequests[requestId];
-        if (request.owner == address(0)) revert IBeanHeadsBreeder__InvalidRequestId();
-
-        Genesis.SVGParams memory childParams = _randomizeAttributes(randomWords[0]);
-
-        delete s_breedRequests[requestId];
-
-        uint256 newTokenId;
-        if (request.mode == BreedingMode.NewBreed) {
-            newTokenId = _handleNewBreed(request, requestId, childParams, randomWords[0]);
+        BreedRequest storage request = s_breedRequests[requestId];
+        if (request.owner == address(0) || request.status != RequestStatus.PENDING) {
+            return;
         }
 
-        if (request.mode == BreedingMode.Mutation) {
-            newTokenId = _handleMutation(request, requestId, childParams, randomWords[0]);
-        }
+        request.status = RequestStatus.SETTLING;
 
-        if (request.mode == BreedingMode.Fusion) {
-            newTokenId = _handleFusion(request, requestId, childParams, randomWords[0]);
+        try this.settleRequestExternal(requestId, randomWords[0]) returns (bool success) {
+            if (!success) {
+                _failAndRefund(requestId);
+            }
+        } catch {
+            _failAndRefund(requestId);
         }
-
-        if (request.mode == BreedingMode.Ascension) {
-            newTokenId = _handleAscension(request, requestId, childParams, randomWords[0]);
-        }
-
-        emit BreedRequestFulfilled(request.owner, requestId, request.mode, newTokenId);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -336,6 +400,8 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         s_mutatedRarityPoints[newTokenId] = rarityPoints;
 
         // Return parents to the owner
+        delete s_escrowedTokens[request.parent1Id];
+        delete s_escrowedTokens[request.parent2Id];
         i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent1Id);
         i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent2Id);
 
@@ -378,9 +444,11 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         s_mutatedRarityPoints[newTokenId] = rarityPoints;
 
         // Return the second parent to the owner
+        delete s_escrowedTokens[request.parent2Id];
         i_beanHeads.safeTransferFrom(address(this), request.owner, request.parent2Id);
 
         // Burn the first parent
+        delete s_escrowedTokens[request.parent1Id];
         i_beanHeads.burn(request.parent1Id);
 
         emit MutationCompleted(
@@ -419,6 +487,8 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         s_mutatedRarityPoints[newTokenId] = rarityPoints;
 
         // Burn both parents
+        delete s_escrowedTokens[request.parent1Id];
+        delete s_escrowedTokens[request.parent2Id];
         i_beanHeads.burn(request.parent1Id);
         i_beanHeads.burn(request.parent2Id);
 
@@ -455,12 +525,75 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         s_mutatedRarityPoints[newTokenId] = rarityPoints;
 
         // Burn the parent
+        delete s_escrowedTokens[request.parent1Id];
         i_beanHeads.burn(request.parent1Id);
 
         emit AscensionCompleted(request.owner, requestId, request.parent1Id, newTokenId, childGen, rarityPoints);
 
         // Return the new token ID
         return newTokenId;
+    }
+
+    function _settleRequest(uint256 requestId, uint256 randomWord) private returns (bool) {
+        BreedRequest storage R = s_breedRequests[requestId];
+        if (R.status != RequestStatus.SETTLING) revert IBeanHeadsBreeder__BadStatus();
+
+        Genesis.SVGParams memory childParams = _randomizeAttributes(randomWord);
+
+        uint256 newTokenId;
+        if (R.mode == BreedingMode.NewBreed) {
+            newTokenId = _handleNewBreed(R, requestId, childParams, randomWord);
+        } else if (R.mode == BreedingMode.Mutation) {
+            newTokenId = _handleMutation(R, requestId, childParams, randomWord);
+        } else if (R.mode == BreedingMode.Fusion) {
+            newTokenId = _handleFusion(R, requestId, childParams, randomWord);
+        } else if (R.mode == BreedingMode.Ascension) {
+            newTokenId = _handleAscension(R, requestId, childParams, randomWord);
+        } else {
+            revert IBeanHeadsBreeder__InvalidRequestId();
+        }
+
+        R.status = RequestStatus.SUCCESS;
+        emit BreedRequestFulfilled(R.owner, requestId, R.mode, newTokenId);
+
+        delete s_breedRequests[requestId];
+
+        return true;
+    }
+
+    function _failAndRefund(uint256 requestId) private {
+        BreedRequest storage R = s_breedRequests[requestId];
+        R.status = RequestStatus.FAILED;
+
+        if (R.paymentAmount > 0) {
+            s_refundable[R.owner][R.paymentToken] += R.paymentAmount;
+            s_totalRefundable[R.paymentToken] += R.paymentAmount;
+        }
+
+        // Return all escrowed parent
+        if (s_escrowedTokens[R.parent1Id] == R.owner) {
+            delete s_escrowedTokens[R.parent1Id];
+            i_beanHeads.safeTransferFrom(address(this), R.owner, R.parent1Id);
+        }
+
+        if (R.parent2Id != 0 && s_escrowedTokens[R.parent2Id] == R.owner) {
+            delete s_escrowedTokens[R.parent2Id];
+            i_beanHeads.safeTransferFrom(address(this), R.owner, R.parent2Id);
+        }
+
+        _decreaseBreedingCount(R);
+
+        emit RequestFailed(requestId, R.owner, R.paymentToken, R.paymentAmount);
+        delete s_breedRequests[requestId];
+    }
+
+    function _decreaseBreedingCount(BreedRequest memory R) private {
+        if (s_parentBreedingCount[R.parent1Id] > 0) {
+            s_parentBreedingCount[R.parent1Id]--;
+        }
+        if (R.parent2Id != 0 && s_parentBreedingCount[R.parent2Id] > 0) {
+            s_parentBreedingCount[R.parent2Id]--;
+        }
     }
 
     /**

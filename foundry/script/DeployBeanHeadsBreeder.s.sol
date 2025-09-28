@@ -21,8 +21,20 @@ contract DeployBeanHeadsBreeder is Script {
     // }
 
     function run() public returns (address, address) {
-        (,,,, address vrfCoordinator, uint256 subscriptionId, bytes32 keyHash, uint256 deployerKey) =
-            helperConfig.activeNetworkConfig();
+        (
+            ,
+            ,
+            ,
+            ,
+            address vrfCoordinator,
+            uint256 subscriptionId,
+            bytes32 keyHash,
+            uint256 deployerKey,
+            uint32 gasLimit,
+            uint16 requestConfirmations,
+            uint256 breedCoolDown,
+            uint256 maxBreedRequests
+        ) = helperConfig.activeNetworkConfig();
 
         HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
 
@@ -44,8 +56,17 @@ contract DeployBeanHeadsBreeder is Script {
         }
 
         vm.startBroadcast(deployerKey);
-        BeanHeadsBreeder beanHeadsBreeder =
-            new BeanHeadsBreeder(deployerAddress, beanHeads, vrfCoordinator, subscriptionId, keyHash);
+        BeanHeadsBreeder beanHeadsBreeder = new BeanHeadsBreeder(
+            deployerAddress,
+            beanHeads,
+            gasLimit,
+            requestConfirmations,
+            breedCoolDown,
+            maxBreedRequests,
+            vrfCoordinator,
+            subscriptionId,
+            keyHash
+        );
 
         vm.stopBroadcast();
 
@@ -65,7 +86,7 @@ contract DeployBeanHeadsBreeder is Script {
 
     function addFundLink(address linkToken, address to) public {
         uint256 amount = 3 ether;
-        (,,,,,,, uint256 deployerKey) = helperConfig.activeNetworkConfig();
+        (,,,,,,, uint256 deployerKey,,,,) = helperConfig.activeNetworkConfig();
         vm.startBroadcast(deployerKey);
         bool ok = IERC20(linkToken).transfer(to, amount);
         vm.stopBroadcast();
@@ -74,7 +95,7 @@ contract DeployBeanHeadsBreeder is Script {
     }
 
     function addVrfConsumer(address vrfCoordinator, uint64 subId, address consumer) public {
-        (,,,,,,, uint256 deployerKey) = helperConfig.activeNetworkConfig();
+        (,,,,,,, uint256 deployerKey,,,,) = helperConfig.activeNetworkConfig();
         vm.startBroadcast(deployerKey);
         // Create a new subscription
         IVRFCoordinatorV2Plus vrfCoord = IVRFCoordinatorV2Plus(vrfCoordinator);

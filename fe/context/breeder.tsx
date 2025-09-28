@@ -6,6 +6,7 @@ import {
   readContract,
   prepareContractCall,
   sendTransaction,
+  waitForReceipt,
   type PreparedTransaction,
   type BaseTransactionOptions,
 } from "thirdweb";
@@ -37,22 +38,23 @@ type BreederCtx = {
     amount: bigint,
     chain: any
   ) => Promise<void>;
-  depositBeanHeads: (tokenId: bigint) => Promise<PreparedTransaction>;
-  withdrawBeanHeads: (tokenId: bigint) => Promise<PreparedTransaction>;
+  ensureTokenApproval: (tokenId: bigint) => Promise<void>;
+  depositBeanHeads: (tokenId: bigint) => Promise<void>;
+  withdrawBeanHeads: (tokenId: bigint) => Promise<void>;
   requestBreed: (
     parent1: bigint,
     parent2: bigint,
     mode: BreedingMode,
     tokenAddress: `0x${string}`
-  ) => Promise<PreparedTransaction>;
-  setCoolDown: (time: bigint) => Promise<PreparedTransaction>;
+  ) => Promise<void>;
+  setCoolDown: (time: bigint) => Promise<void>;
   getRarityPoints: (tokenId: bigint) => Promise<bigint>;
   getBreedRequest: (requestId: bigint) => Promise<BreedRequest>;
   getEscrowedTokenOwner: (
     tokenId: bigint
   ) => Promise<`0x${string}` | undefined>;
   getParentBreedingCount?: (tokenId: bigint) => Promise<bigint>;
-  withdrawFunds?: (tokenAddress: `0x${string}`) => Promise<PreparedTransaction>;
+  withdrawFunds?: (tokenAddress: `0x${string}`) => Promise<void>;
 };
 
 const Ctx = createContext<BreederCtx | null>(null);
@@ -120,42 +122,12 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
       params: [spender, amount],
     });
 
-    await sendTransaction({
+    const result = await sendTransaction({
       account: account!,
       transaction: tx,
     });
+    await waitForReceipt(result);
   }
-
-  //   async function tokenIdApproval(tokenId: bigint) {
-  //     if (!nftContract) throw new Error("NFT Contract not initialized");
-
-  //     const tx = await prepareContractCall({
-  //       contract: nftContract,
-  //       method: "function approve(address to, uint256 tokenId)",
-  //       params: [BREEDER_ADDRESS[chain!.id], tokenId],
-  //     });
-
-  //     await sendTransaction({
-  //       account: account!,
-  //       transaction: tx,
-  //     });
-  //   }
-
-  //   async function depositBeanHeads(tokenId: bigint) {
-  //     if (!contract) throw new Error("Contract not initialized");
-
-  //     await tokenIdApproval(tokenId);
-
-  //     const tx = await prepareContractCall({
-  //       contract,
-  //       method: "depositBeanHeads",
-  //       params: [tokenId],
-  //     });
-  //     return sendTransaction({
-  //       account: account!,
-  //       transaction: tx,
-  //     }) as Promise<PreparedTransaction>;
-  //   }
 
   async function ensureTokenApproval(tokenId: bigint) {
     if (!nftContract || !account || !chain)
@@ -194,22 +166,26 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
       method: "approve",
       params: [BREEDER_ADDRESS[chain.id], tokenId],
     });
-    await sendTransaction({ account: account!, transaction: approveTx });
+    const result = await sendTransaction({
+      account: account!,
+      transaction: approveTx,
+    });
+    await waitForReceipt(result);
   }
 
   async function depositBeanHeads(tokenId: bigint) {
     if (!contract) throw new Error("Contract not initialized");
-    await ensureTokenApproval(tokenId);
 
     const tx = await prepareContractCall({
       contract,
       method: "depositBeanHeads",
       params: [tokenId],
     });
-    return sendTransaction({
+    const result = await sendTransaction({
       account: account!,
       transaction: tx,
-    }) as Promise<PreparedTransaction>;
+    });
+    await waitForReceipt(result);
   }
 
   async function withdrawBeanHeads(tokenId: bigint) {
@@ -220,10 +196,11 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
         method: "withdrawBeanHeads",
         params: [tokenId],
       });
-      return sendTransaction({
+      const result = await sendTransaction({
         account: account!,
         transaction: tx,
-      }) as Promise<PreparedTransaction>;
+      });
+      await waitForReceipt(result);
     } catch (e) {
       throw e;
     }
@@ -269,10 +246,11 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
       method: "requestBreed",
       params: [parent1, parent2, mode, tokenAddress],
     });
-    return sendTransaction({
+    const result = await sendTransaction({
       account: account!,
       transaction: tx,
-    }) as Promise<PreparedTransaction>;
+    });
+    await waitForReceipt(result);
   }
 
   async function setCoolDown(time: bigint) {
@@ -283,10 +261,11 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
         method: "setCoolDown",
         params: [time],
       });
-      return sendTransaction({
+      const result = await sendTransaction({
         account: account!,
         transaction: tx,
-      }) as Promise<PreparedTransaction>;
+      });
+      await waitForReceipt(result);
     } catch (e) {
       throw e;
     }
@@ -356,10 +335,11 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
         method: "withdrawFunds",
         params: [tokenAddress],
       });
-      return sendTransaction({
+      const result = await sendTransaction({
         account: account!,
         transaction: tx,
-      }) as Promise<PreparedTransaction>;
+      });
+      await waitForReceipt(result);
     } catch (e) {
       throw e;
     }
@@ -371,6 +351,7 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
     contract,
     approveToken,
     getContractAddress,
+    ensureTokenApproval,
     depositBeanHeads,
     withdrawBeanHeads,
     requestBreed,

@@ -30,6 +30,18 @@ interface IBeanHeadsBreeder {
     error IBeanHeadsBreeder__InvalidToken();
     /// @notice Error thrown when the request is already fulfilled
     error IBeanHeadsBreeder__RequestAlreadyFulfilled();
+    /// @notice Error thrown when the request is in an invalid state
+    error IBeanHeadsBreeder__BadStatus();
+    /// @notice Error thrown when there is no refundable amount
+    error IBeanHeadsBreeder__NoRefundableAmount();
+    /// @notice Error thrown when the status is not pending
+    error IBeanHeadsBreeder__StatusNotPending();
+    /// @notice Error thrown when the requestor is not the owner
+    error IBeanHeadsBreeder__NotRequestor();
+    /// @notice Error thrown when the answeredRound is stale
+    error IBeanHeadsBreeder__StaleRound();
+    /// @notice Error thrown when the price feed is stale
+    error IBeanHeadsBreeder__StalePrice();
 
     /**
      * @notice Enum representing the different breeding modes.
@@ -47,17 +59,44 @@ interface IBeanHeadsBreeder {
     }
 
     /**
+     * @notice Enum representing the different request statuses.
+     * @dev Used to track the status of breed requests.
+     * - NONE: The request has not been initiated.
+     * - PENDING: The request is awaiting fulfillment.
+     * - SETTLING: The request is being processed.
+     * - SUCCESS: The request has been successfully fulfilled.
+     * - FAILED: The request has failed.
+     * - EXPIRED: The request has expired.
+     */
+    enum RequestStatus {
+        NONE,
+        PENDING,
+        SETTLING,
+        SUCCESS,
+        FAILED,
+        EXPIRED
+    }
+
+    /**
      * @notice Struct representing a breed request.
      * @param owner The address of the owner making the request.
      * @param parent1Id The token ID of the first parent.
      * @param parent2Id The token ID of the second parent.
      * @param mode The breeding mode for this request.
+     * @param paymentToken The address of the ERC20 token used for payment.
+     * @param paymentAmount The amount of the payment token to be used.
+     * @param requestedAt The timestamp when the request was made.
+     * @param status The current status of the request.
      */
     struct BreedRequest {
         address owner;
         uint256 parent1Id;
         uint256 parent2Id;
         BreedingMode mode;
+        address paymentToken;
+        uint256 paymentAmount;
+        uint48 requestedAt;
+        RequestStatus status;
     }
 
     event BreedRequestRefunded(address indexed owner, address indexed paymentToken, uint256 paymentAmount);
@@ -184,6 +223,32 @@ interface IBeanHeadsBreeder {
     );
 
     /**
+     * @notice Emitted when a Chainlink VRF request fails.
+     * @param requestId The ID of the failed request.
+     * @param user The address of the user who made the request.
+     * @param token The address of the ERC20 token used for payment.
+     * @param amount The amount of the payment token that was used.
+     */
+    event RequestFailed(uint256 indexed requestId, address indexed user, address token, uint256 amount);
+
+    /**
+     * @notice Emitted when a Chainlink VRF request is refunded.
+     * @param user The address of the user who made the request.
+     * @param token The address of the ERC20 token used for payment.
+     * @param amount The amount of the payment token that was refunded.
+     */
+    event RequestRefunded(address indexed user, address indexed token, uint256 amount);
+
+    /**
+     * @notice Emitted when a Chainlink VRF request expires.
+     * @param requestId The ID of the expired request.
+     * @param user The address of the user who made the request.
+     * @param token The address of the ERC20 token used for payment.
+     * @param amount The amount of the payment token that was used.
+     */
+    event RequestExpired(uint256 indexed requestId, address indexed user, address token, uint256 amount);
+
+    /**
      * @notice Deposits a BeanHead token into the breeder contract.
      * @param parent1Id The token ID of the BeanHead to deposit.
      * @dev This function allows the owner of the BeanHead to deposit it into the breeder
@@ -242,4 +307,23 @@ interface IBeanHeadsBreeder {
      * It helps to track the breeding history of each parent BeanHead.
      */
     function getParentBreedingCount(uint256 tokenId) external view returns (uint256 count);
+
+    /**
+     * @notice Withdraws funds from the breeder contract.
+     * @param token The address of the ERC20 token to withdraw.
+     * @dev This function allows the owner to withdraw funds from the breeder contract.
+     */
+    function withdrawFunds(address token) external;
+
+    /**
+     * @notice Claims a refund for a failed breed request.
+     * @param token The address of the ERC20 token to refund.
+     */
+    function claimRefund(address token) external;
+
+    /**
+     * @notice Timeouts a breed request and refunds the user.
+     * @param requestId The ID of the breed request to timeout.
+     */
+    function timeoutRefund(uint256 requestId) external;
 }

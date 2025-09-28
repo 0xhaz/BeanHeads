@@ -26,8 +26,10 @@ export type BreedSlotProps = {
   onRemove: () => void;
   /** called when user drops an NFT tokenId into this slot */
   onDropTokenId: (tokenId: bigint) => void;
-  /** toggles deposit/withdraw (parent handles the actual tx) */
-  onToggleDeposit: () => void;
+  /** called when user clicks deposit */
+  onDeposit: () => void;
+  /** called when user clicks withdraw */
+  onWithdraw: () => void;
 };
 
 export default function BreedSlot({
@@ -41,24 +43,24 @@ export default function BreedSlot({
   ensureDetailsByTokenId,
   onRemove,
   onDropTokenId,
-  onToggleDeposit,
+  onDeposit,
+  onWithdraw,
 }: BreedSlotProps) {
   const [dragOver, setDragOver] = useState(false);
 
   const tid = token?.tokenId;
   const avatar = tid ? getAvatarProps(tid) : undefined;
-
   const deposited = !!escrowOwner;
 
   useEffect(() => {
     if (tid && !avatar) {
-      // make sure preview exists even if the contract owns the token
       ensureDetailsByTokenId(tid).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tid]);
 
   if (hidden) return null;
+
   const handleDrop: React.DragEventHandler<HTMLDivElement> = e => {
     e.preventDefault();
     setDragOver(false);
@@ -125,20 +127,17 @@ export default function BreedSlot({
         )}
       </div>
 
-      <div className="flex justify-center">
-        <button
-          className="btn-primary px-4 py-2"
-          disabled={!token || (deposited && !escrowedByYou)} // can't withdraw if not yours
-          onClick={onToggleDeposit}
-        >
-          {!token
-            ? `Deposit ${label}`
-            : escrowedByYou
-            ? `Withdraw ${label}`
-            : deposited
-            ? "Escrowed (not yours)"
-            : `Deposit ${label}`}
-        </button>
+      <div className="flex justify-center gap-4">
+        {!deposited && token && (
+          <button className="btn-primary px-4 py-2" onClick={onDeposit}>
+            Deposit {label}
+          </button>
+        )}
+        {escrowedByYou && deposited && (
+          <button className="btn-primary px-4 py-2" onClick={onWithdraw}>
+            Withdraw {label}
+          </button>
+        )}
       </div>
     </div>
   );

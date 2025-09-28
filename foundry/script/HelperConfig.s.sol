@@ -23,6 +23,10 @@ contract HelperConfig is Script {
         uint256 subscriptionId;
         bytes32 keyHash;
         uint256 deployerKey;
+        uint32 gasLimit;
+        uint16 requestConfirmations;
+        uint256 breedCoolDown;
+        uint256 maxBreedRequest;
     }
 
     address public remoteBridge;
@@ -93,7 +97,11 @@ contract HelperConfig is Script {
             vrfCoordinator: address(vrfCoordinatorMock),
             subscriptionId: subscriptionId,
             keyHash: bytes32(0),
-            deployerKey: DEFAULT_ANVIL_PRIVATE_KEY
+            deployerKey: DEFAULT_ANVIL_PRIVATE_KEY,
+            gasLimit: 1_200_000,
+            requestConfirmations: 3,
+            breedCoolDown: 50,
+            maxBreedRequest: 5
         });
 
         chainIdToNetworkConfig[LOCAL_CHAIN_ID] = activeNetworkConfig;
@@ -110,7 +118,11 @@ contract HelperConfig is Script {
             vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
             subscriptionId: 62006562457364504435480039715090775291352508890600299278052625743272861229499,
             keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-            deployerKey: vm.envUint("PRIVATE_KEY")
+            deployerKey: vm.envUint("PRIVATE_KEY"),
+            gasLimit: 1_200_000,
+            requestConfirmations: 3,
+            breedCoolDown: 50,
+            maxBreedRequest: 5
         });
         chainIdToNetworkConfig[ETH_SEPOLIA_CHAIN_ID] = activeNetworkConfig;
         return activeNetworkConfig;
@@ -125,7 +137,11 @@ contract HelperConfig is Script {
             vrfCoordinator: 0x02667f44a6a44E4BDddCF80e724512Ad3426B17d,
             subscriptionId: 83615733694144098481723925549149254030585331773564248453894784102817899297545,
             keyHash: 0xc3d5bc4d5600fa71f7a50b9ad841f14f24f9ca4236fd00bdb5fda56b052b28a4,
-            deployerKey: vm.envUint("PRIVATE_KEY")
+            deployerKey: vm.envUint("PRIVATE_KEY"),
+            gasLimit: 1_200_000,
+            requestConfirmations: 3,
+            breedCoolDown: 50,
+            maxBreedRequest: 5
         });
         chainIdToNetworkConfig[OPTIMISM_SEPOLIA_CHAIN_ID] = activeNetworkConfig;
         return activeNetworkConfig;
@@ -140,7 +156,11 @@ contract HelperConfig is Script {
             vrfCoordinator: 0x5CE8D5A2BC84beb22a398CCA51996F7930313D61,
             subscriptionId: 67358612661498263543516139562168295078269238317925272370889272572573929337815,
             keyHash: 0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be,
-            deployerKey: vm.envUint("PRIVATE_KEY")
+            deployerKey: vm.envUint("PRIVATE_KEY"),
+            gasLimit: 1_200_000,
+            requestConfirmations: 3,
+            breedCoolDown: 50,
+            maxBreedRequest: 5
         });
         chainIdToNetworkConfig[ARBITRUM_SEPOLIA_CHAIN_ID] = activeNetworkConfig;
         return activeNetworkConfig;

@@ -39,6 +39,7 @@ const BreedingPage = () => {
   } = useBeanHeads();
 
   const {
+    ensureTokenApproval,
     getContractAddress,
     requestBreed,
     depositBeanHeads,
@@ -164,7 +165,6 @@ const BreedingPage = () => {
 
   /* ---------- data loaders ---------- */
   async function refreshEscrowedStatus(tid: bigint) {
-    // safe probe: try mapping, fall back to ownerOf
     try {
       const who = await getEscrowedTokenOwner(tid);
       if (who) {
@@ -176,10 +176,6 @@ const BreedingPage = () => {
     }
     try {
       const onChainOwner = await getOwnerOf(tid);
-      // if contract owns it, we know it's escrowed but we don’t know depositor
-      // store null to mark "escrowed (unknown)" OR leave as null to mark not-escrowed
-      // here we’ll keep null and rely on mapping for depositor; tweak if needed.
-      // setEscrowedOwner(m => ({ ...m, [tid.toString()]: null }));
       setEscrowedOwner(m => ({ ...m, [tid.toString()]: null }));
     } catch {
       setEscrowedOwner(m => ({ ...m, [tid.toString()]: null }));
@@ -287,7 +283,6 @@ const BreedingPage = () => {
   useEffect(() => {
     if (mode === BreedingMode.Ascension) {
       setParent2(null);
-      // also clear LS
       saveSlots(account?.address, chain?.id, parent1?.tokenId ?? null, null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -330,7 +325,7 @@ const BreedingPage = () => {
   }, [account?.address, chain?.id]);
 
   /* ---------- actions ---------- */
-  async function handleDepositToggle(which: "p1" | "p2") {
+  async function handleDeposit(which: "p1" | "p2") {
     const item = which === "p1" ? parent1 : parent2;
     if (!item || !account || !chain) return;
 
@@ -338,6 +333,41 @@ const BreedingPage = () => {
       const currentOwner = await getOwnerOf(item.tokenId);
       const breederAddress = await getContractAddress(chain.id);
 
+      if (currentOwner.toLowerCase() === breederAddress.toLowerCase()) {
+        return toast("Token is already escrowed");
+      }
+
+      if (!(await assertBreedable(item.tokenId))) {
+        if (which === "p1") setParent1(null);
+        else setParent2(null);
+        saveSlots(
+          account.address,
+          chain?.id,
+          which === "p1" ? null : parent1?.tokenId ?? null,
+          which === "p2" ? null : parent2?.tokenId ?? null
+        );
+        return;
+      }
+
+      await ensureTokenApproval(item.tokenId);
+      await depositBeanHeads(item.tokenId);
+      await loadTokenDetailsByTokenId(item.tokenId);
+      await refreshEscrowedStatus(item.tokenId);
+
+      toast(`Deposited token #${String(item.tokenId)}`);
+    } catch (e) {
+      console.error(e);
+      toast("Deposit failed");
+    }
+  }
+
+  async function handleWithdraw(which: "p1" | "p2") {
+    const item = which === "p1" ? parent1 : parent2;
+    if (!item || !account || !chain) return;
+
+    try {
+      const currentOwner = await getOwnerOf(item.tokenId);
+      const breederAddress = await getContractAddress(chain.id);
       const isEscrowed =
         currentOwner.toLowerCase() === breederAddress.toLowerCase();
       const isMine =
@@ -346,48 +376,30 @@ const BreedingPage = () => {
           await getEscrowedTokenOwner(item.tokenId).catch(() => null)
         )?.toLowerCase() === account.address.toLowerCase();
 
-      if (isEscrowed) {
-        if (!isMine) {
-          return toast("This token is escrowed by another user");
-        }
-
-        await withdrawBeanHeads(item.tokenId);
-
-        if (which === "p1") setParent1(null);
-        else setParent2(null);
-
-        saveSlots(
-          account.address,
-          chain?.id,
-          which === "p1" ? null : parent1?.tokenId ?? null,
-          which === "p2" ? null : parent2?.tokenId ?? null
-        );
-
-        toast(`Withdrew token #${String(item.tokenId)}`);
-      } else {
-        if (!(await assertBreedable(item.tokenId))) {
-          if (which === "p1") setParent1(null);
-          else setParent2(null);
-
-          saveSlots(
-            account.address,
-            chain?.id,
-            which === "p1" ? null : parent1?.tokenId ?? null,
-            which === "p2" ? null : parent2?.tokenId ?? null
-          );
-          return;
-        }
-
-        await depositBeanHeads(item.tokenId);
-        await loadTokenDetailsByTokenId(item.tokenId);
-
-        toast(`Deposited token #${String(item.tokenId)}`);
+      if (!isEscrowed) {
+        return toast("Token is not escrowed");
+      }
+      if (!isMine) {
+        return toast("This token is escrowed by another user");
       }
 
+      await withdrawBeanHeads(item.tokenId);
+
+      if (which === "p1") setParent1(null);
+      else setParent2(null);
+      saveSlots(
+        account.address,
+        chain?.id,
+        which === "p1" ? null : parent1?.tokenId ?? null,
+        which === "p2" ? null : parent2?.tokenId ?? null
+      );
+
       await refreshEscrowedStatus(item.tokenId);
+
+      toast(`Withdrew token #${String(item.tokenId)}`);
     } catch (e) {
       console.error(e);
-      toast("Action failed");
+      toast("Withdraw failed");
     }
   }
 
@@ -474,7 +486,7 @@ const BreedingPage = () => {
               value={String(mode)}
               onValueChange={v => setMode(Number(v))}
             >
-              <SelectTrigger className="bg-white/10 border border-black/20 rounded px-3 py-2 text-black w-[200px]">
+              <SelectTrigger className="bg-white/10 border border-white/20 rounded px-3 py-2 text-black w-[200px]">
                 <SelectValue placeholder="Select breeding mode" />
               </SelectTrigger>
               <SelectContent>
@@ -531,7 +543,8 @@ const BreedingPage = () => {
               refreshEscrowedStatus(tid);
               loadTokenDetailsByTokenId(tid);
             }}
-            onToggleDeposit={() => handleDepositToggle("p1")}
+            onDeposit={() => handleDeposit("p1")}
+            onWithdraw={() => handleWithdraw("p1")}
           />
 
           <BreedSlot
@@ -564,7 +577,8 @@ const BreedingPage = () => {
               refreshEscrowedStatus(tid);
               loadTokenDetailsByTokenId(tid);
             }}
-            onToggleDeposit={() => handleDepositToggle("p2")}
+            onDeposit={() => handleDeposit("p2")}
+            onWithdraw={() => handleWithdraw("p2")}
           />
         </div>
 

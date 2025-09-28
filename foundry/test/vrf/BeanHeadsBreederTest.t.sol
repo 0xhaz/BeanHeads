@@ -53,8 +53,20 @@ contract BeanHeadsBreederTest is Test, Helpers {
         helpers = new Helpers();
         mockERC20 = new MockERC20(1000 ether); // Create a mock ERC20 token with 1000 tokens
 
-        (,, address linkToken, address usdPriceFeed, address vrfCoordinatorMock, uint256 subId, bytes32 keyHash,) =
-            helperConfig.activeNetworkConfig();
+        (
+            ,
+            ,
+            address linkToken,
+            address usdPriceFeed,
+            address vrfCoordinatorMock,
+            uint256 subId,
+            bytes32 keyHash,
+            ,
+            uint32 gasLimit,
+            uint16 requestConfirmations,
+            uint256 breedCoolDown,
+            uint256 maxBreedRequests
+        ) = helperConfig.activeNetworkConfig();
 
         priceFeed = AggregatorV3Interface(usdPriceFeed);
         tokenDecimals = mockERC20.decimals();
@@ -63,7 +75,17 @@ contract BeanHeadsBreederTest is Test, Helpers {
         deployBeanHeads = new DeployBeanHeads();
         (address beanHeadsContract,) = deployBeanHeads.run();
         beanHeads = beanHeadsContract;
-        beanHeadsBreeder = new BeanHeadsBreeder(deployerAddress, address(beanHeads), vrfCoordinatorMock, subId, keyHash);
+        beanHeadsBreeder = new BeanHeadsBreeder(
+            deployerAddress,
+            address(beanHeads),
+            gasLimit,
+            requestConfirmations,
+            breedCoolDown,
+            maxBreedRequests,
+            vrfCoordinatorMock,
+            subId,
+            keyHash
+        );
 
         vm.startPrank(deployerAddress); // Deployer address
         beanHeadsBreeder.acceptOwnership(); // Accept ownership of the breeder contract
