@@ -42,6 +42,8 @@ interface IBeanHeadsBreeder {
     error IBeanHeadsBreeder__StaleRound();
     /// @notice Error thrown when the price feed is stale
     error IBeanHeadsBreeder__StalePrice();
+    /// @notice Error thrown when the caller is not the VRF Coordinator
+    error IBeanHeadsBreeder__NotVRFCoordinator();
 
     /**
      * @notice Enum representing the different breeding modes.
@@ -95,7 +97,7 @@ interface IBeanHeadsBreeder {
         BreedingMode mode;
         address paymentToken;
         uint256 paymentAmount;
-        uint48 requestedAt;
+        uint48 requestedAtBlock;
         RequestStatus status;
     }
 

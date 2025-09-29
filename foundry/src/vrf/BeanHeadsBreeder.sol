@@ -139,8 +139,25 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         public
         returns (uint256 requestId)
     {
+        if (!i_beanHeads.isTokenAllowed(paymentToken)) {
+            revert IBeanHeadsBreeder__InvalidToken();
+        }
+
         if (mode == BreedingMode.Ascension) {
-            // For Ascension, only parent1Id is used, parent2Id is ignored
+            if (s_parentBreedingCount[parent1Id] >= i_maxBreedRequests) revert IBeanHeadsBreeder__BreedLimitReached();
+        } else {
+            if (
+                s_parentBreedingCount[parent1Id] >= i_maxBreedRequests
+                    || s_parentBreedingCount[parent2Id] >= i_maxBreedRequests
+            ) revert IBeanHeadsBreeder__BreedLimitReached();
+        }
+
+        // Check if the user has already requested a breed in the last i_breedCoolDown blocks
+        if (s_lastBreedingBlock[msg.sender] + s_breedCoolDown > block.number) {
+            revert IBeanHeadsBreeder__CoolDownNotPassed();
+        }
+
+        if (mode == BreedingMode.Ascension) {
             if (parent2Id != 0) revert IBeanHeadsBreeder__InvalidRequestId();
             if (s_escrowedTokens[parent1Id] != msg.sender) revert IBeanHeadsBreeder__TokensNotEscrowedBySender();
         } else {
@@ -148,10 +165,6 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
             if (s_escrowedTokens[parent1Id] != msg.sender || s_escrowedTokens[parent2Id] != msg.sender) {
                 revert IBeanHeadsBreeder__TokensNotEscrowedBySender();
             }
-        }
-
-        if (!i_beanHeads.isTokenAllowed(paymentToken)) {
-            revert IBeanHeadsBreeder__InvalidToken();
         }
 
         IERC20 token = IERC20(paymentToken);
@@ -164,19 +177,6 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         if (balance < tokenAmount) revert IBeanHeadsBreeder__InsufficientBalance();
 
         token.safeTransferFrom(msg.sender, address(this), tokenAmount);
-
-        // Check if the pairing parents have already been used in breeding
-        if (
-            s_parentBreedingCount[parent1Id] >= i_maxBreedRequests
-                || s_parentBreedingCount[parent2Id] >= i_maxBreedRequests
-        ) {
-            revert IBeanHeadsBreeder__BreedLimitReached();
-        }
-
-        // Check if the user has already requested a breed in the last i_breedCoolDown blocks
-        if (s_lastBreedingBlock[msg.sender] + s_breedCoolDown > block.number) {
-            revert IBeanHeadsBreeder__CoolDownNotPassed();
-        }
 
         requestId = s_vrfCoordinator.requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
@@ -196,25 +196,12 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
             mode: mode,
             paymentToken: paymentToken,
             paymentAmount: tokenAmount,
-            requestedAt: uint48(block.timestamp),
+            requestedAtBlock: uint48(block.number),
             status: RequestStatus.PENDING
         });
 
         // Update the last breeding block for the user
         s_lastBreedingBlock[msg.sender] = block.number;
-
-        if (mode == BreedingMode.Ascension) {
-            if (s_parentBreedingCount[parent1Id] >= i_maxBreedRequests) {
-                revert IBeanHeadsBreeder__BreedLimitReached();
-            }
-        } else {
-            if (
-                s_parentBreedingCount[parent1Id] >= i_maxBreedRequests
-                    || s_parentBreedingCount[parent2Id] >= i_maxBreedRequests
-            ) {
-                revert IBeanHeadsBreeder__BreedLimitReached();
-            }
-        }
 
         // Increment the breeding count for the parents
         s_parentBreedingCount[parent1Id]++;
@@ -283,16 +270,11 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         if (R.status != RequestStatus.PENDING) revert IBeanHeadsBreeder__StatusNotPending();
         if (msg.sender != R.owner) revert IBeanHeadsBreeder__NotRequestor();
 
-        address owner = R.owner;
-        address paymentToken = R.paymentToken;
-        uint256 paymentAmount = R.paymentAmount;
+        if (block.number <= uint256(R.requestedAtBlock) + s_breedCoolDown) {
+            revert IBeanHeadsBreeder__CoolDownNotPassed();
+        }
 
-        R.status = RequestStatus.EXPIRED;
-        _failAndRefund(requestId);
-
-        emit RequestExpired(requestId, owner, paymentToken, paymentAmount);
-
-        delete s_breedRequests[requestId];
+        _failAndRefund(requestId, RequestStatus.EXPIRED);
     }
 
     function settleRequestExternal(uint256 requestId, uint256 randomWord) external returns (bool) {
@@ -353,6 +335,8 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
      * @param randomWords The array of random words returned by Chainlink VRF.
      */
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
+        if (msg.sender != address(s_vrfCoordinator)) revert IBeanHeadsBreeder__NotVRFCoordinator();
+
         BreedRequest storage request = s_breedRequests[requestId];
         if (request.owner == address(0) || request.status != RequestStatus.PENDING) {
             return;
@@ -362,10 +346,10 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
 
         try this.settleRequestExternal(requestId, randomWords[0]) returns (bool success) {
             if (!success) {
-                _failAndRefund(requestId);
+                _failAndRefund(requestId, RequestStatus.FAILED);
             }
         } catch {
-            _failAndRefund(requestId);
+            _failAndRefund(requestId, RequestStatus.FAILED);
         }
     }
 
@@ -561,9 +545,9 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         return true;
     }
 
-    function _failAndRefund(uint256 requestId) private {
+    function _failAndRefund(uint256 requestId, RequestStatus finalStatus) private {
         BreedRequest storage R = s_breedRequests[requestId];
-        R.status = RequestStatus.FAILED;
+        R.status = finalStatus;
 
         if (R.paymentAmount > 0) {
             s_refundable[R.owner][R.paymentToken] += R.paymentAmount;
@@ -583,7 +567,12 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
 
         _decreaseBreedingCount(R);
 
-        emit RequestFailed(requestId, R.owner, R.paymentToken, R.paymentAmount);
+        if (finalStatus == RequestStatus.FAILED) {
+            emit RequestFailed(requestId, R.owner, R.paymentToken, R.paymentAmount);
+        } else if (finalStatus == RequestStatus.EXPIRED) {
+            emit RequestExpired(requestId, R.owner, R.paymentToken, R.paymentAmount);
+        }
+
         delete s_breedRequests[requestId];
     }
 

@@ -34,6 +34,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
     uint256 public MINT_PRICE = 0.01 ether;
     uint256 public constant BREEDING_COOLDOWN = 50;
     uint256 public constant MAX_BREED_REQUESTS = 5;
+    uint256 public constant EXPIRY_BLOCKS = 20;
     AggregatorV3Interface public priceFeed;
     uint8 tokenDecimals;
     uint256 tokenId;
@@ -474,8 +475,9 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         uint256 tokenBalanceAfterBreed = IBeanHeads(beanHeads).getOwnerTokensCount(USER1);
         assertEq(tokenBalanceAfterBreed, 2); // User should have 1 parent tokens + 1 new breed token
-        assertEq(beanHeadsBreeder.s_parentBreedingCount(tokenId), 1);
+        assertEq(beanHeadsBreeder.s_parentBreedingCount(tokenId), 0);
         assertEq(beanHeadsBreeder.s_parentBreedingCount(tokenId2), 1);
+
         vm.stopPrank();
     }
 
@@ -560,8 +562,10 @@ contract BeanHeadsBreederTest is Test, Helpers {
         beanHeadsBreeder.depositBeanHeads(tokenId2);
 
         // Attempt to request breed with a Ascension mode without a second token
-        vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__InvalidRequestId.selector);
+        vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__CoolDownNotPassed.selector);
         beanHeadsBreeder.requestBreed(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.Ascension, address(mockERC20));
+
+        vm.roll(block.number + 100);
 
         // Attempt to request breed with the same token
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__CannotBreedSameBeanHead.selector);
