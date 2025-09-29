@@ -562,7 +562,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         beanHeadsBreeder.depositBeanHeads(tokenId2);
 
         // Attempt to request breed with a Ascension mode without a second token
-        vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__CoolDownNotPassed.selector);
+        vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__InvalidRequestId.selector);
         beanHeadsBreeder.requestBreed(tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.Ascension, address(mockERC20));
 
         vm.roll(block.number + 100);
@@ -619,6 +619,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
 
         beanHeadsBreeder.depositBeanHeads(t1);
         beanHeadsBreeder.depositBeanHeads(t2);
+
+        beanHeadsBreeder.requestBreed(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
 
         vm.expectRevert(IBeanHeadsBreeder.IBeanHeadsBreeder__CoolDownNotPassed.selector);
         beanHeadsBreeder.requestBreed(t1, t2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20));
