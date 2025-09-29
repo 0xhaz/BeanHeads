@@ -153,7 +153,8 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         }
 
         // Check if the user has already requested a breed in the last i_breedCoolDown blocks
-        if (s_lastBreedingBlock[msg.sender] + s_breedCoolDown > block.number) {
+        if (s_lastBreedingBlock[msg.sender] != 0 && (block.number - s_lastBreedingBlock[msg.sender] < s_breedCoolDown))
+        {
             revert IBeanHeadsBreeder__CoolDownNotPassed();
         }
 

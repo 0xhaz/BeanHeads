@@ -667,6 +667,41 @@ contract BeanHeadsBreederTest is Test, Helpers {
         vm.stopPrank();
     }
 
+    function test_timeoutRefund_returnsParentsAndFunds() public MintedBeanHeads {
+        vm.startPrank(USER1);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId);
+        IBeanHeads(beanHeads).approve(address(beanHeadsBreeder), tokenId2);
+        beanHeadsBreeder.depositBeanHeads(tokenId);
+        beanHeadsBreeder.depositBeanHeads(tokenId2);
+
+        uint256 requestId = beanHeadsBreeder.requestBreed(
+            tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20)
+        );
+
+        vm.roll(block.number + BREEDING_COOLDOWN + 20);
+        vm.warp(block.timestamp + 2 hours);
+
+        uint256 refundableBefore = beanHeadsBreeder.s_refundable(USER1, address(mockERC20));
+
+        beanHeadsBreeder.timeoutRefund(requestId);
+
+        assertEq(IBeanHeads(beanHeads).getOwnerOf(tokenId), USER1);
+        assertEq(IBeanHeads(beanHeads).getOwnerOf(tokenId2), USER1);
+
+        vm.expectRevert();
+        beanHeadsBreeder.getEscrowedTokenOwner(tokenId);
+        vm.expectRevert();
+        beanHeadsBreeder.getEscrowedTokenOwner(tokenId2);
+
+        uint256 refundableAfter = beanHeadsBreeder.s_refundable(USER1, address(mockERC20));
+        assertGt(refundableAfter, refundableBefore);
+
+        uint256 userBalanceBefore = mockERC20.balanceOf(USER1);
+        beanHeadsBreeder.claimRefund(address(mockERC20));
+        uint256 userBalanceAfter = mockERC20.balanceOf(USER1);
+        assertGt(userBalanceAfter, userBalanceBefore);
+    }
+
     // Helper functions
     /// @notice Helper function of recorded logs
     function _assertDepositTokenLogs(uint256 token1Id, uint256 token2Id) internal {
