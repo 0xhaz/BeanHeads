@@ -279,6 +279,7 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
         method: "getRarityPoints",
         params: [tokenId],
       });
+      console.log("Rarity points:", points);
       return points as bigint;
     } catch (e) {
       throw e;
@@ -321,6 +322,7 @@ export function BreederProvider({ children }: { children: React.ReactNode }) {
         method: "getParentBreedingCount",
         params: [tokenId],
       });
+      console.log("Breeding count:", count);
       return count as bigint;
     } catch (e) {
       throw e;

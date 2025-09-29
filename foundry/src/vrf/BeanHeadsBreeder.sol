@@ -303,11 +303,11 @@ contract BeanHeadsBreeder is VRFConsumerBaseV2Plus, IBeanHeadsBreeder {
         if (feedAddress == address(0)) revert IBeanHeadsBreeder__InvalidToken();
 
         AggregatorV3Interface priceFeed = AggregatorV3Interface(feedAddress);
-        (uint80 roundId, int256 answer,, uint256 updatedAt, uint80 answeredInRound) = priceFeed.latestRoundData();
+        (uint80 roundId, int256 answer,, /*uint256 updatedAt*/, uint80 answeredInRound) = priceFeed.latestRoundData();
 
         if (answer <= 0) revert IBeanHeadsBreeder__InvalidOraclePrice();
         if (answeredInRound < roundId) revert IBeanHeadsBreeder__StaleRound();
-        if (block.timestamp - updatedAt > 1 hours) revert IBeanHeadsBreeder__StalePrice();
+        // if (block.timestamp - updatedAt > 1 hours) revert IBeanHeadsBreeder__StalePrice(); // Uncomment for production
 
         uint256 price = uint256(answer) * ADDITIONAL_FEED_PRECISION;
         uint8 tokenDecimals = IERC20Metadata(token).decimals();

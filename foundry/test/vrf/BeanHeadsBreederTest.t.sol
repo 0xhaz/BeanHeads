@@ -7,6 +7,7 @@ import {MockLinkToken} from "chainlink-brownie-contracts/contracts/src/v0.8/mock
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {Vm} from "forge-std/Vm.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {DeployBeanHeadsBreeder} from "script/DeployBeanHeadsBreeder.s.sol";
@@ -173,6 +174,7 @@ contract BeanHeadsBreederTest is Test, Helpers {
         uint256 mintedTokenId = 2; // Assuming the new breed token ID is 2 for this test
 
         uint256 rarityPoints = beanHeadsBreeder.getRarityPoints(mintedTokenId);
+        console2.log("Rarity points for minted tokenId:", rarityPoints);
         uint256 expectedRarityPoints = 68; // Assuming the expected rarity points for this test
         assertEq(rarityPoints, expectedRarityPoints);
 
@@ -648,6 +650,8 @@ contract BeanHeadsBreederTest is Test, Helpers {
             reqId = beanHeadsBreeder.requestBreed(
                 tokenId, tokenId2, IBeanHeadsBreeder.BreedingMode.NewBreed, address(mockERC20)
             );
+            console2.log("Count tokenId:", beanHeadsBreeder.getParentBreedingCount(tokenId));
+            console2.log("Count tokenId2:", beanHeadsBreeder.getParentBreedingCount(tokenId2));
 
             VRFCoordinatorV2_5Mock(vrfCoordinatorMock).fulfillRandomWords(reqId, address(beanHeadsBreeder));
         }

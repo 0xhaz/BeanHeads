@@ -20,8 +20,8 @@
     "optimismSepolia": "0x6e44e50E3cc14DD16e01C590DC1d7020cb36eD4C"
   },
   "Breeder": {
-    "sepolia": "0xE5b326c15946D699BD30230D471b508ffB5526d1",
-    "arbitrumSepolia": "0x11ae0Ac2467D49C3d2644E185f297BDF6cf241c9",
-    "optimismSepolia": "0xBcf2E36008eCB40708BAb702dB9C552cB820cCBa"
+    "sepolia": "0x60177c2A125e5285cf3b510FFBbbc374beF517fc",
+    "arbitrumSepolia": "0x5437936DD2114C5c51f03aDc494BEf5Da5B1a421",
+    "optimismSepolia": "0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c"
   }
 }
