@@ -40,6 +40,7 @@ contract DeployBeanHeadsBridge is Script {
 
         console.log("BeanHeadsBridge deployed at:", address(beanHeadsBridge));
         console.log("BeanHeads deployed at:", beanHeads);
+
         return (address(beanHeadsBridge), beanHeads, deployerAddress);
     }
 }

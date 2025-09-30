@@ -5,6 +5,7 @@ import {
   LINK,
   AggregatatorV3Interface,
   Breeder,
+  Bridge,
 } from "@/app/contracts/BeanHeads-address.json";
 
 export const BEANHEADS_ADDRESS: Record<number, `0x${string}`> = {
@@ -37,4 +38,10 @@ export const BREEDER_ADDRESS: Record<number, `0x${string}`> = {
   [sepolia.id]: Breeder.sepolia as `0x${string}`,
   [arbitrumSepolia.id]: Breeder.arbitrumSepolia as `0x${string}`,
   [optimismSepolia.id]: Breeder.optimismSepolia as `0x${string}`,
+};
+
+export const BRIDGE_ADDRESS: Record<number, `0x${string}`> = {
+  [sepolia.id]: Bridge.sepolia as `0x${string}`,
+  [arbitrumSepolia.id]: Bridge.arbitrumSepolia as `0x${string}`,
+  [optimismSepolia.id]: Bridge.optimismSepolia as `0x${string}`,
 };

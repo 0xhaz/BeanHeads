@@ -20,8 +20,13 @@
     "optimismSepolia": "0x6e44e50E3cc14DD16e01C590DC1d7020cb36eD4C"
   },
   "Breeder": {
-    "sepolia": "0x60177c2A125e5285cf3b510FFBbbc374beF517fc",
-    "arbitrumSepolia": "0x5437936DD2114C5c51f03aDc494BEf5Da5B1a421",
-    "optimismSepolia": "0xf02cd198112D16e4Ee0657f7C3A5b76aDfc4b72c"
+    "sepolia": "0x75718e1B4fEE680aa0593f1b622371091B3B488B",
+    "arbitrumSepolia": "0x5AcEDdb9b4a3481242B6653Ace7742de6D00f398",
+    "optimismSepolia": "0xE4bC25839bf41340A55374f354a8A354ea9c3294"
+  },
+  "Bridge": {
+    "sepolia": "0x739D3EDf8a7A6527E3C9c96CFaC2c7c0e5D0A443",
+    "arbitrumSepolia": "0x5414f67D6CB389812E26AE2BeE2E9DF2808A996f",
+    "optimismSepolia": "0x8314B8FA845f635c8BffB11AB3D0e596232b2E1E"
   }
 }
