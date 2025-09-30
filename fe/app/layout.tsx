@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Provider } from "@/provider/client";
 import { BeanHeadsProvider } from "@/context/beanheads";
 import { BreederProvider } from "@/context/breeder";
+import { BridgeProvider } from "@/context/bridge";
 import { Toaster } from "@/components/ui/sonner";
 
 const bricolage = Bricolage_Grotesque({
@@ -27,13 +28,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${bricolage.variable} antialiased`}>
         <Provider>
-          <BreederProvider>
-            <BeanHeadsProvider>
-              <Navbar />
-              <Toaster />
-              {children}
-            </BeanHeadsProvider>
-          </BreederProvider>
+          <BridgeProvider>
+            <BreederProvider>
+              <BeanHeadsProvider>
+                <Navbar />
+                <Toaster />
+                {children}
+              </BeanHeadsProvider>
+            </BreederProvider>
+          </BridgeProvider>
         </Provider>
       </body>
     </html>

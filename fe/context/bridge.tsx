@@ -35,38 +35,38 @@ type BridgeCtx = {
   contract?: ReturnType<typeof getContract> | null;
   nftContract?: ReturnType<typeof getContract> | null;
   sendMintTokenRequest: (
-    destChainId: number,
+    destChainId: bigint,
     to: `0x${string}`,
     avatarParams: ReturnType<typeof generateRandomAvatarAttributes>,
     amount: bigint,
     paymentToken: `0x${string}` | null
   ) => Promise<PreparedTransaction>;
   sendSellTokenRequest: (
-    destChainId: number,
+    destChainId: bigint,
     sell: PermitTypes.Sell,
     permitDeadline: bigint,
     permitSig: `0x${string}`
   ) => Promise<PreparedTransaction>;
   sendBatchSellTokenRequest: (
-    destChainId: number,
+    destChainId: bigint,
     sells: PermitTypes.Sell[],
     permitDeadline: bigint,
     permitSig: `0x${string}`
   ) => Promise<PreparedTransaction>;
   sendBuyTokenRequest: (
-    destChainId: number,
+    destChainId: bigint,
     tokenId: bigint,
     paymentToken: `0x${string}`,
     price: bigint
   ) => Promise<PreparedTransaction>;
   sendBatchBuyTokenRequest: (
-    destChainId: number,
+    destChainId: bigint,
     tokenIds: bigint[],
     prices: bigint[],
     paymentToken: `0x${string}`
   ) => Promise<PreparedTransaction>;
   sendTransferTokenRequest: (
-    destChainId: number,
+    destChainId: bigint,
     tokenId: bigint,
     to: `0x${string}`
   ) => Promise<PreparedTransaction>;
@@ -155,7 +155,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function sendMintTokenRequest(
-    destChainId: number,
+    destChainId: bigint,
     to: `0x${string}`,
     avatarParams: ReturnType<typeof generateRandomAvatarAttributes>,
     amount: bigint,
@@ -196,7 +196,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
   }
 
   function buildDomain(params: {
-    chainId: number;
+    chainId: bigint;
     verifyingContract: `0x${string}`;
     name?: string;
     version?: string;
@@ -217,7 +217,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function sendSellTokenRequest(
-    destChainId: number,
+    destChainId: bigint,
     sell: PermitTypes.Sell,
     permitDeadline: bigint,
     permitSig: `0x${string}`
@@ -227,7 +227,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
     if (!chain) throw new Error("Chain not available");
 
     const domain = buildDomain({
-      chainId: chain.id,
+      chainId: BigInt(chain.id),
       verifyingContract: contract.address as `0x${string}`,
     });
 
@@ -257,7 +257,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function sendBatchSellTokenRequest(
-    destChainId: number,
+    destChainId: bigint,
     sells: PermitTypes.Sell[],
     permitDeadline: bigint,
     permitSig: `0x${string}`
@@ -267,7 +267,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
     if (!chain) throw new Error("Chain not available");
 
     const domain = buildDomain({
-      chainId: chain.id,
+      chainId: BigInt(chain.id),
       verifyingContract: contract.address as `0x${string}`,
     });
 
@@ -301,7 +301,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function sendBuyTokenRequest(
-    destChainId: number,
+    destChainId: bigint,
     tokenId: bigint,
     paymentToken: `0x${string}`,
     price: bigint
@@ -321,7 +321,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function sendBatchBuyTokenRequest(
-    destChainId: number,
+    destChainId: bigint,
     tokenIds: bigint[],
     prices: bigint[],
     paymentToken: `0x${string}`
@@ -341,7 +341,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function sendTransferTokenRequest(
-    destChainId: number,
+    destChainId: bigint,
     tokenId: bigint,
     to: `0x${string}`
   ) {
