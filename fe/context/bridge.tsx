@@ -33,6 +33,46 @@ type BridgeCtx = {
   chainId?: number;
   address?: `0x${string}`;
   contract?: ReturnType<typeof getContract> | null;
+  nftContract?: ReturnType<typeof getContract> | null;
+  sendMintTokenRequest: (
+    destChainId: number,
+    to: `0x${string}`,
+    avatarParams: ReturnType<typeof generateRandomAvatarAttributes>,
+    amount: bigint,
+    paymentToken: `0x${string}` | null
+  ) => Promise<PreparedTransaction>;
+  sendSellTokenRequest: (
+    destChainId: number,
+    sell: PermitTypes.Sell,
+    permitDeadline: bigint,
+    permitSig: `0x${string}`
+  ) => Promise<PreparedTransaction>;
+  sendBatchSellTokenRequest: (
+    destChainId: number,
+    sells: PermitTypes.Sell[],
+    permitDeadline: bigint,
+    permitSig: `0x${string}`
+  ) => Promise<PreparedTransaction>;
+  sendBuyTokenRequest: (
+    destChainId: number,
+    tokenId: bigint,
+    paymentToken: `0x${string}`,
+    price: bigint
+  ) => Promise<PreparedTransaction>;
+  sendBatchBuyTokenRequest: (
+    destChainId: number,
+    tokenIds: bigint[],
+    prices: bigint[],
+    paymentToken: `0x${string}`
+  ) => Promise<PreparedTransaction>;
+  sendTransferTokenRequest: (
+    destChainId: number,
+    tokenId: bigint,
+    to: `0x${string}`
+  ) => Promise<PreparedTransaction>;
+  setRemoteBridge: (address: `0x${string}`) => Promise<PreparedTransaction>;
+  depositLink: (amount: bigint) => Promise<PreparedTransaction>;
+  withdrawLink: (amount: bigint) => Promise<PreparedTransaction>;
 };
 
 const Ctx = createContext<BridgeCtx | null>(null);
@@ -279,4 +319,145 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
       transaction: tx,
     });
   }
+
+  async function sendBatchBuyTokenRequest(
+    destChainId: number,
+    tokenIds: bigint[],
+    prices: bigint[],
+    paymentToken: `0x${string}`
+  ) {
+    if (!contract) throw new Error("Bridge contract not available");
+
+    const tx = await prepareContractCall({
+      contract,
+      method: "sendBatchBuyTokenRequest",
+      params: [destChainId, tokenIds, paymentToken, prices],
+    });
+
+    return sendTransaction({
+      account: account!,
+      transaction: tx,
+    });
+  }
+
+  async function sendTransferTokenRequest(
+    destChainId: number,
+    tokenId: bigint,
+    to: `0x${string}`
+  ) {
+    if (!contract) throw new Error("Bridge contract not available");
+
+    const tx = await prepareContractCall({
+      contract,
+      method: "sendTransferTokenRequest",
+      params: [destChainId, tokenId, to],
+    });
+
+    return sendTransaction({
+      account: account!,
+      transaction: tx,
+    });
+  }
+
+  async function setRemoteBridge(address: `0x${string}`) {
+    if (!contract) throw new Error("Bridge contract not available");
+
+    const tx = await prepareContractCall({
+      contract,
+      method: "setRemoteBridge",
+      params: [address],
+    });
+
+    return sendTransaction({
+      account: account!,
+      transaction: tx,
+    });
+  }
+
+  async function depositLink(amount: bigint) {
+    if (!contract) throw new Error("Bridge contract not available");
+    if (!chain) throw new Error("Chain not available");
+
+    const link = getContract({
+      client,
+      chain,
+      address: LINK_ADDRESS[chain.id],
+      abi: ERC20ABI as any,
+    });
+
+    const allowance = (await readContract({
+      contract: link,
+      method: "allowance",
+      params: [
+        account!.address as `0x${string}`,
+        contract.address as `0x${string}`,
+      ],
+    })) as bigint;
+
+    if (allowance < amount) {
+      const approveTx = await prepareContractCall({
+        contract: link,
+        method: "approve",
+        params: [contract.address as `0x${string}`, amount],
+      });
+
+      const approveResult = await sendTransaction({
+        account: account!,
+        transaction: approveTx,
+      });
+      await waitForReceipt(approveResult);
+    }
+
+    const tx = await prepareContractCall({
+      contract,
+      method: "depositLink",
+      params: [amount],
+    });
+
+    return sendTransaction({
+      account: account!,
+      transaction: tx,
+    });
+  }
+
+  async function withdrawLink(amount: bigint) {
+    if (!contract) throw new Error("Bridge contract not available");
+
+    const tx = await prepareContractCall({
+      contract,
+      method: "withdrawLink",
+      params: [amount],
+    });
+
+    return sendTransaction({
+      account: account!,
+      transaction: tx,
+    });
+  }
+
+  const value: BridgeCtx = {
+    chainId: chain?.id,
+    address,
+    contract,
+    nftContract,
+    sendMintTokenRequest,
+    sendSellTokenRequest,
+    sendBatchSellTokenRequest,
+    sendBuyTokenRequest,
+    sendBatchBuyTokenRequest,
+    sendTransferTokenRequest,
+    setRemoteBridge,
+    depositLink,
+    withdrawLink,
+  };
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+export function useBridge() {
+  const ctx = useContext(Ctx);
+  if (!ctx) {
+    throw new Error("useBridge must be used within a BridgeProvider");
+  }
+  return ctx;
 }
