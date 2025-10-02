@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useMemo } from "react";
 import CircularMenu from "@/components/CircularMenu";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import {
@@ -7,7 +7,8 @@ import {
   generateRandomAvatarAttributes as selectRandom,
 } from "@/components/Avatar";
 import { useBeanHeads } from "@/context/beanheads";
-import { USDC_ADDRESS } from "@/constants/contract";
+import { useBridge } from "@/context/bridge";
+import { BRIDGE_ADDRESS, USDC_ADDRESS } from "@/constants/contract";
 import { toast } from "sonner";
 
 const pages = [
@@ -23,9 +24,25 @@ const MintPage = () => {
   const [selectedAttributes, setSelectedAttributes] = useState<any | null>(
     null
   );
+  const [destChainId, setDestChainId] = useState<number | "">("");
+  const [mode, setMode] = useState<"local" | "remote">("local");
+  const [isMinting, setIsMinting] = useState(false);
+
   const { mintGenesis } = useBeanHeads();
   const account = useActiveAccount();
   const chain = useActiveWalletChain();
+  const { sendMintTokenRequest } = useBridge();
+
+  const destinationOptions = useMemo(() => {
+    return Object.entries(BRIDGE_ADDRESS).map(([id, addr]) => ({
+      id: Number(id),
+      address: addr as `0x${string}`,
+    }));
+  }, []);
+
+  useEffect(() => {
+    setSelectedAttributes(selectRandom());
+  }, []);
 
   useEffect(() => {
     const randomAttributes = selectRandom();
@@ -47,6 +64,46 @@ const MintPage = () => {
     }
     if (!chain) {
       toast("Please select a network to mint.");
+      return;
+    }
+
+    const amount = BigInt(1); // Minting 1 NFT
+
+    const effectiveDest =
+      mode === "local"
+        ? chain.id
+        : typeof destChainId === "number"
+        ? destChainId
+        : undefined;
+
+    if (!effectiveDest) {
+      toast("Please select a valid destination chain.");
+      return;
+    }
+
+    setIsMinting(true);
+
+    const sourceUsdc = USDC_ADDRESS[chain.id];
+
+    if (effectiveDest === chain.id) {
+      if (typeof mintGenesis !== "function") {
+        toast("Local minting function is not available.");
+        return;
+      }
+
+      if (!sourceUsdc) {
+        toast("USDC is not available on the source network.");
+        return;
+      }
+
+      const tx = await mintGenesis(
+        account.address as `0x${string}`,
+        selectedAttributes,
+        amount,
+        sourceUsdc
+      );
+
+      toast("Local minting successful!");
       return;
     }
 
