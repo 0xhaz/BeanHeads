@@ -178,7 +178,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
 
     const tx = await prepareContractCall({
       contract,
-      method: "requestMintToken",
+      method: "sendMintTokenRequest",
       params: [
         destChainId,
         to,

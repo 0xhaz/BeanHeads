@@ -28,5 +28,10 @@
     "sepolia": "0x739D3EDf8a7A6527E3C9c96CFaC2c7c0e5D0A443",
     "arbitrumSepolia": "0x5414f67D6CB389812E26AE2BeE2E9DF2808A996f",
     "optimismSepolia": "0x8314B8FA845f635c8BffB11AB3D0e596232b2E1E"
+  },
+  "ChainSelector": {
+    "sepolia": "16015286601757825753",
+    "arbitrumSepolia": "3478487238524512106",
+    "optimismSepolia": "5224473277236331295"
   }
 }

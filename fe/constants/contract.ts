@@ -6,6 +6,7 @@ import {
   AggregatatorV3Interface,
   Breeder,
   Bridge,
+  ChainSelector,
 } from "@/app/contracts/BeanHeads-address.json";
 
 export const BEANHEADS_ADDRESS: Record<number, `0x${string}`> = {
@@ -44,4 +45,10 @@ export const BRIDGE_ADDRESS: Record<number, `0x${string}`> = {
   [sepolia.id]: Bridge.sepolia as `0x${string}`,
   [arbitrumSepolia.id]: Bridge.arbitrumSepolia as `0x${string}`,
   [optimismSepolia.id]: Bridge.optimismSepolia as `0x${string}`,
+};
+
+export const CHAIN_SELECTOR: Record<number, bigint> = {
+  [sepolia.id]: BigInt(ChainSelector.sepolia),
+  [arbitrumSepolia.id]: BigInt(ChainSelector.arbitrumSepolia),
+  [optimismSepolia.id]: BigInt(ChainSelector.optimismSepolia),
 };
