@@ -16,27 +16,9 @@ import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 contract DeployBeanHeadsBreeder is Script {
     HelperConfig helperConfig = new HelperConfig();
 
-    // constructor(HelperConfig _helperConfig) {
-    //     helperConfig = _helperConfig;
-    // }
-
     function run() public returns (address, address) {
-        (
-            ,
-            ,
-            ,
-            ,
-            address vrfCoordinator,
-            uint256 subscriptionId,
-            bytes32 keyHash,
-            uint256 deployerKey,
-            uint32 gasLimit,
-            uint16 requestConfirmations,
-            uint256 breedCoolDown,
-            uint256 maxBreedRequests
-        ) = helperConfig.activeNetworkConfig();
-
-        HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
+        (HelperConfig.NetworkConfig memory config, HelperConfig.VrfConfig memory vrfConfig,) =
+            helperConfig.getActiveNetworkConfig();
 
         address deployerAddress = vm.addr(config.deployerKey);
 
@@ -55,24 +37,24 @@ contract DeployBeanHeadsBreeder is Script {
             revert("Unsupported network");
         }
 
-        vm.startBroadcast(deployerKey);
+        vm.startBroadcast(config.deployerKey);
         BeanHeadsBreeder beanHeadsBreeder = new BeanHeadsBreeder(
             deployerAddress,
             beanHeads,
-            gasLimit,
-            requestConfirmations,
-            breedCoolDown,
-            maxBreedRequests,
-            vrfCoordinator,
-            subscriptionId,
-            keyHash
+            vrfConfig.gasLimit,
+            vrfConfig.requestConfirmations,
+            vrfConfig.breedCoolDown,
+            vrfConfig.maxBreedRequest,
+            vrfConfig.vrfCoordinator,
+            vrfConfig.subscriptionId,
+            vrfConfig.keyHash
         );
 
         vm.stopBroadcast();
 
         console.log("BeanHeadsBreeder deployed at:", address(beanHeadsBreeder));
 
-        vm.startBroadcast(deployerKey);
+        vm.startBroadcast(config.deployerKey);
         // beanHeadsBreeder.acceptOwnership();
         // console.log("BeanHeadsBreeder ownership accepted by:", address(beanHeadsBreeder));
         IBeanHeads(beanHeads).authorizeBreeder(address(beanHeadsBreeder));
@@ -82,25 +64,5 @@ contract DeployBeanHeadsBreeder is Script {
         vm.stopBroadcast();
 
         return (address(beanHeadsBreeder), beanHeads);
-    }
-
-    function addFundLink(address linkToken, address to) public {
-        uint256 amount = 3 ether;
-        (,,,,,,, uint256 deployerKey,,,,) = helperConfig.activeNetworkConfig();
-        vm.startBroadcast(deployerKey);
-        bool ok = IERC20(linkToken).transfer(to, amount);
-        vm.stopBroadcast();
-        require(ok, "Transfer failed");
-        console.log("Funded LINK to:", to, "with amount:", amount);
-    }
-
-    function addVrfConsumer(address vrfCoordinator, uint64 subId, address consumer) public {
-        (,,,,,,, uint256 deployerKey,,,,) = helperConfig.activeNetworkConfig();
-        vm.startBroadcast(deployerKey);
-        // Create a new subscription
-        IVRFCoordinatorV2Plus vrfCoord = IVRFCoordinatorV2Plus(vrfCoordinator);
-        vrfCoord.addConsumer(subId, consumer);
-        console.log("Added consumer:", consumer, "to subscription:", subId);
-        vm.stopBroadcast();
     }
 }

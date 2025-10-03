@@ -48,8 +48,8 @@ contract BeanHeadsPermitTest is Test, ERC721PermitBase, Helpers {
         helperConfig = new HelperConfig();
         mockERC20 = new MockERC20(1000000 ether);
 
-        address usdcPriceFeed = helperConfig.getActiveNetworkConfig().usdPriceFeed;
-        priceFeed = AggregatorV3Interface(usdcPriceFeed);
+        (HelperConfig.NetworkConfig memory config,,) = helperConfig.getActiveNetworkConfig();
+        priceFeed = AggregatorV3Interface(config.usdPriceFeed);
         tokenDecimals = mockERC20.decimals();
 
         (alicePk, alice) = _newSigner("alice");
@@ -62,11 +62,11 @@ contract BeanHeadsPermitTest is Test, ERC721PermitBase, Helpers {
 
         mockERC20.approve(address(beanHeads), type(uint256).max); // Approve BeanHeads to spend mock ERC20 tokens
 
-        deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
+        deployerAddress = vm.addr(config.deployerKey);
         vm.startPrank(deployerAddress);
         beanHeads.setAllowedToken(address(mockERC20), true); // Allow mock ERC20 token for minting
         beanHeads.setMintPrice(1 * 1e18); // Set mint price to 0.01 ether
-        beanHeads.addPriceFeed(address(mockERC20), usdcPriceFeed); // Add mock ERC20 price feed
+        beanHeads.addPriceFeed(address(mockERC20), config.usdPriceFeed); // Add mock ERC20 price feed
 
         royalty = deployBeanHeads.royalty();
         royalty.setRoyaltyInfo(600); // Set royalty to 6%

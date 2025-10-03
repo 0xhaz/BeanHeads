@@ -23,7 +23,7 @@ contract DeployBeanHeads is Script {
 
     function run() public returns (address, address) {
         HelperConfig helperConfig = new HelperConfig();
-        HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
+        (HelperConfig.NetworkConfig memory config,,) = helperConfig.getActiveNetworkConfig();
 
         address deployerAddress = vm.addr(config.deployerKey);
         address priceFeed = config.usdPriceFeed;

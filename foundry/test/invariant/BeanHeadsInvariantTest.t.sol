@@ -57,10 +57,10 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
         deployBeanHeads = new DeployBeanHeads();
         mockERC20 = new MockERC20(1000 ether);
 
-        address usdcPriceFeed = helperConfig.getActiveNetworkConfig().usdPriceFeed;
-        priceFeed = AggregatorV3Interface(usdcPriceFeed);
+        (HelperConfig.NetworkConfig memory config,,) = helperConfig.getActiveNetworkConfig();
+        priceFeed = AggregatorV3Interface(config.usdPriceFeed);
 
-        deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
+        deployerAddress = vm.addr(config.deployerKey);
         (address beanHeadsAddr,) = deployBeanHeads.run();
         beanHeads = IBeanHeads(payable(beanHeadsAddr));
         royaltyContract = deployBeanHeads.royalty();
@@ -93,7 +93,7 @@ contract BeanHeadsInvariantTest is StdInvariant, Test {
 
         beanHeads.setAllowedToken(address(mockERC20), true); // Allow mock ERC20 token for minting
         beanHeads.setMintPrice(1 * 1e18); // Set mint price to 0.01 ether
-        beanHeads.addPriceFeed(address(mockERC20), usdcPriceFeed); // Add mock ERC20 price feed
+        beanHeads.addPriceFeed(address(mockERC20), config.usdPriceFeed); // Add mock ERC20 price feed
         vm.stopPrank();
 
         vm.startPrank(USER);

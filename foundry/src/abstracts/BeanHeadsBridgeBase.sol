@@ -27,6 +27,7 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
 
     IRouterClient public immutable i_router;
     address public s_remoteBridge;
+    uint64 public s_destChain;
     IERC20 public s_linkToken;
     address public immutable i_beanHeadsContract;
 
@@ -42,7 +43,7 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Mapping to track the remote bridge address
-    mapping(address remoteBridge => bool isRegistered) public remoteBridgeAddresses;
+    mapping(uint64 chainId => mapping(address remoteBridge => bool isRegistered)) public remoteBridgeAddresses;
 
     /*//////////////////////////////////////////////////////////////
                            MESSAGE FUNCTIONS
@@ -253,10 +254,11 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
     /*//////////////////////////////////////////////////////////////
                                  ADMIN
     //////////////////////////////////////////////////////////////*/
-    function setRemoteBridge(address _newRemoteBridge) public virtual {
+    function setRemoteBridge(uint64 destChain, address _newRemoteBridge, bool allowed) public virtual {
         if (_newRemoteBridge == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
         s_remoteBridge = _newRemoteBridge;
-        remoteBridgeAddresses[_newRemoteBridge] = true;
+        s_destChain = destChain;
+        remoteBridgeAddresses[destChain][_newRemoteBridge] = allowed;
 
         emit RemoteBridgeUpdated(_newRemoteBridge);
     }

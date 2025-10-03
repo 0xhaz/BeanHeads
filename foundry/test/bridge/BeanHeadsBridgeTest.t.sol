@@ -94,6 +94,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
     function setUp() public {
         HelperConfig.NetworkConfig memory config;
+        HelperConfig.CrossChainConfig memory crossChainConfig;
         // create fork
         sepoliaFork = vm.createSelectFork("sepolia-eth");
         arbFork = vm.createSelectFork("arb-sepolia");
@@ -110,7 +111,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         console.log("Sepolia Network Details: ", block.chainid);
 
         sepoliaHelperConfig = new HelperConfig();
-        config = sepoliaHelperConfig.getActiveNetworkConfig();
+        (config,, crossChainConfig) = sepoliaHelperConfig.getActiveNetworkConfig();
 
         address usdPriceFeedSepolia = config.usdPriceFeed;
         priceFeedSepolia = AggregatorV3Interface(usdPriceFeedSepolia);
@@ -144,7 +145,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         console.log("Arb Network Details: ", block.chainid);
 
         arbHelperConfig = new HelperConfig();
-        config = arbHelperConfig.getActiveNetworkConfig();
+        (config,, crossChainConfig) = arbHelperConfig.getActiveNetworkConfig();
 
         address usdPriceFeedArbitrum = config.usdPriceFeed;
         priceFeedArbitrum = AggregatorV3Interface(usdPriceFeedArbitrum);
@@ -186,9 +187,11 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(sepoliaTokenPool));
 
-        sepoliaBeanHeadsBridge.setRemoteBridge(address(arbBeanHeadsBridge));
+        uint64 arbChainId = arbHelperConfig.ARBITRUM_SEPOLIA_CHAIN_ID();
+
+        sepoliaBeanHeadsBridge.setRemoteBridge(arbChainId, address(arbBeanHeadsBridge), true);
         ccipSimulatorSepolia.requestLinkFromFaucet(address(sepoliaBeanHeadsBridge), 10 ether);
-        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
+        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(arbChainId, address(arbBeanHeadsBridge)), true);
         vm.stopPrank();
 
         vm.mockCall(
@@ -215,9 +218,11 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(arbTokenPool));
 
-        arbBeanHeadsBridge.setRemoteBridge(address(sepoliaBeanHeadsBridge));
+        uint64 sepoliaChainId = sepoliaHelperConfig.ETH_SEPOLIA_CHAIN_ID();
+
+        arbBeanHeadsBridge.setRemoteBridge(sepoliaChainId, address(sepoliaBeanHeadsBridge), true);
         ccipSimulatorArbitrum.requestLinkFromFaucet(address(arbBeanHeadsBridge), 10 ether);
-        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
+        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(sepoliaChainId, address(sepoliaBeanHeadsBridge)), true);
         vm.stopPrank();
 
         vm.mockCall(
@@ -394,11 +399,12 @@ contract BeanHeadsBridgeTest is Test, Helpers {
     function test_Initialize() public {
         vm.selectFork(sepoliaFork);
         vm.startPrank(ownerSepolia);
+        uint64 sepChainId = sepoliaHelperConfig.ETH_SEPOLIA_CHAIN_ID();
         assertEq(sepoliaBeanHeadsBridge.owner(), ownerSepolia);
         assertEq(IERC173(address(sepoliaBeanHeads)).owner(), ownerSepolia);
         assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
         assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockArbToken)), true);
-        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
+        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(sepChainId, address(arbBeanHeadsBridge)), true);
         assertEq(sepoliaBeanHeads.getMintPrice(), MINT_PRICE);
         assertEq(sepoliaBeanHeads.name(), "BeanHeads");
         assertEq(sepoliaBeanHeads.symbol(), "BEANS");
@@ -406,11 +412,12 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         vm.selectFork(arbFork);
         vm.startPrank(ownerArbitrum);
+        uint64 arbChainId = arbHelperConfig.ARBITRUM_SEPOLIA_CHAIN_ID();
         assertEq(arbBeanHeadsBridge.owner(), ownerArbitrum);
         assertEq(IERC173(address(arbBeanHeads)).owner(), ownerArbitrum);
         assertEq(arbBeanHeads.isTokenAllowed(address(mockArbToken)), true);
         assertEq(arbBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
-        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
+        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(arbChainId, address(sepoliaBeanHeadsBridge)), true);
         vm.stopPrank();
     }
 

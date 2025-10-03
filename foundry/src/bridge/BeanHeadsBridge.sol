@@ -29,7 +29,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
 
     /// @notice Modifier to ensure that the remote bridge is registered
     modifier onlyRegisteredRemoteBridge() {
-        if (!remoteBridgeAddresses[s_remoteBridge]) {
+        if (!remoteBridgeAddresses[s_destChain][s_remoteBridge]) {
             revert IBeanHeadsBridge__InvalidRemoteAddress();
         }
         _;
@@ -38,12 +38,11 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(address router, address remote, address initialOwner, address linkToken, address beanHeads)
+    constructor(address router, address initialOwner, address linkToken, address beanHeads)
         CCIPReceiver(router)
         Ownable(initialOwner)
     {
         i_router = IRouterClient(router);
-        s_remoteBridge = remote;
         s_linkToken = IERC20(linkToken);
         i_beanHeadsContract = beanHeads;
     }
@@ -150,8 +149,8 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
                                  ADMIN
     //////////////////////////////////////////////////////////////*/
     /// @inheritdoc IBeanHeadsBridge
-    function setRemoteBridge(address _newRemoteBridge) public override onlyOwner {
-        super.setRemoteBridge(_newRemoteBridge);
+    function setRemoteBridge(uint64 chainId, address _newRemoteBridge, bool allowed) public override onlyOwner {
+        super.setRemoteBridge(chainId, _newRemoteBridge, allowed);
     }
 
     /// @inheritdoc IBeanHeadsBridge

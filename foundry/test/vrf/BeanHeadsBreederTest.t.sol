@@ -55,38 +55,26 @@ contract BeanHeadsBreederTest is Test, Helpers {
         helpers = new Helpers();
         mockERC20 = new MockERC20(1000 ether); // Create a mock ERC20 token with 1000 tokens
 
-        (
-            ,
-            ,
-            address linkToken,
-            address usdPriceFeed,
-            address vrfCoordinatorMock,
-            uint256 subId,
-            bytes32 keyHash,
-            ,
-            uint32 gasLimit,
-            uint16 requestConfirmations,
-            uint256 breedCoolDown,
-            uint256 maxBreedRequests
-        ) = helperConfig.activeNetworkConfig();
+        (HelperConfig.NetworkConfig memory config, HelperConfig.VrfConfig memory vrfConfig,) =
+            helperConfig.getActiveNetworkConfig();
+        priceFeed = AggregatorV3Interface(config.usdPriceFeed);
 
-        priceFeed = AggregatorV3Interface(usdPriceFeed);
         tokenDecimals = mockERC20.decimals();
 
-        deployerAddress = vm.addr(helperConfig.getActiveNetworkConfig().deployerKey);
+        deployerAddress = vm.addr(config.deployerKey);
         deployBeanHeads = new DeployBeanHeads();
         (address beanHeadsContract,) = deployBeanHeads.run();
         beanHeads = beanHeadsContract;
         beanHeadsBreeder = new BeanHeadsBreeder(
             deployerAddress,
             address(beanHeads),
-            gasLimit,
-            requestConfirmations,
-            breedCoolDown,
-            maxBreedRequests,
-            vrfCoordinatorMock,
-            subId,
-            keyHash
+            vrfConfig.gasLimit,
+            vrfConfig.requestConfirmations,
+            vrfConfig.breedCoolDown,
+            vrfConfig.maxBreedRequest,
+            vrfConfig.vrfCoordinator,
+            vrfConfig.subscriptionId,
+            vrfConfig.keyHash
         );
 
         vm.startPrank(deployerAddress); // Deployer address
@@ -96,10 +84,12 @@ contract BeanHeadsBreederTest is Test, Helpers {
         IBeanHeads(beanHeads).addPriceFeed(address(mockERC20), address(priceFeed));
         IBeanHeads(beanHeads).setMintPrice(1 ether);
 
-        MockLinkToken(linkToken).setBalance(deployerAddress, 1000 ether); // Fund the deployer with LINK tokens
-        MockLinkToken(linkToken).transfer(address(beanHeadsBreeder), 100 ether); // Fund the breeder contract with LINK tokens
-        VRFCoordinatorV2_5Mock(vrfCoordinatorMock).fundSubscription(subId, 100 ether); // Fund the subscription with LINK tokens
-        VRFCoordinatorV2_5Mock(vrfCoordinatorMock).addConsumer(subId, address(beanHeadsBreeder));
+        MockLinkToken(config.linkToken).setBalance(deployerAddress, 1000 ether); // Fund the deployer with LINK tokens
+        MockLinkToken(config.linkToken).transfer(address(beanHeadsBreeder), 100 ether); // Fund the breeder contract with LINK tokens
+        VRFCoordinatorV2_5Mock(vrfConfig.vrfCoordinator).fundSubscription(vrfConfig.subscriptionId, 100 ether); // Fund the subscription with LINK tokens
+        VRFCoordinatorV2_5Mock(vrfConfig.vrfCoordinator).addConsumer(
+            vrfConfig.subscriptionId, address(beanHeadsBreeder)
+        );
         IBeanHeads(beanHeads).authorizeBreeder(address(beanHeadsBreeder));
 
         IBeanHeads(beanHeads).setAllowedToken(address(mockERC20), true); // Allow the mock ERC20 token in BeanHeads

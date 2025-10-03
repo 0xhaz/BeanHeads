@@ -2,6 +2,11 @@
 pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
+import {RegistryModuleOwnerCustom} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/ccip/tokenAdminRegistry/RegistryModuleOwnerCustom.sol";
+import {TokenAdminRegistry} from
+    "chainlink-brownie-contracts/contracts/src/v0.8/ccip/tokenAdminRegistry/TokenAdminRegistry.sol";
+import {TokenPool, IERC20} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/pools/TokenPool.sol";
 import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
@@ -11,7 +16,8 @@ import {BHStorage} from "src/libraries/BHStorage.sol";
 contract DeployBeanHeadsBridge is Script {
     function run() public returns (address, address, address) {
         HelperConfig helperConfig = new HelperConfig();
-        HelperConfig.NetworkConfig memory config = helperConfig.getActiveNetworkConfig();
+        (HelperConfig.NetworkConfig memory config,, HelperConfig.CrossChainConfig memory crossChainConfig) =
+            helperConfig.getActiveNetworkConfig();
 
         address beanHeads;
 
@@ -34,7 +40,16 @@ contract DeployBeanHeadsBridge is Script {
         vm.startBroadcast(config.deployerKey);
 
         BeanHeadsBridge beanHeadsBridge =
-            new BeanHeadsBridge(config.routerClient, config.remoteBridge, deployerAddress, config.linkToken, beanHeads);
+            new BeanHeadsBridge(crossChainConfig.routerClient, deployerAddress, config.linkToken, beanHeads);
+
+        // console.log("Registering module owners");
+        // RegistryModuleOwnerCustom(crossChainConfig.registryModule).registerAdminViaOwner(crossChainConfig.usdcToken);
+        // console.log("Registering token admin");
+        // TokenAdminRegistry(crossChainConfig.tokenAdminRegistry).acceptAdminRole(crossChainConfig.usdcToken);
+        // console.log("Adding token pool");
+        // TokenAdminRegistry(crossChainConfig.tokenAdminRegistry).setPool(
+        //     crossChainConfig.usdcToken, crossChainConfig.usdcTokenPool
+        // );
 
         vm.stopBroadcast();
 

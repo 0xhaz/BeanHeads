@@ -25,9 +25,9 @@
     "optimismSepolia": "0xE4bC25839bf41340A55374f354a8A354ea9c3294"
   },
   "Bridge": {
-    "sepolia": "0x739D3EDf8a7A6527E3C9c96CFaC2c7c0e5D0A443",
-    "arbitrumSepolia": "0x5414f67D6CB389812E26AE2BeE2E9DF2808A996f",
-    "optimismSepolia": "0x8314B8FA845f635c8BffB11AB3D0e596232b2E1E"
+    "sepolia": "0x83f8740964c7578A76c5D8A64E4f07781D98400B",
+    "arbitrumSepolia": "0xC48e62dDe560b291B0f97022bfC76Db3c8ef4229",
+    "optimismSepolia": "0x3ebbFf0F65d5098A131a690607d748a59fEEefd0"
   },
   "ChainSelector": {
     "sepolia": "16015286601757825753",

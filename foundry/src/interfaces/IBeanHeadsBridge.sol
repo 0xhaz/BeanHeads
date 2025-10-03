@@ -134,9 +134,11 @@ interface IBeanHeadsBridge {
     /**
      * @notice Updates the trusted remote bridge address.
      * @dev Only callable by the owner.
+     * @param destChain The destination chain ID.
      * @param _newRemoteBridge The new remote bridge address.
+     * @param allowed Whether the new remote bridge is allowed.
      */
-    function setRemoteBridge(address _newRemoteBridge) external;
+    function setRemoteBridge(uint64 destChain, address _newRemoteBridge, bool allowed) external;
 
     /**
      * @notice Initiates a cross-chain mint token request.
