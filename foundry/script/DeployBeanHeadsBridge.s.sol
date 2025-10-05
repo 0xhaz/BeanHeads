@@ -39,8 +39,9 @@ contract DeployBeanHeadsBridge is Script {
 
         vm.startBroadcast(config.deployerKey);
 
-        BeanHeadsBridge beanHeadsBridge =
-            new BeanHeadsBridge(crossChainConfig.routerClient, deployerAddress, config.linkToken, beanHeads);
+        BeanHeadsBridge beanHeadsBridge = new BeanHeadsBridge(
+            crossChainConfig.routerClient, deployerAddress, config.linkToken, crossChainConfig.usdcToken, beanHeads
+        );
 
         // console.log("Registering module owners");
         // RegistryModuleOwnerCustom(crossChainConfig.registryModule).registerAdminViaOwner(crossChainConfig.usdcToken);

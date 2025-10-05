@@ -163,6 +163,7 @@ export function BridgeProvider({ children }: { children: React.ReactNode }) {
   ) {
     if (!contract) throw new Error("Bridge contract not available");
 
+    console.log("Sending to destChainId:", destChainId.toString());
     const svgParams = toSVGParamsFromAvatar(avatarParams);
 
     if (paymentToken) {

@@ -189,9 +189,9 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         uint64 arbChainId = arbHelperConfig.ARBITRUM_SEPOLIA_CHAIN_ID();
 
-        sepoliaBeanHeadsBridge.setRemoteBridge(arbChainId, address(arbBeanHeadsBridge), true);
+        sepoliaBeanHeadsBridge.setRemoteBridge(address(arbBeanHeadsBridge), true);
         ccipSimulatorSepolia.requestLinkFromFaucet(address(sepoliaBeanHeadsBridge), 10 ether);
-        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(arbChainId, address(arbBeanHeadsBridge)), true);
+        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
         vm.stopPrank();
 
         vm.mockCall(
@@ -220,9 +220,9 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         uint64 sepoliaChainId = sepoliaHelperConfig.ETH_SEPOLIA_CHAIN_ID();
 
-        arbBeanHeadsBridge.setRemoteBridge(sepoliaChainId, address(sepoliaBeanHeadsBridge), true);
+        arbBeanHeadsBridge.setRemoteBridge(address(sepoliaBeanHeadsBridge), true);
         ccipSimulatorArbitrum.requestLinkFromFaucet(address(arbBeanHeadsBridge), 10 ether);
-        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(sepoliaChainId, address(sepoliaBeanHeadsBridge)), true);
+        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
         vm.stopPrank();
 
         vm.mockCall(
@@ -404,7 +404,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         assertEq(IERC173(address(sepoliaBeanHeads)).owner(), ownerSepolia);
         assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
         assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockArbToken)), true);
-        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(sepChainId, address(arbBeanHeadsBridge)), true);
+        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
         assertEq(sepoliaBeanHeads.getMintPrice(), MINT_PRICE);
         assertEq(sepoliaBeanHeads.name(), "BeanHeads");
         assertEq(sepoliaBeanHeads.symbol(), "BEANS");
@@ -417,7 +417,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         assertEq(IERC173(address(arbBeanHeads)).owner(), ownerArbitrum);
         assertEq(arbBeanHeads.isTokenAllowed(address(mockArbToken)), true);
         assertEq(arbBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
-        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(arbChainId, address(sepoliaBeanHeadsBridge)), true);
+        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
         vm.stopPrank();
     }
 
