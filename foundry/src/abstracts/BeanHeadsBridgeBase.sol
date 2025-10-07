@@ -35,7 +35,7 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
     uint256 public constant ADDITIONAL_FEED_PRECISION = 1e10;
     uint256 public constant PRECISION = 1e18;
     uint256 public constant GAS_LIMIT_TRANSFER = 500_000;
-    uint256 public constant GAS_LIMIT_MINT = 500_000;
+    uint256 public constant GAS_LIMIT_MINT = 2_400_000;
     uint256 public constant GAS_LIMIT_BUY = 500_000;
     uint256 public constant GAS_LIMIT_SELL = 600_000;
 

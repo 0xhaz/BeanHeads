@@ -42,7 +42,6 @@ export const BREEDER_ADDRESS: Record<number, `0x${string}`> = {
 };
 
 export const BRIDGE_ADDRESS: Record<number, `0x${string}`> = {
-  [sepolia.id]: Bridge.sepolia as `0x${string}`,
   [arbitrumSepolia.id]: Bridge.arbitrumSepolia as `0x${string}`,
   [optimismSepolia.id]: Bridge.optimismSepolia as `0x${string}`,
 };
