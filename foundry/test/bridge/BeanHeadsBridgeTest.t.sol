@@ -187,7 +187,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(sepoliaTokenPool));
 
-        uint64 arbChainId = arbHelperConfig.ARBITRUM_SEPOLIA_CHAIN_ID();
+        // uint64 arbChainId = arbHelperConfig.ARBITRUM_SEPOLIA_CHAIN_ID();
 
         sepoliaBeanHeadsBridge.setRemoteBridge(address(arbBeanHeadsBridge), true);
         ccipSimulatorSepolia.requestLinkFromFaucet(address(sepoliaBeanHeadsBridge), 10 ether);
@@ -218,7 +218,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(arbTokenPool));
 
-        uint64 sepoliaChainId = sepoliaHelperConfig.ETH_SEPOLIA_CHAIN_ID();
+        // uint64 sepoliaChainId = sepoliaHelperConfig.ETH_SEPOLIA_CHAIN_ID();
 
         arbBeanHeadsBridge.setRemoteBridge(address(sepoliaBeanHeadsBridge), true);
         ccipSimulatorArbitrum.requestLinkFromFaucet(address(arbBeanHeadsBridge), 10 ether);
@@ -399,7 +399,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
     function test_Initialize() public {
         vm.selectFork(sepoliaFork);
         vm.startPrank(ownerSepolia);
-        uint64 sepChainId = sepoliaHelperConfig.ETH_SEPOLIA_CHAIN_ID();
+        // uint64 sepChainId = sepoliaHelperConfig.ETH_SEPOLIA_CHAIN_ID();
         assertEq(sepoliaBeanHeadsBridge.owner(), ownerSepolia);
         assertEq(IERC173(address(sepoliaBeanHeads)).owner(), ownerSepolia);
         assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
@@ -412,7 +412,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         vm.selectFork(arbFork);
         vm.startPrank(ownerArbitrum);
-        uint64 arbChainId = arbHelperConfig.ARBITRUM_SEPOLIA_CHAIN_ID();
+        // uint64 arbChainId = arbHelperConfig.ARBITRUM_SEPOLIA_CHAIN_ID();
         assertEq(arbBeanHeadsBridge.owner(), ownerArbitrum);
         assertEq(IERC173(address(arbBeanHeads)).owner(), ownerArbitrum);
         assertEq(arbBeanHeads.isTokenAllowed(address(mockArbToken)), true);

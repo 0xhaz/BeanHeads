@@ -2,7 +2,6 @@
 
 import { createThirdwebClient } from "thirdweb";
 import { ThirdwebProvider } from "thirdweb/react";
-import { sepolia, optimismSepolia, arbitrumSepolia } from "thirdweb/chains";
 import { inAppWallet, createWallet } from "thirdweb/wallets";
 
 export const client = createThirdwebClient({

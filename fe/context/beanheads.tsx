@@ -19,24 +19,7 @@ import {
 import { client } from "@/provider/client";
 import beanHeads from "@/app/contracts/BeanHeadsABI.json";
 import ERC20 from "@/app/contracts/ERC20.json";
-import {
-  ACCESSORIES,
-  BG_COLORS,
-  BODY_TYPES,
-  CLOTHING_COLORS,
-  CLOTHING_GRAPHICS,
-  CLOTHING_STYLES,
-  EYE_SHAPES,
-  EYEBROW_SHAPES,
-  FACIAL_HAIR_STYLES,
-  generateRandomAvatarAttributes,
-  HAIR_COLORS,
-  HAIR_STYLES,
-  HAT_STYLES,
-  LIP_COLORS,
-  MOUTH_SHAPES,
-  SKIN_COLORS,
-} from "@/components/Avatar";
+import { generateRandomAvatarAttributes } from "@/components/Avatar";
 import { SVGParams, toSVGParamsFromAvatar } from "@/utils/encode";
 // Ensure ABI is typed as readonly for thirdweb
 // const rawAbi = beanHeads.abi as any[];

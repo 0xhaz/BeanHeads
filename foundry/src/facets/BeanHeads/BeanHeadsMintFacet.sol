@@ -172,6 +172,7 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
         if (msg.sender != from && !isApprovedForAll(from, msg.sender) && getApproved(tokenId) != msg.sender) {
             _revert(IBeanHeadsMint__NotOwnerOrApproved.selector);
         }
+
         super.safeTransferFrom(from, to, tokenId, data);
     }
 

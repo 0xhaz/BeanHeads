@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ConnectButton } from "thirdweb/react";
 import { inAppWallet, createWallet } from "thirdweb/wallets";
 import { client, wallets } from "@/provider/client";
-import { arbitrumSepolia, optimismSepolia, sepolia } from "thirdweb/chains";
+import { arbitrumSepolia, optimismSepolia } from "thirdweb/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const navItems = [
@@ -37,7 +37,7 @@ const NavItems = () => {
         <ConnectButton
           client={client}
           wallets={wallets}
-          chains={[sepolia, arbitrumSepolia, optimismSepolia]}
+          chains={[arbitrumSepolia, optimismSepolia]}
           // accountAbstraction={{
           //   chain: sepolia,
           //   sponsorGas: true,

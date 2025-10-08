@@ -16,6 +16,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {PermitTypes} from "src/types/PermitTypes.sol";
 import {OracleLib} from "src/libraries/OracleLib.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
+import {console2} from "forge-std/console2.sol";
 
 abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
     using SafeERC20 for IERC20;
@@ -398,6 +399,9 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
         returns (ActionType action, bytes memory payload)
     {
         uint256 originChainId = IBeanHeads(i_beanHeadsContract).getOriginChainId(tokenId);
+        console2.log("tokenId:", tokenId);
+        console2.log("block.chainid:", block.chainid);
+        console2.log("originChainId:", originChainId);
         if (block.chainid == originChainId) {
             // Origin chain sending → lock + send mirror
             IBeanHeads(i_beanHeadsContract).lockToken(tokenId);

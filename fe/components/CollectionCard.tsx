@@ -3,7 +3,7 @@
 import React, { useMemo } from "react";
 import { Avatar } from "./Avatar";
 import type { SVGParams } from "@/utils/avatarMapping";
-import { svgParamsToAvatarProps } from "@/utils/avatarMapping"; // ⬅️ use the converter
+import { svgParamsToAvatarProps } from "@/utils/avatarMapping";
 import {
   HAIR_STYLES,
   BODY_TYPES,
