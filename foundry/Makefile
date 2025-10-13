@@ -53,6 +53,9 @@ deploy-bridge:
 deploy-breeder:
 	@forge script script/DeployBeanHeadsBreeder.s.sol:DeployBeanHeadsBreeder $(NETWORK_ARGS)
 
+deploy-interaction:
+	@forge script script/Interactions.s.sol:InteractionBridges $(NETWORK_ARGS)
+
 upgrade:
 	@forge script script/UpgradeScript.s.sol:UpgradeScript $(NETWORK_ARGS)
 

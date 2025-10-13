@@ -187,10 +187,12 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
             address bridgedToken = message.destTokenAmounts[0].token;
             uint256 bridgedAmount = message.destTokenAmounts[0].amount;
 
+            uint256 nextTokenId = IBeanHeads(i_beanHeadsContract).getNextTokenId();
+
             // Approve the BeanHeads contract to spend the bridged token
             _safeApproveTokens(IERC20(bridgedToken), bridgedAmount);
 
-            beans.mintGenesis(receiver, params, quantity, bridgedToken);
+            beans.mintBridgeToken(receiver, nextTokenId, params, block.chainid);
 
             emit TokenMintedCrossChain(receiver, params, quantity);
         }

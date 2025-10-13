@@ -7,7 +7,7 @@ import {RegistryModuleOwnerCustom} from
 import {TokenAdminRegistry} from
     "chainlink-brownie-contracts/contracts/src/v0.8/ccip/tokenAdminRegistry/TokenAdminRegistry.sol";
 import {TokenPool, IERC20} from "chainlink-brownie-contracts/contracts/src/v0.8/ccip/pools/TokenPool.sol";
-import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
+import {BeanHeadsBridge, IBeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
 import {DeployBeanHeads} from "script/DeployBeanHeads.s.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
@@ -42,15 +42,6 @@ contract DeployBeanHeadsBridge is Script {
         BeanHeadsBridge beanHeadsBridge = new BeanHeadsBridge(
             crossChainConfig.routerClient, deployerAddress, config.linkToken, crossChainConfig.usdcToken, beanHeads
         );
-
-        // console.log("Registering module owners");
-        // RegistryModuleOwnerCustom(crossChainConfig.registryModule).registerAdminViaOwner(crossChainConfig.usdcToken);
-        // console.log("Registering token admin");
-        // TokenAdminRegistry(crossChainConfig.tokenAdminRegistry).acceptAdminRole(crossChainConfig.usdcToken);
-        // console.log("Adding token pool");
-        // TokenAdminRegistry(crossChainConfig.tokenAdminRegistry).setPool(
-        //     crossChainConfig.usdcToken, crossChainConfig.usdcTokenPool
-        // );
 
         vm.stopBroadcast();
 
