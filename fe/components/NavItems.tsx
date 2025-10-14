@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "thirdweb/react";
-import { inAppWallet, createWallet } from "thirdweb/wallets";
 import { client, wallets } from "@/provider/client";
 import { arbitrumSepolia, optimismSepolia } from "thirdweb/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

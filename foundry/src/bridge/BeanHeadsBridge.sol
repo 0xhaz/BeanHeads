@@ -179,7 +179,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
 
         IBeanHeads beans = IBeanHeads(i_beanHeadsContract);
 
-        if (action == ActionType.MINT) {
+         if (action == ActionType.MINT) {
             /// @notice Decode the message data for minting a Genesis token.
             (address receiver, Genesis.SVGParams memory params, uint256 quantity) =
                 abi.decode(payload, (address, Genesis.SVGParams, uint256));
@@ -187,12 +187,10 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
             address bridgedToken = message.destTokenAmounts[0].token;
             uint256 bridgedAmount = message.destTokenAmounts[0].amount;
 
-            uint256 nextTokenId = IBeanHeads(i_beanHeadsContract).getNextTokenId();
-
             // Approve the BeanHeads contract to spend the bridged token
             _safeApproveTokens(IERC20(bridgedToken), bridgedAmount);
 
-            beans.mintBridgeToken(receiver, nextTokenId, params, block.chainid);
+            beans.mintGenesis(receiver, params, quantity, bridgedToken);
 
             emit TokenMintedCrossChain(receiver, params, quantity);
         }

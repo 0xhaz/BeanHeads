@@ -221,8 +221,8 @@ contract HelperConfig is Script {
 
     function _setOpSepoliaConfig() public returns (NetworkConfig memory, VrfConfig memory, CrossChainConfig memory) {
         activeNetworkConfig = NetworkConfig({
-            linkToken: 0xE4aB69C077896252FAFBD49EFD26B5D171A32410,
-            usdPriceFeed: 0x6e44e50E3cc14DD16e01C590DC1d7020cb36eD4C,
+            linkToken: OP_SEPOLIA_LINK_TOKEN,
+            usdPriceFeed: OP_SEPOLIA_USDC_USD_PRICE_FEED,
             deployerKey: vm.envUint("PRIVATE_KEY")
         });
 
@@ -256,8 +256,8 @@ contract HelperConfig is Script {
         returns (NetworkConfig memory, VrfConfig memory, CrossChainConfig memory)
     {
         activeNetworkConfig = NetworkConfig({
-            linkToken: 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E,
-            usdPriceFeed: 0x0153002d20B96532C639313c2d54c3dA09109309,
+            linkToken: ARBITRUM_SEPOLIA_LINK_TOKEN,
+            usdPriceFeed: ARBITRUM_SEPOLIA_USDC_USD_PRICE_FEED,
             deployerKey: vm.envUint("PRIVATE_KEY")
         });
 

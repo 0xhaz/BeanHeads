@@ -1,7 +1,7 @@
 {
   "BeanHeads": {
-    "arbitrumSepolia": "0xacbDce96cE151D15c7245555E8dA7F2D5B7aC171",
-    "optimismSepolia": "0x88ECCD5B949dD77Ac38BC606E51725A1AB3152FA"
+    "arbitrumSepolia": "0x2C5bf69D7C60bcD79fe85A468793BAa3BEd7B5a0",
+    "optimismSepolia": "0x5CcE59A8650159E5A4f842955078f19a60C24DFb"
   },
   "USDC": {
     "arbitrumSepolia": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
@@ -16,12 +16,12 @@
     "optimismSepolia": "0x6e44e50E3cc14DD16e01C590DC1d7020cb36eD4C"
   },
   "Breeder": {
-    "arbitrumSepolia": "0xaceF68f2eB2e774036662CaAd69045011a349eF3",
-    "optimismSepolia": "0x99bDD8e0D20b6cF21B28462236adfAB574D33181"
+    "arbitrumSepolia": "0x41258232c3E24352b606f787f9089b15939A3D5D",
+    "optimismSepolia": "0xCA58c2323c2cD5759d9E17450871f4806710D280"
   },
   "Bridge": {
-    "arbitrumSepolia": "0xEEc407d4237cBC8258b772bcF0cf241ef2eB2654",
-    "optimismSepolia": "0x3Ef3b48d5569C372e03Ca3bCB364D16E056445AE"
+    "arbitrumSepolia": "0xD60C2bda109213Cba11EE67aD19Abe7D353f064c",
+    "optimismSepolia": "0xBC8Cdf5400b785Bf2142Dee4627009702BfCbA41"
   },
   "ChainSelector": {
     "arbitrumSepolia": "3478487238524512106",

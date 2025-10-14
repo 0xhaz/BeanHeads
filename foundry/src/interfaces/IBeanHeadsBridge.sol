@@ -106,7 +106,7 @@ interface IBeanHeadsBridge {
     event BatchTokenBoughtCrossChain(address indexed buyer, address indexed paymentToken);
 
     /// @notice Emitted when a token is minted cross-chain.
-    event TokenMintedCrossChain(address indexed receiver, Genesis.SVGParams params, uint256 amount);
+    event TokenMintedCrossChain(address indexed receiver, Genesis.SVGParams params, uint256 tokenId);
 
     /// @notice Emitted when a token is listed for sale cross-chain.
     event TokenListedCrossChain(address indexed seller, uint256 tokenId, uint256 price);

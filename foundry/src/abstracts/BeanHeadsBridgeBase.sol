@@ -77,6 +77,8 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
 
         // Approve router to spend the tokens
         token.safeApprove(address(i_router), mintPayment);
+        // Approve BeanHeads contract to spend the tokens
+        token.safeApprove(address(i_beanHeadsContract), mintPayment);
 
         messageId = _sendCCIP(_destinationChainSelector, message);
     }
@@ -399,9 +401,7 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
         returns (ActionType action, bytes memory payload)
     {
         uint256 originChainId = IBeanHeads(i_beanHeadsContract).getOriginChainId(tokenId);
-        console2.log("tokenId:", tokenId);
-        console2.log("block.chainid:", block.chainid);
-        console2.log("originChainId:", originChainId);
+
         if (block.chainid == originChainId) {
             // Origin chain sending → lock + send mirror
             IBeanHeads(i_beanHeadsContract).lockToken(tokenId);
