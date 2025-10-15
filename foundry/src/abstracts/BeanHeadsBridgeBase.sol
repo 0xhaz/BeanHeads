@@ -76,8 +76,11 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
             _buildCCIPMessage(ActionType.MINT, encodeMintPayload, tokenAmounts, GAS_LIMIT_MINT);
 
         // Approve router to spend the tokens
+        token.safeApprove(address(i_router), 0);
         token.safeApprove(address(i_router), mintPayment);
+
         // Approve BeanHeads contract to spend the tokens
+        token.safeApprove(address(i_beanHeadsContract), 0);
         token.safeApprove(address(i_beanHeadsContract), mintPayment);
 
         messageId = _sendCCIP(_destinationChainSelector, message);
