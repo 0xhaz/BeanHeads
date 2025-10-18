@@ -1865,6 +1865,11 @@
     },
     {
       "type": "error",
+      "name": "IBeanHeadsMint__InsufficientContractBalance",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "IBeanHeadsMint__InsufficientPayment",
       "inputs": []
     },

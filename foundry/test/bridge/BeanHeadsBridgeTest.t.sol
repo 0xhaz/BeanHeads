@@ -16,6 +16,7 @@ import {Ownable as OwnableOZ} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AggregatorV3Interface} from
     "chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {IBeanHeads, IBeanHeadsView, IBeanHeadsMint, IBeanHeadsMarketplace} from "src/interfaces/IBeanHeads.sol";
 import {MockTokenPool, Pool} from "src/mocks/MockTokenPool.sol";
@@ -470,6 +471,11 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         uint256 userTokenSupply = sepoliaBeanHeads.getTotalSupply();
         assertEq(userTokenSupply, tokenAmount);
         assertEq(sepoliaBeanHeads.getOwnerOf(0), USER);
+         console2.log("Expected MINT_PRICE:", MINT_PRICE);
+        uint256 contractBalance = IERC20(address(mockSepoliaToken)).balanceOf(address(sepoliaBeanHeads));
+       
+        console2.log("Actual contract balance:", contractBalance);
+        assertEq(contractBalance, MINT_PRICE);
     }
 
     modifier mintedTokens() {

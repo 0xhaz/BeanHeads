@@ -12,7 +12,8 @@ import {SafeERC20} from
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IBeanHeads, IBeanHeadsMarketplace} from "src/interfaces/IBeanHeads.sol";
+import {IBeanHeads, IBeanHeadsMarketplace, IBeanHeadsMint} from "src/interfaces/IBeanHeads.sol";
+import {Genesis} from "src/types/Genesis.sol";
 
 abstract contract BeanHeadsBase is ERC721AUpgradeable {
     using SafeERC20 for IERC20;
@@ -193,6 +194,14 @@ abstract contract BeanHeadsBase is ERC721AUpgradeable {
         }
     }
 
+    /**
+     * @notice Processes the transfer of a single token
+     * @dev This function handles the transfer of a token from the contract to the buyer, paying the seller and handling royalties
+     * @param buyer The address of the buyer
+     * @param tokenId The ID of the token to transfer
+     * @param paymentToken The address of the payment token
+     * @param adjustedPrice The adjusted price for the token
+     */
     function _processSingleTransfer(address buyer, uint256 tokenId, address paymentToken, uint256 adjustedPrice)
         internal
     {

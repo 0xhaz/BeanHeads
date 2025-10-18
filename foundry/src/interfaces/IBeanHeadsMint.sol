@@ -33,6 +33,8 @@ interface IBeanHeadsMint {
     error IBeanHeadsMint__MultiHopNotAllowed();
     /// @notice Error when user tries to burn the source token
     error IBeanHeadsMint__CannotBurnOriginToken();
+    /// @notice Error for insufficient contract balance
+    // error IBeanHeadsMint__InsufficientContractBalance();
 
     /// @notice Emitted when a new Genesis NFT is minted
     event MintedGenesis(address indexed owner, uint256 indexed tokenId);

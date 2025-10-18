@@ -323,13 +323,9 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
         // Required token amount = usdAmount / tokenPrice
         uint256 tokenAmountIn18 = (usdAmount * PRECISION) / price; // Convert to 18 decimals
 
-        if (tokenDecimals < 18) {
-            return tokenAmountIn18 / (10 ** (18 - tokenDecimals));
-        } else if (tokenDecimals > 18) {
-            return tokenAmountIn18 * (10 ** (tokenDecimals - 18));
-        } else {
-            return tokenAmountIn18;
-        }
+        return tokenDecimals < 18
+            ? tokenAmountIn18 / (10 ** (18 - tokenDecimals))
+            : tokenDecimals > 18 ? tokenAmountIn18 * (10 ** (tokenDecimals - 18)) : tokenAmountIn18;
     }
 
     /**
@@ -349,6 +345,8 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
      */
     function _safeApproveTokens(IERC20 token, uint256 amount) internal {
         // Reset approval to 0 first to prevent issues with some tokens
+        token.safeApprove(address(i_beanHeadsContract), 0);
+        token.safeApprove(address(i_beanHeadsContract), amount);
         token.safeApprove(address(i_router), 0);
         token.safeApprove(address(i_router), amount);
     }
