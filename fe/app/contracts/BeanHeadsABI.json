@@ -1374,6 +1374,184 @@
     },
     {
       "type": "function",
+      "name": "mintBridgeGenesis",
+      "inputs": [
+        {
+          "name": "_to",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_params",
+          "type": "tuple",
+          "internalType": "struct Genesis.SVGParams",
+          "components": [
+            {
+              "name": "hairParams",
+              "type": "tuple",
+              "internalType": "struct Genesis.HairParams",
+              "components": [
+                {
+                  "name": "hairStyle",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "hairColor",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                }
+              ]
+            },
+            {
+              "name": "bodyParams",
+              "type": "tuple",
+              "internalType": "struct Genesis.BodyParams",
+              "components": [
+                {
+                  "name": "bodyType",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "skinColor",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                }
+              ]
+            },
+            {
+              "name": "clothingParams",
+              "type": "tuple",
+              "internalType": "struct Genesis.ClothingParams",
+              "components": [
+                {
+                  "name": "clothes",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "clothingColor",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "clothesGraphic",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                }
+              ]
+            },
+            {
+              "name": "facialFeaturesParams",
+              "type": "tuple",
+              "internalType": "struct Genesis.FacialFeaturesParams",
+              "components": [
+                {
+                  "name": "eyebrowShape",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "eyeShape",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "facialHairType",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "mouthStyle",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "lipColor",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                }
+              ]
+            },
+            {
+              "name": "accessoryParams",
+              "type": "tuple",
+              "internalType": "struct Genesis.AccessoryParams",
+              "components": [
+                {
+                  "name": "accessoryId",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "hatStyle",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "hatColor",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                }
+              ]
+            },
+            {
+              "name": "otherParams",
+              "type": "tuple",
+              "internalType": "struct Genesis.OtherParams",
+              "components": [
+                {
+                  "name": "faceMask",
+                  "type": "bool",
+                  "internalType": "bool"
+                },
+                {
+                  "name": "faceMaskColor",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "shapes",
+                  "type": "bool",
+                  "internalType": "bool"
+                },
+                {
+                  "name": "shapeColor",
+                  "type": "uint8",
+                  "internalType": "uint8"
+                },
+                {
+                  "name": "lashes",
+                  "type": "bool",
+                  "internalType": "bool"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "_amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_paymentToken",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "_tokenId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
       "name": "mintBridgeToken",
       "inputs": [
         {
@@ -1861,11 +2039,6 @@
     {
       "type": "error",
       "name": "IBeanHeadsMint__InsufficientAllowance",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "IBeanHeadsMint__InsufficientContractBalance",
       "inputs": []
     },
     {

@@ -190,9 +190,9 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
             // Approve the BeanHeads contract to spend the bridged token
             _safeApproveTokens(IERC20(bridgedToken), bridgedAmount);
 
-            IERC20(bridgedToken).safeTransfer(i_beanHeadsContract, bridgedAmount);
+            IERC20(bridgedToken).safeTransfer(address(i_beanHeadsContract), bridgedAmount);
 
-            beans.mintGenesis(receiver, params, quantity, bridgedToken);
+            beans.mintBridgeGenesis(receiver, params, quantity, bridgedToken);
 
             emit TokenMintedCrossChain(receiver, params, quantity);
         }

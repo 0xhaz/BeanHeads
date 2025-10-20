@@ -136,4 +136,16 @@ interface IBeanHeadsMint {
      * @return The total number of tokens minted.
      */
     function getTotalSupply() external view returns (uint256);
+
+    /**
+     * @notice Mints a Genesis NFT via bridge contract
+     * @param to The address to mint the NFT to
+     * @param params The SVG parameters for the Genesis NFT
+     * @param amount The amount of payment token sent for minting
+     * @param token The address of the payment token
+     * @return tokenId The ID of the newly minted Genesis NFT
+     */
+    function mintBridgeGenesis(address to, Genesis.SVGParams calldata params, uint256 amount, address token)
+        external
+        returns (uint256);
 }

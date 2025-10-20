@@ -82,6 +82,41 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
     }
 
     /// @inheritdoc IBeanHeadsMint
+    function mintBridgeGenesis(address _to, Genesis.SVGParams calldata _params, uint256 _amount, address _paymentToken)
+        external
+        onlyBridge
+        returns (uint256 _tokenId)
+    {
+        BHStorage.BeanHeadsStorage storage ds = BHStorage.diamondStorage();
+
+        if (_amount == 0) _revert(IBeanHeadsMint__InvalidAmount.selector);
+        if (!ds.allowedTokens[_paymentToken]) _revert(IBeanHeadsMint__TokenNotAllowed.selector);
+
+        // IERC20 token = IERC20(_paymentToken);
+        // uint256 rawPrice = ds.mintPriceUsd * _amount;
+        // uint256 adjustedPrice = _getTokenAmountFromUsd(_paymentToken, rawPrice);
+
+        // token.safeTransferFrom(address(i_bridgeContract), address(this), adjustedPrice);
+
+        _tokenId = _nextTokenId();
+        _safeMint(_to, _amount);
+
+        for (uint256 i; i < _amount; i++) {
+            uint256 currentTokenId = _tokenId + i;
+
+            // Store the token parameters
+            ds.tokenIdToParams[currentTokenId] = _params;
+            // Initialize the token's listing and payment token
+            ds.tokenIdToListing[currentTokenId] = BHStorage.Listing({seller: address(0), price: 0, isActive: false});
+            // Set the payment token and generation
+            ds.tokenIdToPaymentToken[currentTokenId] = _paymentToken;
+            ds.tokenIdToGeneration[currentTokenId] = 1;
+
+            ds.tokenIdToOrigin[currentTokenId] = block.chainid;
+        }
+    }
+
+    /// @inheritdoc IBeanHeadsMint
     function mintBridgeToken(address _to, uint256 _tokenId, Genesis.SVGParams calldata _params, uint256 _originChainId)
         external
         onlyBridge
