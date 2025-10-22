@@ -113,6 +113,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         sepoliaHelperConfig = new HelperConfig();
         (config,, crossChainConfig) = sepoliaHelperConfig.getActiveNetworkConfig();
+        uint64 sepoliaChainSelector = sepoliaHelperConfig.SEPOLIA_CHAIN_SELECTOR();
 
         address usdPriceFeedSepolia = config.usdPriceFeed;
         priceFeedSepolia = AggregatorV3Interface(usdPriceFeedSepolia);
@@ -147,6 +148,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
 
         arbHelperConfig = new HelperConfig();
         (config,, crossChainConfig) = arbHelperConfig.getActiveNetworkConfig();
+        uint64 arbChainSelector = arbHelperConfig.ARBITRUM_CHAIN_SELECTOR();
 
         address usdPriceFeedArbitrum = config.usdPriceFeed;
         priceFeedArbitrum = AggregatorV3Interface(usdPriceFeedArbitrum);
@@ -188,11 +190,9 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(sepoliaTokenPool));
 
-        // uint64 arbChainId = arbHelperConfig.ARBITRUM_SEPOLIA_CHAIN_ID();
-
-        sepoliaBeanHeadsBridge.setRemoteBridge(address(arbBeanHeadsBridge), true);
+        sepoliaBeanHeadsBridge.setRemoteBridge(arbChainSelector, address(arbBeanHeadsBridge), true);
         ccipSimulatorSepolia.requestLinkFromFaucet(address(sepoliaBeanHeadsBridge), 10 ether);
-        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
+        assertEq(sepoliaBeanHeadsBridge.s_remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
         vm.stopPrank();
 
         vm.mockCall(
@@ -219,11 +219,9 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         );
         vm.makePersistent(address(arbTokenPool));
 
-        // uint64 sepoliaChainId = sepoliaHelperConfig.ETH_SEPOLIA_CHAIN_ID();
-
-        arbBeanHeadsBridge.setRemoteBridge(address(sepoliaBeanHeadsBridge), true);
+        arbBeanHeadsBridge.setRemoteBridge(sepoliaChainSelector, address(sepoliaBeanHeadsBridge), true);
         ccipSimulatorArbitrum.requestLinkFromFaucet(address(arbBeanHeadsBridge), 10 ether);
-        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
+        assertEq(arbBeanHeadsBridge.s_remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
         vm.stopPrank();
 
         vm.mockCall(
@@ -405,7 +403,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         assertEq(IERC173(address(sepoliaBeanHeads)).owner(), ownerSepolia);
         assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
         assertEq(sepoliaBeanHeads.isTokenAllowed(address(mockArbToken)), true);
-        assertEq(sepoliaBeanHeadsBridge.remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
+        assertEq(sepoliaBeanHeadsBridge.s_remoteBridgeAddresses(address(arbBeanHeadsBridge)), true);
         assertEq(sepoliaBeanHeads.getMintPrice(), MINT_PRICE);
         assertEq(sepoliaBeanHeads.name(), "BeanHeads");
         assertEq(sepoliaBeanHeads.symbol(), "BEANS");
@@ -418,7 +416,7 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         assertEq(IERC173(address(arbBeanHeads)).owner(), ownerArbitrum);
         assertEq(arbBeanHeads.isTokenAllowed(address(mockArbToken)), true);
         assertEq(arbBeanHeads.isTokenAllowed(address(mockSepoliaToken)), true);
-        assertEq(arbBeanHeadsBridge.remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
+        assertEq(arbBeanHeadsBridge.s_remoteBridgeAddresses(address(sepoliaBeanHeadsBridge)), true);
         vm.stopPrank();
     }
 
@@ -471,9 +469,9 @@ contract BeanHeadsBridgeTest is Test, Helpers {
         uint256 userTokenSupply = sepoliaBeanHeads.getTotalSupply();
         assertEq(userTokenSupply, tokenAmount);
         assertEq(sepoliaBeanHeads.getOwnerOf(0), USER);
-         console2.log("Expected MINT_PRICE:", MINT_PRICE);
+        console2.log("Expected MINT_PRICE:", MINT_PRICE);
         uint256 contractBalance = IERC20(address(mockSepoliaToken)).balanceOf(address(sepoliaBeanHeads));
-       
+
         console2.log("Actual contract balance:", contractBalance);
         assertEq(contractBalance, MINT_PRICE);
     }

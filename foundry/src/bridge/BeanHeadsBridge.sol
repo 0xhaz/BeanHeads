@@ -28,8 +28,9 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Modifier to ensure that the remote bridge is registered
-    modifier onlyRegisteredRemoteBridge() {
-        if (!remoteBridgeAddresses[s_remoteBridge]) {
+    modifier onlyRegisteredRemoteBridge(uint64 _sourceChainSelector) {
+        address remote = s_chainToRemoteBridge[_sourceChainSelector];
+        if (!s_remoteBridgeAddresses[remote]) {
             revert IBeanHeadsBridge__InvalidRemoteAddress();
         }
         _;
@@ -58,7 +59,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
         Genesis.SVGParams calldata _params,
         uint256 _amount,
         address _paymentToken
-    ) external payable onlyRegisteredRemoteBridge nonReentrant returns (bytes32 messageId) {
+    ) external payable onlyRegisteredRemoteBridge(_destinationChainSelector) nonReentrant returns (bytes32 messageId) {
         messageId = _sendMintTokenRequest(_destinationChainSelector, _receiver, _params, _amount, _paymentToken);
 
         emit SentMintTokenRequest(messageId, _destinationChainSelector, _receiver, _amount);
@@ -71,7 +72,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
         bytes calldata sellSig,
         uint256 permitDeadline,
         bytes calldata permitSig
-    ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
+    ) external onlyRegisteredRemoteBridge(_destinationChainSelector) returns (bytes32 messageId) {
         messageId = _sendSellTokenRequest(_destinationChainSelector, s, sellSig, permitDeadline, permitSig);
 
         emit SentSellTokenRequest(messageId, _destinationChainSelector, s.owner, s.tokenId, s.price);
@@ -83,7 +84,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
         bytes[] calldata _sellSigs,
         uint256[] calldata _permitDeadlines,
         bytes[] calldata _permitSigs
-    ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
+    ) external onlyRegisteredRemoteBridge(_destinationChainSelector) returns (bytes32 messageId) {
         messageId = _sendBatchSellTokenRequest(
             _destinationChainSelector, _sellRequests, _sellSigs, _permitDeadlines, _permitSigs
         );
@@ -97,7 +98,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
         uint256 _tokenId,
         address _paymentToken,
         uint256 _price
-    ) external onlyRegisteredRemoteBridge nonReentrant returns (bytes32 messageId) {
+    ) external onlyRegisteredRemoteBridge(_destinationChainSelector) nonReentrant returns (bytes32 messageId) {
         messageId = _sendBuyTokenRequest(_destinationChainSelector, _tokenId, _paymentToken, _price);
 
         emit SentBuyTokenRequest(messageId, _destinationChainSelector, msg.sender, _tokenId, _price);
@@ -108,7 +109,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
         uint256[] calldata _tokenIds,
         uint256[] calldata _prices,
         address _paymentToken
-    ) external onlyRegisteredRemoteBridge nonReentrant returns (bytes32 messageId) {
+    ) external onlyRegisteredRemoteBridge(_destinationChainSelector) nonReentrant returns (bytes32 messageId) {
         messageId = _sendBatchBuyTokenRequest(_destinationChainSelector, _tokenIds, _prices, _paymentToken);
 
         emit SentBatchBuyTokensRequest(messageId, _destinationChainSelector, msg.sender);
@@ -119,7 +120,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
         uint64 _destinationChainSelector,
         PermitTypes.Cancel calldata c,
         bytes calldata cancelSig
-    ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
+    ) external onlyRegisteredRemoteBridge(_destinationChainSelector) returns (bytes32 messageId) {
         messageId = _sendCancelTokenSaleRequest(_destinationChainSelector, c, cancelSig);
 
         emit CancelSellTokenRequest(messageId, _destinationChainSelector, c.seller, c.tokenId);
@@ -129,7 +130,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
         uint64 _destinationChainSelector,
         PermitTypes.Cancel[] calldata _cancelRequests,
         bytes[] calldata _cancelSigs
-    ) external onlyRegisteredRemoteBridge returns (bytes32 messageId) {
+    ) external onlyRegisteredRemoteBridge(_destinationChainSelector) returns (bytes32 messageId) {
         messageId = _sendBatchCancelTokenSaleRequest(_destinationChainSelector, _cancelRequests, _cancelSigs);
 
         emit CancelBatchSellTokenRequest(_cancelRequests);
@@ -138,7 +139,7 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
     /// @inheritdoc IBeanHeadsBridge
     function sendTransferTokenRequest(uint64 _destinationChainSelector, uint256 _tokenId, address _receiver)
         external
-        onlyRegisteredRemoteBridge
+        onlyRegisteredRemoteBridge(_destinationChainSelector)
         returns (bytes32 messageId)
     {
         messageId = _sendTransferTokenRequest(_destinationChainSelector, _tokenId, _receiver);
@@ -150,8 +151,8 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
                                  ADMIN
     //////////////////////////////////////////////////////////////*/
     /// @inheritdoc IBeanHeadsBridge
-    function setRemoteBridge(address _newRemoteBridge, bool allowed) public override onlyOwner {
-        super.setRemoteBridge(_newRemoteBridge, allowed);
+    function setRemoteBridge(uint64 _chainSelector, address _newRemoteBridge, bool allowed) public override onlyOwner {
+        super.setRemoteBridge(_chainSelector, _newRemoteBridge, allowed);
     }
 
     /// @inheritdoc IBeanHeadsBridge
@@ -168,9 +169,11 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
                            CALLBACK FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     function _ccipReceive(Client.Any2EVMMessage memory message) internal override {
+        uint64 sourceChainSelector = message.sourceChainSelector;
         address sender = abi.decode(message.sender, (address));
+        address expectedSender = s_chainToRemoteBridge[sourceChainSelector];
 
-        if (sender != s_remoteBridge) {
+        if (sender != expectedSender || !s_remoteBridgeAddresses[sender]) {
             revert IBeanHeadsBridge__UnauthorizedSender(sender);
         }
 

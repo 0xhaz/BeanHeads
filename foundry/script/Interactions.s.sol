@@ -31,14 +31,18 @@ contract InteractionBridges is Script {
                 DevOpsTools.get_most_recent_deployment("BeanHeadsBridge", helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID());
 
             console.log("Setting Optimism Sepolia Bridge remote to Arbitrum Sepolia Bridge");
-            IBeanHeadsBridge(opBridgeAddress).setRemoteBridge(arbBridgeAddress, true);
+            IBeanHeadsBridge(opBridgeAddress).setRemoteBridge(
+                helperConfig.ARBITRUM_CHAIN_SELECTOR(), arbBridgeAddress, true
+            );
         } else if (block.chainid == helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID()) {
             opBridgeAddress =
                 DevOpsTools.get_most_recent_deployment("BeanHeadsBridge", helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID());
             arbBridgeAddress = DevOpsTools.get_most_recent_deployment("BeanHeadsBridge", block.chainid);
 
             console.log("Setting Arbitrum Sepolia Bridge remote to Optimism Sepolia Bridge");
-            IBeanHeadsBridge(arbBridgeAddress).setRemoteBridge(opBridgeAddress, true);
+            IBeanHeadsBridge(arbBridgeAddress).setRemoteBridge(
+                helperConfig.OPTIMISM_CHAIN_SELECTOR(), opBridgeAddress, true
+            );
         }
 
         address adminFacet;

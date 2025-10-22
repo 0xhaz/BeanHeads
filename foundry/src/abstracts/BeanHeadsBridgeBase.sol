@@ -27,7 +27,6 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
     //////////////////////////////////////////////////////////////*/
 
     IRouterClient public immutable i_router;
-    address public s_remoteBridge;
     uint64 public s_destChain;
     IERC20 public s_linkToken;
     IERC20 public s_usdcToken;
@@ -44,8 +43,11 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
                                 MAPPINGS
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Mapping to track remote bridge addresses per chain selector
+    mapping(uint64 chainSelector => address remoteBridge) public s_chainToRemoteBridge;
+
     /// @notice Mapping to track the remote bridge address
-    mapping(address remoteBridge => bool isRegistered) public remoteBridgeAddresses;
+    mapping(address remoteBridge => bool isRegistered) public s_remoteBridgeAddresses;
 
     /*//////////////////////////////////////////////////////////////
                            MESSAGE FUNCTIONS
@@ -72,8 +74,9 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
 
         Client.EVMTokenAmount[] memory tokenAmounts = _wrapToken(_paymentToken, mintPayment);
 
-        Client.EVM2AnyMessage memory message =
-            _buildCCIPMessage(ActionType.MINT, encodeMintPayload, tokenAmounts, GAS_LIMIT_MINT);
+        Client.EVM2AnyMessage memory message = _buildCCIPMessage(
+            ActionType.MINT, encodeMintPayload, tokenAmounts, GAS_LIMIT_MINT, _destinationChainSelector
+        );
 
         // Approve router to spend the tokens
         token.safeApprove(address(i_router), 0);
@@ -101,7 +104,8 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
             ActionType.SELL,
             encodeSellPayload,
             new Client.EVMTokenAmount[](0), // No token transfers in this message
-            GAS_LIMIT_SELL
+            GAS_LIMIT_SELL,
+            _destinationChainSelector
         );
 
         messageId = _sendCCIP(_destinationChainSelector, message);
@@ -126,7 +130,7 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
         Client.EVMTokenAmount[] memory tokenAmounts = _wrapToken(_paymentToken, _price);
 
         Client.EVM2AnyMessage memory message =
-            _buildCCIPMessage(ActionType.BUY, encodeBuyPayload, tokenAmounts, GAS_LIMIT_BUY);
+            _buildCCIPMessage(ActionType.BUY, encodeBuyPayload, tokenAmounts, GAS_LIMIT_BUY, _destinationChainSelector);
 
         // Approve router to spend the tokens
         token.safeApprove(address(i_router), _price);
@@ -145,7 +149,8 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
             ActionType.CANCEL,
             encodeCancelPayload,
             new Client.EVMTokenAmount[](0), // No token transfers in this message
-            GAS_LIMIT_SELL
+            GAS_LIMIT_SELL,
+            _destinationChainSelector
         );
 
         messageId = _sendCCIP(_destinationChainSelector, message);
@@ -167,7 +172,8 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
             action,
             transferCalldata,
             new Client.EVMTokenAmount[](0), // No token transfers in this message
-            GAS_LIMIT_TRANSFER
+            GAS_LIMIT_TRANSFER,
+            _destinationChainSelector
         );
 
         messageId = _sendCCIP(_destinationChainSelector, message);
@@ -193,7 +199,8 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
             ActionType.BATCH_SELL,
             encodeBatchSellPayload,
             new Client.EVMTokenAmount[](0), // No token transfers in this message
-            GAS_LIMIT_SELL
+            GAS_LIMIT_SELL,
+            _destinationChainSelector
         );
 
         messageId = _sendCCIP(_destinationChainSelector, message);
@@ -228,8 +235,9 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
 
         Client.EVMTokenAmount[] memory tokenAmounts = _wrapToken(_paymentToken, totalPrice);
 
-        Client.EVM2AnyMessage memory message =
-            _buildCCIPMessage(ActionType.BATCH_BUY, encodeBuyPayload, tokenAmounts, GAS_LIMIT_BUY);
+        Client.EVM2AnyMessage memory message = _buildCCIPMessage(
+            ActionType.BATCH_BUY, encodeBuyPayload, tokenAmounts, GAS_LIMIT_BUY, _destinationChainSelector
+        );
 
         // Approve router to spend the tokens
         token.safeApprove(address(i_router), totalPrice);
@@ -252,7 +260,8 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
             ActionType.BATCH_CANCEL,
             encodeBatchCancelPayload,
             new Client.EVMTokenAmount[](0), // No token transfers in this message
-            GAS_LIMIT_SELL
+            GAS_LIMIT_SELL,
+            _destinationChainSelector
         );
 
         messageId = _sendCCIP(_destinationChainSelector, message);
@@ -261,11 +270,10 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
     /*//////////////////////////////////////////////////////////////
                                  ADMIN
     //////////////////////////////////////////////////////////////*/
-    function setRemoteBridge(address _newRemoteBridge, bool allowed) public virtual {
+    function setRemoteBridge(uint64 _chainSelector, address _newRemoteBridge, bool allowed) public virtual {
         if (_newRemoteBridge == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
-        s_remoteBridge = _newRemoteBridge;
-
-        remoteBridgeAddresses[_newRemoteBridge] = allowed;
+        s_chainToRemoteBridge[_chainSelector] = _newRemoteBridge;
+        s_remoteBridgeAddresses[_newRemoteBridge] = allowed;
 
         emit RemoteBridgeUpdated(_newRemoteBridge);
     }
@@ -374,10 +382,13 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
         ActionType action,
         bytes memory payload,
         Client.EVMTokenAmount[] memory tokenAmounts,
-        uint256 gasLimit
+        uint256 gasLimit,
+        uint64 destinationChainSelector
     ) internal view returns (Client.EVM2AnyMessage memory) {
+        address remote = s_chainToRemoteBridge[destinationChainSelector];
+        if (remote == address(0)) revert IBeanHeadsBridge__InvalidRemoteAddress();
         return Client.EVM2AnyMessage({
-            receiver: abi.encode(s_remoteBridge),
+            receiver: abi.encode(remote),
             data: abi.encode(action, payload),
             tokenAmounts: tokenAmounts,
             feeToken: address(s_linkToken),

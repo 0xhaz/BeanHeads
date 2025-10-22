@@ -120,6 +120,11 @@ contract HelperConfig is Script {
     address public constant OP_SEPOLIA_ROUTER_CLIENT = 0x114A20A10b43D4115e5aeef7345a1A71d2a60C57;
     address public constant ARBITRUM_SEPOLIA_ROUTER_CLIENT = 0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165;
 
+    // Chain Selector
+    uint64 public constant SEPOLIA_CHAIN_SELECTOR = 16015286601757825753;
+    uint64 public constant ARBITRUM_CHAIN_SELECTOR = 3478487238524512106;
+    uint64 public constant OPTIMISM_CHAIN_SELECTOR = 5224473277236331295;
+
     mapping(uint256 => NetworkConfig) public chainIdToNetworkConfig;
     mapping(uint256 => VrfConfig) public chainIdToVrfConfig;
     mapping(uint256 => CrossChainConfig) public chainIdToCrossChainConfig;
