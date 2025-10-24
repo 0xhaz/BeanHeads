@@ -92,12 +92,6 @@ contract BeanHeadsMintFacet is IBeanHeadsMint, BeanHeadsBase {
         if (_amount == 0) _revert(IBeanHeadsMint__InvalidAmount.selector);
         if (!ds.allowedTokens[_paymentToken]) _revert(IBeanHeadsMint__TokenNotAllowed.selector);
 
-        // IERC20 token = IERC20(_paymentToken);
-        // uint256 rawPrice = ds.mintPriceUsd * _amount;
-        // uint256 adjustedPrice = _getTokenAmountFromUsd(_paymentToken, rawPrice);
-
-        // token.safeTransferFrom(address(i_bridgeContract), address(this), adjustedPrice);
-
         _tokenId = _nextTokenId();
         _safeMint(_to, _amount);
 

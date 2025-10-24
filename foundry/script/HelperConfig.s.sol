@@ -7,11 +7,8 @@ import {VRFCoordinatorV2_5Mock} from
 import {MockLinkToken} from "chainlink-brownie-contracts/contracts/src/v0.8/mocks/MockLinkToken.sol";
 import {MockV3Aggregator} from "chainlink-brownie-contracts/contracts/src/v0.8/tests/MockV3Aggregator.sol";
 
-// import {BeanHeads} from "src/core/BeanHeads.sol";
 import {IBeanHeads} from "src/interfaces/IBeanHeads.sol";
 import {Genesis} from "src/types/Genesis.sol";
-// import {BeanHeadsBreeder} from "src/vrf/BeanHeadsBreeder.sol";
-// import {BeanHeadsBridge} from "src/bridge/BeanHeadsBridge.sol";
 
 contract HelperConfig is Script {
     struct NetworkConfig {

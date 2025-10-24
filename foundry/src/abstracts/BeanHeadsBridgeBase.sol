@@ -70,7 +70,7 @@ abstract contract BeanHeadsBridgeBase is IBeanHeadsBridge {
 
         token.safeTransferFrom(msg.sender, address(this), mintPayment);
 
-        bytes memory encodeMintPayload = abi.encode(_receiver, _params, _amount);
+        bytes memory encodeMintPayload = abi.encode(_receiver, _params, _amount, mintPayment);
 
         Client.EVMTokenAmount[] memory tokenAmounts = _wrapToken(_paymentToken, mintPayment);
 

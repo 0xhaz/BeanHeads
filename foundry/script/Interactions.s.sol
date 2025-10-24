@@ -49,8 +49,8 @@ contract InteractionBridges is Script {
 
         if (block.chainid == helperConfig.ETH_SEPOLIA_CHAIN_ID()) {
             adminFacet = DevOpsTools.get_most_recent_deployment("BeanHeadsDiamond", block.chainid);
-            IBeanHeads(adminFacet).setAllowedToken(config.linkToken, true);
-            console.log("Link token allowed:", config.linkToken);
+            IBeanHeads(adminFacet).setAllowedToken(helperConfig.SEPOLIA_LINK_TOKEN(), true);
+            console.log("Link token allowed:", helperConfig.SEPOLIA_LINK_TOKEN());
             IBeanHeads(adminFacet).setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
             console.log("Sepolia USDC allowed:", helperConfig.SEPOLIA_USDC());
             IBeanHeads(adminFacet).setAllowedToken(helperConfig.ARBITRUM_SEPOLIA_USDC(), true);
@@ -59,42 +59,54 @@ contract InteractionBridges is Script {
             console.log("Optimism Sepolia USDC allowed:", helperConfig.OP_SEPOLIA_USDC());
             IBeanHeads(adminFacet).addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
             console.log("Sepolia USDC price feed added:", config.usdPriceFeed);
-            IBeanHeads(adminFacet).addPriceFeed(helperConfig.ARBITRUM_SEPOLIA_USDC(), config.usdPriceFeed);
-            console.log("Arbitrum Sepolia USDC price feed added:", config.usdPriceFeed);
-            IBeanHeads(adminFacet).addPriceFeed(helperConfig.OP_SEPOLIA_USDC(), config.usdPriceFeed);
-            console.log("Optimism Sepolia USDC price feed added:", config.usdPriceFeed);
+            IBeanHeads(adminFacet).addPriceFeed(
+                helperConfig.ARBITRUM_SEPOLIA_USDC(), helperConfig.ARBITRUM_SEPOLIA_USDC_USD_PRICE_FEED()
+            );
+            console.log("Arbitrum Sepolia USDC price feed added:", helperConfig.ARBITRUM_SEPOLIA_USDC_USD_PRICE_FEED());
+            IBeanHeads(adminFacet).addPriceFeed(
+                helperConfig.OP_SEPOLIA_USDC(), helperConfig.OP_SEPOLIA_USDC_USD_PRICE_FEED()
+            );
+            console.log("Optimism Sepolia USDC price feed added:", helperConfig.OP_SEPOLIA_USDC_USD_PRICE_FEED());
         } else if (block.chainid == helperConfig.OPTIMISM_SEPOLIA_CHAIN_ID()) {
             adminFacet = DevOpsTools.get_most_recent_deployment("BeanHeadsDiamond", block.chainid);
-            IBeanHeads(adminFacet).setAllowedToken(config.linkToken, true);
-            console.log("Link token allowed:", config.linkToken);
+            IBeanHeads(adminFacet).setAllowedToken(helperConfig.OP_SEPOLIA_LINK_TOKEN(), true);
+            console.log("Link token allowed:", helperConfig.OP_SEPOLIA_LINK_TOKEN());
             IBeanHeads(adminFacet).setAllowedToken(helperConfig.OP_SEPOLIA_USDC(), true);
             console.log("Optimism Sepolia USDC allowed:", helperConfig.OP_SEPOLIA_USDC());
             IBeanHeads(adminFacet).setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
             console.log("Sepolia USDC allowed:", helperConfig.SEPOLIA_USDC());
             IBeanHeads(adminFacet).setAllowedToken(helperConfig.ARBITRUM_SEPOLIA_USDC(), true);
             console.log("Arbitrum Sepolia USDC allowed:", helperConfig.ARBITRUM_SEPOLIA_USDC());
-            IBeanHeads(adminFacet).addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
-            console.log("Sepolia USDC price feed added:", config.usdPriceFeed);
-            IBeanHeads(adminFacet).addPriceFeed(helperConfig.OP_SEPOLIA_USDC(), config.usdPriceFeed);
-            console.log("Optimism Sepolia USDC price feed added:", config.usdPriceFeed);
-            IBeanHeads(adminFacet).addPriceFeed(helperConfig.ARBITRUM_SEPOLIA_USDC(), config.usdPriceFeed);
-            console.log("Arbitrum Sepolia USDC price feed added:", config.usdPriceFeed);
+            IBeanHeads(adminFacet).addPriceFeed(helperConfig.SEPOLIA_USDC(), helperConfig.SEPOLIA_USDC_USD_PRICE_FEED());
+            console.log("Sepolia USDC price feed added:", helperConfig.SEPOLIA_USDC_USD_PRICE_FEED());
+            IBeanHeads(adminFacet).addPriceFeed(
+                helperConfig.OP_SEPOLIA_USDC(), helperConfig.OP_SEPOLIA_USDC_USD_PRICE_FEED()
+            );
+            console.log("Optimism Sepolia USDC price feed added:", helperConfig.OP_SEPOLIA_USDC_USD_PRICE_FEED());
+            IBeanHeads(adminFacet).addPriceFeed(
+                helperConfig.ARBITRUM_SEPOLIA_USDC(), helperConfig.ARBITRUM_SEPOLIA_USDC_USD_PRICE_FEED()
+            );
+            console.log("Arbitrum Sepolia USDC price feed added:", helperConfig.ARBITRUM_SEPOLIA_USDC_USD_PRICE_FEED());
         } else if (block.chainid == helperConfig.ARBITRUM_SEPOLIA_CHAIN_ID()) {
             adminFacet = DevOpsTools.get_most_recent_deployment("BeanHeadsDiamond", block.chainid);
-            IBeanHeads(adminFacet).setAllowedToken(config.linkToken, true);
-            console.log("Link token allowed:", config.linkToken);
+            IBeanHeads(adminFacet).setAllowedToken(helperConfig.ARBITRUM_SEPOLIA_LINK_TOKEN(), true);
+            console.log("Link token allowed:", helperConfig.ARBITRUM_SEPOLIA_LINK_TOKEN());
             IBeanHeads(adminFacet).setAllowedToken(helperConfig.ARBITRUM_SEPOLIA_USDC(), true);
             console.log("Arbitrum Sepolia USDC allowed:", helperConfig.ARBITRUM_SEPOLIA_USDC());
             IBeanHeads(adminFacet).setAllowedToken(helperConfig.SEPOLIA_USDC(), true);
             console.log("Sepolia USDC allowed:", helperConfig.SEPOLIA_USDC());
             IBeanHeads(adminFacet).setAllowedToken(helperConfig.OP_SEPOLIA_USDC(), true);
             console.log("Optimism Sepolia USDC allowed:", helperConfig.OP_SEPOLIA_USDC());
-            IBeanHeads(adminFacet).addPriceFeed(helperConfig.SEPOLIA_USDC(), config.usdPriceFeed);
-            console.log("Sepolia USDC price feed added:", config.usdPriceFeed);
-            IBeanHeads(adminFacet).addPriceFeed(helperConfig.OP_SEPOLIA_USDC(), config.usdPriceFeed);
-            console.log("Optimism Sepolia USDC price feed added:", config.usdPriceFeed);
-            IBeanHeads(adminFacet).addPriceFeed(helperConfig.ARBITRUM_SEPOLIA_USDC(), config.usdPriceFeed);
-            console.log("Arbitrum Sepolia USDC price feed added:", config.usdPriceFeed);
+            IBeanHeads(adminFacet).addPriceFeed(helperConfig.SEPOLIA_USDC(), helperConfig.SEPOLIA_USDC_USD_PRICE_FEED());
+            console.log("Sepolia USDC price feed added:", helperConfig.SEPOLIA_USDC_USD_PRICE_FEED());
+            IBeanHeads(adminFacet).addPriceFeed(
+                helperConfig.OP_SEPOLIA_USDC(), helperConfig.OP_SEPOLIA_USDC_USD_PRICE_FEED()
+            );
+            console.log("Optimism Sepolia USDC price feed added:", helperConfig.OP_SEPOLIA_USDC_USD_PRICE_FEED());
+            IBeanHeads(adminFacet).addPriceFeed(
+                helperConfig.ARBITRUM_SEPOLIA_USDC(), helperConfig.ARBITRUM_SEPOLIA_USDC_USD_PRICE_FEED()
+            );
+            console.log("Arbitrum Sepolia USDC price feed added:", helperConfig.ARBITRUM_SEPOLIA_USDC_USD_PRICE_FEED());
         }
 
         vm.stopBroadcast();

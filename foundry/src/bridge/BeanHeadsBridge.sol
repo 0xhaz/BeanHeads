@@ -184,20 +184,25 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
 
         if (action == ActionType.MINT) {
             /// @notice Decode the message data for minting a Genesis token.
-            (address receiver, Genesis.SVGParams memory params, uint256 quantity) =
-                abi.decode(payload, (address, Genesis.SVGParams, uint256));
+            (address receiver, Genesis.SVGParams memory params, uint256 quantity, uint256 expectedAmount) =
+                abi.decode(payload, (address, Genesis.SVGParams, uint256, uint256));
+
+            require(message.destTokenAmounts.length == 1, "Invalid token amounts length");
 
             address bridgedToken = message.destTokenAmounts[0].token;
             uint256 bridgedAmount = message.destTokenAmounts[0].amount;
 
+            if (bridgedAmount != expectedAmount || bridgedAmount == 0) {
+                revert IBeanHeadsBridge__InvalidAmount();
+            }
+
             // Approve the BeanHeads contract to spend the bridged token
             _safeApproveTokens(IERC20(bridgedToken), bridgedAmount);
-
             IERC20(bridgedToken).safeTransfer(address(i_beanHeadsContract), bridgedAmount);
 
             beans.mintBridgeGenesis(receiver, params, quantity, bridgedToken);
 
-            emit TokenMintedCrossChain(receiver, params, quantity);
+            emit TokenMintedCrossChain(receiver, params, quantity, bridgedToken, bridgedAmount);
         }
 
         if (action == ActionType.SELL) {
