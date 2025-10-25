@@ -12,6 +12,7 @@ import {SafeERC20} from
     "chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import {BeanHeadsBridgeBase} from "src/abstracts/BeanHeadsBridgeBase.sol";
@@ -186,11 +187,17 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
             /// @notice Decode the message data for minting a Genesis token.
             (address receiver, Genesis.SVGParams memory params, uint256 quantity, uint256 expectedAmount) =
                 abi.decode(payload, (address, Genesis.SVGParams, uint256, uint256));
+            console2.log("Receiver:", receiver);
+            console2.log("Quantity:", quantity);
+            console2.log("Expected amount:", expectedAmount);
 
             require(message.destTokenAmounts.length == 1, "Invalid token amounts length");
 
             address bridgedToken = message.destTokenAmounts[0].token;
             uint256 bridgedAmount = message.destTokenAmounts[0].amount;
+            console2.log("Bridged amount:", bridgedAmount);
+            console2.log("Expected amount:", expectedAmount);
+            console2.log("Bridged token:", bridgedToken);
 
             if (bridgedAmount != expectedAmount || bridgedAmount == 0) {
                 revert IBeanHeadsBridge__InvalidAmount();

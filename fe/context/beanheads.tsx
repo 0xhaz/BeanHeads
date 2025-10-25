@@ -67,6 +67,12 @@ type BeanHeadsCtx = {
     originChainId: bigint,
     options?: BaseTransactionOptions
   ) => Promise<PreparedTransaction>;
+  mintBridgeGenesis?: (
+    address: `0x${string}`,
+    svgParams: any,
+    amount: bigint,
+    paymentToken: `0x${string}` | null
+  ) => Promise<PreparedTransaction>;
   unlockToken?: (tokenId: bigint) => Promise<PreparedTransaction>;
   lockToken?: (tokenId: bigint) => Promise<PreparedTransaction>;
   burnToken?: (tokenId: bigint) => Promise<PreparedTransaction>;
@@ -347,6 +353,44 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     const txRequest = await prepareContractCall({
       contract,
       method: "mintGenesis",
+      params: [
+        address,
+        svgParams as any,
+        amount,
+        paymentToken ?? USDC_ADDRESS[chain?.id!],
+      ],
+      value: paymentToken ? BigInt(0) : amount,
+    });
+    return sendTransaction({
+      account: account!,
+      transaction: txRequest,
+    });
+  }
+
+  async function mintBridgeGenesis(
+    address: `0x${string}`,
+    avatar: ReturnType<typeof generateRandomAvatarAttributes>,
+    amount: bigint,
+    paymentToken: `0x${string}` | null
+  ) {
+    if (!contract) throw new Error("Contract not initialized");
+
+    const svgParams = toSVGParamsFromAvatar(avatar);
+
+    if (paymentToken) {
+      const priceUsd18 = await getMintPrice();
+      const totalPrice = (priceUsd18 ?? BigInt(0)) * amount;
+      await approveToken(
+        account!.address as `0x${string}`,
+        contract.address as `0x${string}`,
+        totalPrice,
+        chain
+      );
+    }
+
+    const txRequest = await prepareContractCall({
+      contract,
+      method: "mintBridgeGenesis",
       params: [
         address,
         svgParams as any,
@@ -769,6 +813,7 @@ export function BeanHeadsProvider({ children }: { children: React.ReactNode }) {
     totalSupply,
     balanceOf,
     mintGenesis,
+    mintBridgeGenesis,
     tokenURI,
     getAttributesByTokenId,
     getAttributesByOwner,
