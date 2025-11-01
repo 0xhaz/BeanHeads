@@ -187,17 +187,11 @@ contract BeanHeadsBridge is BeanHeadsBridgeBase, CCIPReceiver, Ownable, Reentran
             /// @notice Decode the message data for minting a Genesis token.
             (address receiver, Genesis.SVGParams memory params, uint256 quantity, uint256 expectedAmount) =
                 abi.decode(payload, (address, Genesis.SVGParams, uint256, uint256));
-            console2.log("Receiver:", receiver);
-            console2.log("Quantity:", quantity);
-            console2.log("Expected amount:", expectedAmount);
 
             require(message.destTokenAmounts.length == 1, "Invalid token amounts length");
 
             address bridgedToken = message.destTokenAmounts[0].token;
             uint256 bridgedAmount = message.destTokenAmounts[0].amount;
-            console2.log("Bridged amount:", bridgedAmount);
-            console2.log("Expected amount:", expectedAmount);
-            console2.log("Bridged token:", bridgedToken);
 
             if (bridgedAmount != expectedAmount || bridgedAmount == 0) {
                 revert IBeanHeadsBridge__InvalidAmount();
